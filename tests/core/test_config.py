@@ -25,3 +25,10 @@ def test_config_roundtrip(tmp_path) -> None:
     assert loaded.active_service == "dida365"
     assert profile.base_url == "https://api.dida365.com"
     assert profile.client_id == "client"
+
+
+def test_config_save_sets_owner_only_permissions(tmp_path) -> None:
+    store = ConfigStore(tmp_path / "config.json")
+    store.save(store.load())
+
+    assert store.path.stat().st_mode & 0o777 == 0o600

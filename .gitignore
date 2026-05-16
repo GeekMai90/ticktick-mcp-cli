@@ -3,3 +3,10 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+.env
+.env.*
+!.env.example
+ticktask-config*.json
+ticktask-token*.json
+config.json
+tokens.json

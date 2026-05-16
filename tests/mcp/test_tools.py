@@ -1,3 +1,7 @@
+import inspect
+
+import pytest
+
 from ticktask.mcp import tools
 from ticktask.mcp.server import INSTALL_HINT, build_server
 
@@ -23,16 +27,38 @@ class FakeService:
         return {"task_id": task_id, "project_id": project_id}
 
 
-def test_mcp_tool_functions_use_stable_result_shape() -> None:
-    payload = tools.ticktask_list_projects(service_obj=FakeService())
+def test_mcp_tool_functions_use_stable_result_shape(monkeypatch) -> None:
+    monkeypatch.setattr(tools, "_make_service", lambda: FakeService())
+    payload = tools.ticktask_list_projects()
     assert payload["ok"] is True
     assert payload["meta"]["count"] == 1
 
 
-def test_mcp_complete_requires_confirmation() -> None:
-    payload = tools.ticktask_complete_task("t1", "p1", service_obj=FakeService())
+def test_mcp_complete_requires_confirmation(monkeypatch) -> None:
+    monkeypatch.setattr(tools, "_make_service", lambda: FakeService())
+    payload = tools.ticktask_complete_task("t1", "p1")
     assert payload["ok"] is False
     assert payload["error"]["code"] == "CONFIRMATION_REQUIRED"
+
+
+def test_public_mcp_tool_signatures_are_json_serializable() -> None:
+    public_tools = [
+        tools.ticktask_doctor,
+        tools.ticktask_auth_status,
+        tools.ticktask_list_projects,
+        tools.ticktask_list_tasks,
+        tools.ticktask_search_tasks,
+        tools.ticktask_create_task,
+        tools.ticktask_complete_task,
+        tools.ticktask_today,
+    ]
+    for tool in public_tools:
+        assert "service_obj" not in inspect.signature(tool).parameters
+
+
+def test_build_server_succeeds_when_mcp_is_available() -> None:
+    pytest.importorskip("mcp.server.fastmcp")
+    build_server()
 
 
 def test_mcp_missing_package_hint(monkeypatch) -> None:

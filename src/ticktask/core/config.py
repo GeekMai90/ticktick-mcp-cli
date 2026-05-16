@@ -132,6 +132,10 @@ class ConfigStore:
             json.dumps(config.to_dict(), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        try:
+            self.path.chmod(0o600)
+        except OSError:
+            pass
 
     def path_string(self) -> str:
         return str(self.path)

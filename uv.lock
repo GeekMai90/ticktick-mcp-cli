@@ -762,6 +762,7 @@ mcp = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "mcp" },
     { name = "pytest" },
 ]
 
@@ -776,7 +777,10 @@ requires-dist = [
 provides-extras = ["mcp", "dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.0" }]
+dev = [
+    { name = "mcp", specifier = ">=1.0" },
+    { name = "pytest", specifier = ">=8.0" },
+]
 
 [[package]]
 name = "typer"

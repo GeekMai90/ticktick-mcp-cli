@@ -19,7 +19,10 @@ mcp = ["mcp>=1.0"]
 dev = ["pytest>=8.0"]
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = [
+    "mcp>=1.0",
+    "pytest>=8.0",
+]
 
 [project.scripts]
 ticktask = "ticktask.cli.app:app"
