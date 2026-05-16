@@ -1,0 +1,42 @@
+from __future__ import annotations
+
+import sys
+
+from ticktask.mcp import tools
+
+
+INSTALL_HINT = (
+    "ticktask MCP server requires the optional `mcp` package. "
+    "Install with `uv pip install 'ticktask[mcp]'` or `pip install 'ticktask[mcp]'`."
+)
+
+
+def build_server():
+    try:
+        from mcp.server.fastmcp import FastMCP
+    except Exception as exc:
+        raise RuntimeError(INSTALL_HINT) from exc
+
+    server = FastMCP("ticktask")
+    server.tool()(tools.ticktask_doctor)
+    server.tool()(tools.ticktask_auth_status)
+    server.tool()(tools.ticktask_list_projects)
+    server.tool()(tools.ticktask_list_tasks)
+    server.tool()(tools.ticktask_search_tasks)
+    server.tool()(tools.ticktask_create_task)
+    server.tool()(tools.ticktask_complete_task)
+    server.tool()(tools.ticktask_today)
+    return server
+
+
+def main() -> None:
+    try:
+        server = build_server()
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(2) from exc
+    server.run()
+
+
+if __name__ == "__main__":
+    main()
