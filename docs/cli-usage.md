@@ -21,10 +21,13 @@ uv run ticktask project data PROJECT_ID --json
 ```bash
 uv run ticktask task list --json
 uv run ticktask task list --project Inbox --status open --json
+uv run ticktask task list --status completed --json
 uv run ticktask task search "invoice" --json
 uv run ticktask task add "Send invoice" --project Inbox --content "Include May details" --json
 uv run ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ```
+
+Completed-task listing uses the official `POST /open/v1/task/completed` API. Global completed queries intentionally omit `projectIds`, which avoids missing completed Dida365 tasks.
 
 Aliases:
 

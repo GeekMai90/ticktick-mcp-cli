@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from datetime import date, datetime
 from typing import Any
 
 import httpx
@@ -68,7 +70,33 @@ class TicktaskClient:
     def complete_task(self, project_id: str, task_id: str) -> dict[str, Any]:
         return self.request("POST", f"/open/v1/project/{project_id}/task/{task_id}/complete")
 
-    def completed_tasks(self, project_id: str | None = None) -> Any:
-        if project_id:
-            return self.request("GET", f"/open/v1/project/{project_id}/completed")
-        return self.request("GET", "/open/v1/project/all/completed")
+    def completed_tasks(
+        self,
+        start_date: str | date | datetime | None = None,
+        end_date: str | date | datetime | None = None,
+        project_ids: str | Sequence[str] | None = None,
+    ) -> Any:
+        payload: dict[str, Any] = {
+            "startDate": self._format_date(start_date or "1970-01-01"),
+            "endDate": self._format_date(end_date or date.today()),
+        }
+        normalized_project_ids = self._normalize_project_ids(project_ids)
+        if normalized_project_ids:
+            payload["projectIds"] = normalized_project_ids
+        return self.request("POST", "/open/v1/task/completed", json=payload)
+
+    @staticmethod
+    def _format_date(value: str | date | datetime) -> str:
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        return value
+
+    @staticmethod
+    def _normalize_project_ids(project_ids: str | Sequence[str] | None) -> list[str]:
+        if project_ids is None:
+            return []
+        if isinstance(project_ids, str):
+            return [project_ids] if project_ids else []
+        return [project_id for project_id in project_ids if project_id]

@@ -7,7 +7,7 @@ from ticktask.core.services import TicktaskService
 class FakeClient:
     def __init__(self):
         self.closed = False
-        self.completed_project_ids = []
+        self.completed_calls = []
 
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
@@ -26,9 +26,12 @@ class FakeClient:
     def complete_task(self, project_id, task_id):
         return {"completed": True, "projectId": project_id, "taskId": task_id}
 
-    def completed_tasks(self, project_id=None):
-        self.completed_project_ids.append(project_id)
-        return [{"id": "t2", "title": "Done item", "status": 2, "projectId": project_id or "p1"}]
+    def completed_tasks(self, start_date=None, end_date=None, project_ids=None):
+        self.completed_calls.append(
+            {"start_date": start_date, "end_date": end_date, "project_ids": project_ids}
+        )
+        project_id = project_ids[0] if project_ids else "p1"
+        return [{"id": "t2", "title": "Done item", "status": 2, "projectId": project_id}]
 
     def close(self):
         self.closed = True
@@ -51,7 +54,7 @@ def test_search_tasks(tmp_path) -> None:
     assert tasks[0]["id"] == "t1"
 
 
-def test_list_completed_uses_global_completed_endpoint(tmp_path) -> None:
+def test_list_completed_uses_global_completed_query_without_project_ids(tmp_path) -> None:
     fake = FakeClient()
     manager = AuthManager(ConfigStore(tmp_path / "config.json"))
     manager.init("dida365", "client", "secret", "http://localhost", access_token="token")
@@ -60,7 +63,29 @@ def test_list_completed_uses_global_completed_endpoint(tmp_path) -> None:
     tasks = svc.list_tasks(status="completed")
 
     assert tasks[0]["id"] == "t2"
-    assert fake.completed_project_ids == [None]
+    assert len(fake.completed_calls) == 1
+    assert fake.completed_calls[0]["start_date"] == "1970-01-01"
+    assert fake.completed_calls[0]["end_date"] is not None
+    assert fake.completed_calls[0]["project_ids"] is None
+
+
+def test_list_completed_with_project_passes_project_ids_and_dates(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    tasks = svc.list_tasks(
+        project="Inbox",
+        status="completed",
+        start_date="2026-01-01",
+        end_date="2026-01-31",
+    )
+
+    assert tasks[0]["id"] == "t2"
+    assert fake.completed_calls == [
+        {"start_date": "2026-01-01", "end_date": "2026-01-31", "project_ids": ["p1"]}
+    ]
 
 
 def test_create_task_resolves_project(tmp_path) -> None:

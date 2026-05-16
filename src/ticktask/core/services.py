@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from ticktask.core.auth import AuthManager
@@ -56,6 +56,8 @@ class TicktaskService:
         project: str | None = None,
         status: str = "open",
         today_only: bool = False,
+        start_date: str | date | datetime | None = None,
+        end_date: str | date | datetime | None = None,
     ) -> list[dict[str, Any]]:
         client = self._with_client()
         try:
@@ -63,13 +65,24 @@ class TicktaskService:
             selected = self._select_projects(projects, project)
             tasks: list[Task] = []
             if status == "completed":
+                completed_start = start_date or "1970-01-01"
+                completed_end = end_date or date.today()
                 if project:
-                    for item in selected:
-                        data = client.completed_tasks(item.id)
-                        for raw_task in self._extract_tasks(data):
-                            tasks.append(Task.from_api(raw_task, project_id=item.id))
+                    project_ids = [item.id for item in selected]
+                    data = client.completed_tasks(
+                        start_date=completed_start,
+                        end_date=completed_end,
+                        project_ids=project_ids,
+                    )
+                    project_id = project_ids[0] if len(project_ids) == 1 else None
+                    for raw_task in self._extract_tasks(data):
+                        tasks.append(Task.from_api(raw_task, project_id=project_id))
                 else:
-                    for raw_task in self._extract_tasks(client.completed_tasks()):
+                    data = client.completed_tasks(
+                        start_date=completed_start,
+                        end_date=completed_end,
+                    )
+                    for raw_task in self._extract_tasks(data):
                         tasks.append(Task.from_api(raw_task))
             else:
                 for item in selected:

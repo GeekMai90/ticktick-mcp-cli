@@ -69,6 +69,7 @@ uv run ticktask doctor --json
 uv run ticktask auth status --json
 uv run ticktask project list --json
 uv run ticktask task list --json
+uv run ticktask task list --status completed --json
 uv run ticktask task search "release" --json
 uv run ticktask task add "Plan release" --project Inbox --json
 uv run ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
@@ -89,6 +90,8 @@ All machine-facing errors use:
 
 Dangerous operations require exact IDs and explicit confirmation. For example,
 task completion requires `--project-id PROJECT_ID --yes`.
+
+Completed-task listing uses the official `POST /open/v1/task/completed` API. Global completed queries intentionally omit `projectIds`, which avoids missing completed Dida365 tasks.
 
 ## MCP
 
