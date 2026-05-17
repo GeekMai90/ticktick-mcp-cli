@@ -19,7 +19,7 @@ uv run ticktick-mcp-cli integration smoke --json
 uv run ticktick-mcp-cli project list --json
 uv run ticktick-mcp-cli project get PROJECT_ID --json
 uv run ticktick-mcp-cli project data PROJECT_ID --json
-uv run ticktick-mcp-cli project create "Focus" --color "#00aa00" --view-mode list --json
+uv run ticktick-mcp-cli project create "Focus" --color "#00aa00" --view-mode list --kind TASK --json
 uv run ticktick-mcp-cli project update PROJECT_ID --name "Renamed" --closed --json
 uv run ticktick-mcp-cli project delete PROJECT_ID --yes --json
 ```
@@ -34,7 +34,7 @@ uv run ticktick-mcp-cli task list --tag agent --filter high-priority --json
 uv run ticktick-mcp-cli task filter --tag agent --project Inbox --priority high --json
 uv run ticktick-mcp-cli task search "invoice" --json
 uv run ticktick-mcp-cli task analytics week --project Inbox --json
-uv run ticktick-mcp-cli task add "Send invoice" --project Inbox --content "Include May details" --json
+uv run ticktick-mcp-cli task add "Send invoice" --project Inbox --content "Include May details" --due tomorrow --priority high --json
 uv run ticktick-mcp-cli task get TASK_ID --project-id PROJECT_ID --json
 uv run ticktick-mcp-cli task update TASK_ID --project-id PROJECT_ID --title "Send paid invoice" --json
 uv run ticktick-mcp-cli task complete TASK_ID --project-id PROJECT_ID --yes --json
@@ -55,6 +55,8 @@ uv run ticktick-mcp-cli task item update TASK_ID ITEM_ID --project-id PROJECT_ID
 uv run ticktick-mcp-cli task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
 uv run ticktick-mcp-cli task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes --json
 ```
+
+Date arguments for task due dates and task filters accept `YYYY-MM-DD`, `today`, `tomorrow`, and `next <weekday>` (for example, `next monday`). Priority aliases such as `p1`, `p2`, `p3`, `high`, `medium`, `low`, and `normal` are normalized before API calls. Task status aliases such as `done`/`completed` and `all` are validated. Project `--kind` accepts `TASK` or `NOTE`; `--view-mode` accepts `list`, `kanban`, or `timeline`.
 
 Batch commands default to dry-run previews; pass `--execute --yes` to mutate remote tasks. Reminder, repeat, and tag operations update the parent task through the official task update API and require exact task/project IDs. Repeat presets are `daily`, `weekly`, `monthly`, and `yearly`; `--rrule` also accepts raw RRULE strings. `task filter` uses the official `POST /open/v1/task/filter` endpoint; `task list --tag/--filter` applies deterministic local filtering over listed tasks. Smart filters: `today`, `overdue`, `upcoming`, `high-priority`, `no-date`.
 

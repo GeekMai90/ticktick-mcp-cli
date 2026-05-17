@@ -97,6 +97,8 @@ Prompts:
 
 Prompt functions are importable from `ticktask.mcp.prompts` for unit testing without launching stdio.
 
+Task date and enum inputs are normalized before the shared core reaches the API: task due/filter dates accept `YYYY-MM-DD`, `today`, `tomorrow`, and `next <weekday>`; priorities accept aliases such as `p1`/`p2`/`p3`; statuses accept aliases such as `done`; project kind/view-mode inputs are validated.
+
 `ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. `ticktask_task_analytics` returns open/completed/overdue counts, project throughput, tag distribution, and priority distribution for a preset or explicit date range. `ticktask_progress_report` combines task analytics, habit check-ins, and focus duration into one cross-domain scorecard. `ticktask_sync_state`, `ticktask_mark_sync_state`, and `ticktask_sync_export_tasks` provide checkpointed incremental task exports backed by the local `sync-state.json` file. `ticktask_backup_tasks` writes local date/project backup files in Markdown, JSONL, CSV, or JSON and returns a manifest path. Batch tools default to `dry_run=true`; pass `dry_run=false` and `yes=true` to execute. Reminder, repeat, and tag mutation tools update the parent task through the official task update API. Habit tools cover list/get/create/update, check-in, and history. Focus tools cover list/get/delete plus report-friendly exports, and enforce the official 30-day query window.
 
 Tool functions are importable from `ticktask.mcp.tools` for unit testing without launching stdio.
