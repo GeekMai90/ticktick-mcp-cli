@@ -7,9 +7,9 @@ This project is not published automatically yet. Use this checklist before creat
 ```bash
 uv sync --all-extras --dev
 uv run pytest -q
-uv run ticktask --help
-uv run ticktask doctor --json
-uv run ticktask integration smoke --json
+uv run ticktick-mcp-cli --help
+uv run ticktick-mcp-cli doctor --json
+uv run ticktick-mcp-cli integration smoke --json
 uv run --with 'mcp>=1.0' python -c 'from ticktask.mcp.server import build_server; build_server(); print("mcp_build_ok")'
 uv build
 git diff --check
@@ -20,7 +20,7 @@ git diff --check
 Only run this when a local service profile has real OAuth credentials/tokens and the account is safe to inspect:
 
 ```bash
-TICKTASK_INTEGRATION=1 uv run ticktask integration smoke --service dida365 --json
+TICKTASK_INTEGRATION=1 uv run ticktick-mcp-cli integration smoke --service dida365 --json
 ```
 
 The smoke command is read-only and lists projects to confirm authentication and API reachability. It does not create, update, complete, move, or delete tasks.

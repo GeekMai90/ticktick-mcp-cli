@@ -3,7 +3,7 @@
 `ticktask` does not ship OAuth client secrets. Create your own TickTick or Dida365 developer app and store the credentials locally.
 
 ```bash
-uv run ticktask auth init \
+uv run ticktick-mcp-cli auth init \
   --service ticktick \
   --client-id "$TICKTICK_CLIENT_ID" \
   --client-secret "$TICKTICK_CLIENT_SECRET" \
@@ -18,16 +18,16 @@ Supported services:
 Check status:
 
 ```bash
-uv run ticktask auth status --json
+uv run ticktick-mcp-cli auth status --json
 ```
 
 Login flow:
 
 ```bash
-uv run ticktask auth login --service ticktick --no-browser --json
-uv run ticktask auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
-uv run ticktask auth login --service ticktick --code CALLBACK_CODE --state STATE --json
-uv run ticktask auth refresh --service ticktick --json
+uv run ticktick-mcp-cli auth login --service ticktick --no-browser --json
+uv run ticktick-mcp-cli auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
+uv run ticktick-mcp-cli auth login --service ticktick --code CALLBACK_CODE --state STATE --json
+uv run ticktick-mcp-cli auth refresh --service ticktick --json
 ```
 
 `auth login --no-browser` now starts a hardened browser flow:

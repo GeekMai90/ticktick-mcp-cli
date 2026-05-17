@@ -3,37 +3,37 @@
 ## Health and Auth
 
 ```bash
-uv run ticktask doctor --json
-uv run ticktask auth status --json
-uv run ticktask auth login --service ticktick --no-browser --json
-uv run ticktask auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
-uv run ticktask auth login --service ticktick --code CALLBACK_CODE --state STATE --json
-uv run ticktask auth refresh --service ticktick --json
-uv run ticktask config path
-uv run ticktask integration smoke --json
+uv run ticktick-mcp-cli doctor --json
+uv run ticktick-mcp-cli auth status --json
+uv run ticktick-mcp-cli auth login --service ticktick --no-browser --json
+uv run ticktick-mcp-cli auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
+uv run ticktick-mcp-cli auth login --service ticktick --code CALLBACK_CODE --state STATE --json
+uv run ticktick-mcp-cli auth refresh --service ticktick --json
+uv run ticktick-mcp-cli config path
+uv run ticktick-mcp-cli integration smoke --json
 ```
 
 ## Projects
 
 ```bash
-uv run ticktask project list --json
-uv run ticktask project get PROJECT_ID --json
-uv run ticktask project data PROJECT_ID --json
+uv run ticktick-mcp-cli project list --json
+uv run ticktick-mcp-cli project get PROJECT_ID --json
+uv run ticktick-mcp-cli project data PROJECT_ID --json
 ```
 
 ## Tasks
 
 ```bash
-uv run ticktask task list --json
-uv run ticktask task list --project Inbox --status open --json
-uv run ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
-uv run ticktask task search "invoice" --json
-uv run ticktask task add "Send invoice" --project Inbox --content "Include May details" --json
-uv run ticktask task get TASK_ID --project-id PROJECT_ID --json
-uv run ticktask task update TASK_ID --project-id PROJECT_ID --title "Send paid invoice" --json
-uv run ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
-uv run ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
-uv run ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID --json
+uv run ticktick-mcp-cli task list --json
+uv run ticktick-mcp-cli task list --project Inbox --status open --json
+uv run ticktick-mcp-cli task list --status completed --from 2026-05-01 --to 2026-05-17 --json
+uv run ticktick-mcp-cli task search "invoice" --json
+uv run ticktick-mcp-cli task add "Send invoice" --project Inbox --content "Include May details" --json
+uv run ticktick-mcp-cli task get TASK_ID --project-id PROJECT_ID --json
+uv run ticktick-mcp-cli task update TASK_ID --project-id PROJECT_ID --title "Send paid invoice" --json
+uv run ticktick-mcp-cli task complete TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktick-mcp-cli task delete TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktick-mcp-cli task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID --json
 ```
 
 Completed-task listing uses the official `POST /open/v1/task/completed` API. Global completed queries intentionally omit `projectIds`, which avoids missing completed Dida365 tasks.
@@ -41,19 +41,19 @@ Completed-task listing uses the official `POST /open/v1/task/completed` API. Glo
 ## Completed
 
 ```bash
-uv run ticktask completed today --json
-uv run ticktask completed yesterday --json
-uv run ticktask completed week --json
-uv run ticktask completed --from 2026-05-01 --to 2026-05-17 --project Inbox --json
+uv run ticktick-mcp-cli completed today --json
+uv run ticktick-mcp-cli completed yesterday --json
+uv run ticktick-mcp-cli completed week --json
+uv run ticktick-mcp-cli completed --from 2026-05-01 --to 2026-05-17 --project Inbox --json
 ```
 
 ## Export
 
 ```bash
-uv run ticktask export tasks --format json --status open
-uv run ticktask export tasks --format jsonl --status all --from 2026-05-01 --to 2026-05-17
-uv run ticktask export tasks --format csv --project Inbox
-uv run ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
+uv run ticktick-mcp-cli export tasks --format json --status open
+uv run ticktick-mcp-cli export tasks --format jsonl --status all --from 2026-05-01 --to 2026-05-17
+uv run ticktick-mcp-cli export tasks --format csv --project Inbox
+uv run ticktick-mcp-cli export completed --format markdown --from 2026-05-01 --to 2026-05-17
 ```
 
 Supported formats are `json`, `jsonl`, `csv`, and `markdown`. Export commands emit raw export content instead of wrapping the output in the stable CLI result envelope.
@@ -61,9 +61,9 @@ Supported formats are `json`, `jsonl`, `csv`, and `markdown`. Export commands em
 Aliases:
 
 ```bash
-uv run ticktask today --json
-uv run ticktask add "Send invoice" --json
-uv run ticktask done TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktick-mcp-cli today --json
+uv run ticktick-mcp-cli add "Send invoice" --json
+uv run ticktick-mcp-cli done TASK_ID --project-id PROJECT_ID --yes --json
 ```
 
 ## JSON Contract

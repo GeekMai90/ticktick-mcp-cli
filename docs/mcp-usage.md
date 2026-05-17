@@ -9,7 +9,7 @@ uv sync --extra mcp
 Run the stdio server:
 
 ```bash
-uv run ticktask-mcp
+uv run ticktick-mcp
 ```
 
 Example MCP client command config:
@@ -19,7 +19,7 @@ Example MCP client command config:
   "mcpServers": {
     "ticktask": {
       "command": "uv",
-      "args": ["run", "ticktask-mcp"],
+      "args": ["run", "ticktick-mcp"],
       "cwd": "/path/to/ticktask"
     }
   }

@@ -766,7 +766,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ticktask"
+name = "ticktick-mcp-cli"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

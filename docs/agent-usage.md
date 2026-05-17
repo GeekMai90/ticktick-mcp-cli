@@ -3,13 +3,13 @@
 Prefer JSON commands:
 
 ```bash
-uv run ticktask doctor --json
-uv run ticktask auth status --json
-uv run ticktask project list --json
-uv run ticktask task list --json
-uv run ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
-uv run ticktask task search "query" --json
-uv run ticktask completed today --json
+uv run ticktick-mcp-cli doctor --json
+uv run ticktick-mcp-cli auth status --json
+uv run ticktick-mcp-cli project list --json
+uv run ticktick-mcp-cli task list --json
+uv run ticktick-mcp-cli task list --status completed --from 2026-05-01 --to 2026-05-17 --json
+uv run ticktick-mcp-cli task search "query" --json
+uv run ticktick-mcp-cli completed today --json
 ```
 
 Rules for agents:
@@ -24,8 +24,8 @@ Rules for agents:
 Mutation example:
 
 ```bash
-uv run ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
-uv run ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktick-mcp-cli task complete TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktick-mcp-cli task delete TASK_ID --project-id PROJECT_ID --yes --json
 ```
 
 The commands refuse non-confirmed destructive operations and return a stable `CONFIRMATION_REQUIRED` error.
@@ -33,6 +33,6 @@ The commands refuse non-confirmed destructive operations and return a stable `CO
 Exports are raw content, not result envelopes:
 
 ```bash
-uv run ticktask export tasks --format jsonl --status all --from 2026-05-01 --to 2026-05-17
-uv run ticktask export completed --format csv --from 2026-05-01 --to 2026-05-17
+uv run ticktick-mcp-cli export tasks --format jsonl --status all --from 2026-05-01 --to 2026-05-17
+uv run ticktick-mcp-cli export completed --format csv --from 2026-05-01 --to 2026-05-17
 ```

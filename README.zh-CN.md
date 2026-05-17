@@ -1,10 +1,10 @@
-# ticktask
+# TickTick MCP CLI
 
 简体中文 | [English](README.md)
 
 面向人类和 AI Agent 的 TickTick 国际版 / 滴答清单 Dida365 国内版 CLI 与 MCP 服务器。
 
-`ticktask` 的目标是让人类用户和 AI Agent 都能安全、清楚、稳定地操作任务系统：
+TickTick MCP CLI 的目标是让人类用户和 AI Agent 都能安全、清楚、稳定地操作任务系统：
 
 - **人类用户**可以通过易读的命令行管理项目、任务、已完成任务、导出、OAuth 登录和诊断。
 - **AI Agent**可以使用稳定 JSON 输出、明确的安全约束、确定性的命令格式，以及基于同一套核心能力的 MCP 工具。
@@ -13,10 +13,10 @@
 
 ## 它能做什么
 
-`ticktask` 使用一个共享 Python Core，并在其上提供两个薄前端：
+TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前端：
 
-- **CLI**：`ticktask` 和短别名 `tt`。
-- **MCP Server**：`ticktask-mcp`，供支持 Model Context Protocol 的 Agent Runtime 使用。
+- **CLI**：`ticktick-mcp-cli`、兼容旧命令 `ticktask` 和短别名 `tt`。
+- **MCP Server**：`ticktick-mcp` 和兼容旧命令 `ticktask-mcp`，供支持 Model Context Protocol 的 Agent Runtime 使用。
 
 支持的服务配置：
 
@@ -40,8 +40,8 @@
 ### 方式 A：从 clone 直接使用
 
 ```bash
-git clone https://github.com/GeekMai90/ticktask.git
-cd ticktask
+git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
+cd ticktick-mcp-cli
 uv sync --all-extras --dev
 uv run ticktask --help
 uv run tt --help
@@ -50,23 +50,25 @@ uv run tt --help
 ### 方式 B：从 GitHub 安装为工具
 
 ```bash
-uv tool install git+https://github.com/GeekMai90/ticktask.git
+uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
 # 或
-pipx install git+https://github.com/GeekMai90/ticktask.git
+pipx install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
 ```
 
 验证：
 
 ```bash
-ticktask --version
-ticktask doctor --json
+ticktick-mcp-cli --version
+ticktick-mcp-cli doctor --json
 ```
 
 命令入口：
 
-- `ticktask`：主 CLI。
-- `tt`：短别名。
-- `ticktask-mcp`：stdio MCP Server。
+- `ticktick-mcp-cli`：主公开 CLI。
+- `ticktask`：向后兼容的旧 CLI。
+- `tt`：短 CLI 别名。
+- `ticktick-mcp`：主公开 stdio MCP Server。
+- `ticktask-mcp`：向后兼容的旧 MCP Server。
 
 ## 人类用户快速开始
 
@@ -213,7 +215,7 @@ TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
 
 ```bash
 uv sync --extra mcp
-uv run ticktask-mcp
+uv run ticktick-mcp
 ```
 
 如果已经作为工具安装：
@@ -262,12 +264,12 @@ TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
 ## 开发
 
 ```bash
-git clone https://github.com/GeekMai90/ticktask.git
-cd ticktask
+git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
+cd ticktick-mcp-cli
 uv sync --all-extras --dev
 uv run pytest -q
-uv run ticktask --help
-uv run ticktask doctor --json
+uv run ticktick-mcp-cli --help
+uv run ticktick-mcp-cli doctor --json
 uv run --with 'mcp>=1.0' python -c 'from ticktask.mcp.server import build_server; build_server(); print("mcp_build_ok")'
 uv build
 ```
@@ -280,6 +282,7 @@ uv build
 - [MCP Usage](docs/mcp-usage.md)
 - [Agent Usage](docs/agent-usage.md)
 - [Release Checklist](docs/release.md)
+- [Roadmap: competitive parity and best-in-class agent workflows](docs/roadmap.md)
 - [Original Implementation Plan](docs/plans/2026-05-17-ticktask-cli-mcp-plan.md)
 
 ## 安全说明

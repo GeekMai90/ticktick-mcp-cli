@@ -1,10 +1,10 @@
-# ticktask
+# TickTick MCP CLI
 
 [简体中文](README.zh-CN.md) | English
 
 Agent-friendly CLI and MCP server for TickTick international and Dida365 domestic APIs.
 
-`ticktask` is designed for both human operators and AI agents:
+TickTick MCP CLI is designed for both human operators and AI agents:
 
 - **Humans** get readable terminal commands for projects, tasks, completed tasks, exports, OAuth, and diagnostics.
 - **AI agents** get stable JSON output, explicit safety checks, deterministic command shapes, and an MCP server exposing the same core capabilities.
@@ -13,10 +13,10 @@ If you paste this repository link into an agent, the agent should be able to ins
 
 ## What it does
 
-`ticktask` provides a shared Python core with two thin frontends:
+TickTick MCP CLI provides a shared Python core with two thin frontends:
 
-- **CLI**: `ticktask` and short alias `tt`.
-- **MCP server**: `ticktask-mcp` for agent runtimes that support Model Context Protocol.
+- **CLI**: `ticktick-mcp-cli`, legacy `ticktask`, and short alias `tt`.
+- **MCP server**: `ticktick-mcp` and legacy `ticktask-mcp` for agent runtimes that support Model Context Protocol.
 
 Supported service profiles:
 
@@ -40,8 +40,8 @@ Current capabilities:
 ### Option A: use directly from a clone
 
 ```bash
-git clone https://github.com/GeekMai90/ticktask.git
-cd ticktask
+git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
+cd ticktick-mcp-cli
 uv sync --all-extras --dev
 uv run ticktask --help
 uv run tt --help
@@ -50,23 +50,25 @@ uv run tt --help
 ### Option B: install from GitHub
 
 ```bash
-uv tool install git+https://github.com/GeekMai90/ticktask.git
+uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
 # or
-pipx install git+https://github.com/GeekMai90/ticktask.git
+pipx install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
 ```
 
 Then verify:
 
 ```bash
-ticktask --version
-ticktask doctor --json
+ticktick-mcp-cli --version
+ticktick-mcp-cli doctor --json
 ```
 
 Console scripts:
 
-- `ticktask` — main CLI.
+- `ticktick-mcp-cli` — main public CLI.
+- `ticktask` — backward-compatible legacy CLI.
 - `tt` — short CLI alias.
-- `ticktask-mcp` — stdio MCP server.
+- `ticktick-mcp` — main public stdio MCP server.
+- `ticktask-mcp` — backward-compatible legacy MCP server.
 
 ## Quick start for humans
 
@@ -213,13 +215,13 @@ Install optional MCP dependencies when working from a clone:
 
 ```bash
 uv sync --extra mcp
-uv run ticktask-mcp
+uv run ticktick-mcp
 ```
 
 If installed as a tool, run:
 
 ```bash
-ticktask-mcp
+ticktick-mcp
 ```
 
 The MCP server uses stdio and exposes the same shared core behavior as the CLI.
@@ -262,15 +264,21 @@ This only lists projects and returns `project_count`. It does not create, update
 ## Development
 
 ```bash
-git clone https://github.com/GeekMai90/ticktask.git
-cd ticktask
+git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
+cd ticktick-mcp-cli
 uv sync --all-extras --dev
 uv run pytest -q
-uv run ticktask --help
-uv run ticktask doctor --json
+uv run ticktick-mcp-cli --help
+uv run ticktick-mcp-cli doctor --json
 uv run --with 'mcp>=1.0' python -c 'from ticktask.mcp.server import build_server; build_server(); print("mcp_build_ok")'
-uv build
 ```
+
+Project notes:
+
+- Keep CLI and MCP as thin frontends over `ticktask.core`.
+- Preserve stable JSON envelopes for agent callers.
+- Keep destructive actions explicit and ID-based.
+- Do not commit OAuth secrets or local token files.
 
 ## Documentation
 
@@ -280,6 +288,7 @@ uv build
 - [MCP Usage](docs/mcp-usage.md)
 - [Agent Usage](docs/agent-usage.md)
 - [Release Checklist](docs/release.md)
+- [Roadmap: competitive parity and best-in-class agent workflows](docs/roadmap.md)
 - [Original Implementation Plan](docs/plans/2026-05-17-ticktask-cli-mcp-plan.md)
 
 ## Safety notes

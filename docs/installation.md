@@ -5,7 +5,7 @@
 ```bash
 uv sync --all-extras --dev
 uv run pytest -q
-uv run ticktask --help
+uv run ticktick-mcp-cli --help
 uv run tt --help
 ```
 
@@ -23,17 +23,17 @@ The MCP server depends on the optional `mcp` package:
 
 ```bash
 uv sync --extra mcp
-uv run ticktask-mcp
+uv run ticktick-mcp
 ```
 
-Without the optional package, `ticktask-mcp` prints an installation hint instead of a Python stack trace.
+Without the optional package, `ticktick-mcp` prints an installation hint instead of a Python stack trace.
 
 ## Local Config
 
 Config is stored at:
 
 ```bash
-uv run ticktask config path
+uv run ticktick-mcp-cli config path
 ```
 
 Set `TICKTASK_CONFIG_DIR` to override the config directory for tests or isolated runs.

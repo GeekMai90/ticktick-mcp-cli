@@ -1,6 +1,6 @@
 # AGENTS.md
 
-## Project: ticktask
+## Project: TickTick MCP CLI
 
 Build an open-source, agent-friendly CLI and MCP server for TickTick international and Dida365 domestic APIs.
 
@@ -22,9 +22,9 @@ Run:
 
 ```bash
 uv run pytest -q
-uv run ticktask --help
-uv run ticktask doctor --json
-uv run ticktask auth status --json
+uv run ticktick-mcp-cli --help
+uv run ticktick-mcp-cli doctor --json
+uv run ticktick-mcp-cli auth status --json
 ```
 
 If something cannot be implemented, document the reason in the final summary and leave tests for implemented behavior passing.
