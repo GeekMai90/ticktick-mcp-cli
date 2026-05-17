@@ -1,6 +1,7 @@
 from ticktask.core.auth import AuthManager
 from ticktask.core.config import ConfigStore
 from ticktask.core.errors import ConfirmationRequiredError
+from ticktask.core.errors import ValidationError
 from ticktask.core.services import TicktaskService
 
 
@@ -25,6 +26,18 @@ class FakeClient:
 
     def complete_task(self, project_id, task_id):
         return {"completed": True, "projectId": project_id, "taskId": task_id}
+
+    def get_task(self, project_id, task_id):
+        return {"id": task_id, "title": "Loaded", "projectId": project_id}
+
+    def update_task(self, task_id, payload):
+        return {"id": task_id, **payload}
+
+    def delete_task(self, project_id, task_id):
+        return {"deleted": True, "projectId": project_id, "taskId": task_id}
+
+    def move_task(self, task_id, from_project_id, to_project_id):
+        return {"moved": True, "taskId": task_id, "from": from_project_id, "to": to_project_id}
 
     def completed_tasks(self, start_date=None, end_date=None, project_ids=None):
         self.completed_calls.append(
@@ -102,3 +115,25 @@ def test_complete_requires_confirmation(tmp_path) -> None:
         assert exc.code == "CONFIRMATION_REQUIRED"
     else:
         raise AssertionError("expected ConfirmationRequiredError")
+
+
+def test_task_crud_move_and_export(tmp_path) -> None:
+    svc = service(tmp_path)
+    assert svc.get_task("t1", "p1")["title"] == "Loaded"
+    updated = svc.update_task("t1", "p1", title="Renamed", priority="medium")
+    assert updated["title"] == "Renamed"
+    assert updated["priority"] == 3
+    deleted = svc.delete_task("t1", "p1", confirmed=True)
+    assert deleted["result"]["deleted"] is True
+    moved = svc.move_task("t1", "p1", "p2")
+    assert moved["to_project_id"] == "p2"
+    assert "Buy milk" in svc.export_tasks("markdown")
+
+
+def test_update_requires_changed_field(tmp_path) -> None:
+    try:
+        service(tmp_path).update_task("t1", "p1")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")

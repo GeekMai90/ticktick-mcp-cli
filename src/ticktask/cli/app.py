@@ -4,6 +4,7 @@ import typer
 
 from ticktask import __version__
 from ticktask.cli import auth as auth_commands
+from ticktask.cli import export as export_commands
 from ticktask.cli import project as project_commands
 from ticktask.cli import task as task_commands
 from ticktask.cli.formatters import emit_error, emit_json, print_tasks
@@ -16,6 +17,7 @@ app = typer.Typer(help="Agent-friendly CLI for TickTick and Dida365.")
 app.add_typer(auth_commands.app, name="auth")
 app.add_typer(project_commands.app, name="project")
 app.add_typer(task_commands.app, name="task")
+app.add_typer(export_commands.app, name="export")
 
 
 def version_callback(value: bool) -> None:
@@ -80,6 +82,29 @@ def today(
 ) -> None:
     try:
         tasks = TicktaskService().list_tasks(status="open", today_only=True)
+        if json_output:
+            emit_json(ok(tasks, {"count": len(tasks)}))
+        else:
+            print_tasks(tasks)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("completed")
+def completed(
+    period: str | None = typer.Argument(None, help="today, yesterday, or week."),
+    from_date: str | None = typer.Option(None, "--from", help="Start date, YYYY-MM-DD."),
+    to_date: str | None = typer.Option(None, "--to", help="End date, YYYY-MM-DD."),
+    project: str | None = typer.Option(None, "--project", help="Project name or ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        tasks = TicktaskService().completed_tasks(
+            preset=period,
+            start_date=from_date,
+            end_date=to_date,
+            project=project,
+        )
         if json_output:
             emit_json(ok(tasks, {"count": len(tasks)}))
         else:

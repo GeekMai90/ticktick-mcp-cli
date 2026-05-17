@@ -10,7 +10,7 @@ class FakeService:
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
 
-    def list_tasks(self, project=None, status="open", today_only=False):
+    def list_tasks(self, project=None, status="open", today_only=False, start_date=None, end_date=None):
         return [{"id": "t1", "title": "Task", "project_id": "p1"}]
 
     def search_tasks(self, query):
@@ -25,6 +25,28 @@ class FakeService:
 
             raise ConfirmationRequiredError("confirm")
         return {"task_id": task_id, "project_id": project_id}
+
+    def get_task(self, task_id, project_id):
+        return {"id": task_id, "project_id": project_id}
+
+    def update_task(self, task_id, project_id, title=None, content=None, due=None, priority=None):
+        return {"id": task_id, "project_id": project_id, "title": title}
+
+    def delete_task(self, task_id, project_id, confirmed):
+        if not confirmed:
+            from ticktask.core.errors import ConfirmationRequiredError
+
+            raise ConfirmationRequiredError("confirm")
+        return {"task_id": task_id, "project_id": project_id}
+
+    def move_task(self, task_id, from_project_id, to_project_id):
+        return {"task_id": task_id, "to_project_id": to_project_id}
+
+    def completed_tasks(self, preset=None, start_date=None, end_date=None, project=None):
+        return [{"id": "t2", "status": 2}]
+
+    def export_tasks(self, output_format, project=None, status="open", start_date=None, end_date=None):
+        return "exported"
 
 
 def test_mcp_tool_functions_use_stable_result_shape(monkeypatch) -> None:
@@ -41,6 +63,16 @@ def test_mcp_complete_requires_confirmation(monkeypatch) -> None:
     assert payload["error"]["code"] == "CONFIRMATION_REQUIRED"
 
 
+def test_mcp_new_tools(monkeypatch) -> None:
+    monkeypatch.setattr(tools, "_make_service", lambda: FakeService())
+    assert tools.ticktask_get_task("t1", "p1")["ok"] is True
+    assert tools.ticktask_update_task("t1", "p1", title="Renamed")["data"]["title"] == "Renamed"
+    assert tools.ticktask_delete_task("t1", "p1")["error"]["code"] == "CONFIRMATION_REQUIRED"
+    assert tools.ticktask_move_task("t1", "p1", "p2")["data"]["to_project_id"] == "p2"
+    assert tools.ticktask_completed(period="today")["meta"]["count"] == 1
+    assert tools.ticktask_export_tasks("json")["data"]["content"] == "exported"
+
+
 def test_public_mcp_tool_signatures_are_json_serializable() -> None:
     public_tools = [
         tools.ticktask_doctor,
@@ -51,6 +83,12 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_create_task,
         tools.ticktask_complete_task,
         tools.ticktask_today,
+        tools.ticktask_get_task,
+        tools.ticktask_update_task,
+        tools.ticktask_delete_task,
+        tools.ticktask_move_task,
+        tools.ticktask_completed,
+        tools.ticktask_export_tasks,
     ]
     for tool in public_tools:
         assert "service_obj" not in inspect.signature(tool).parameters

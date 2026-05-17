@@ -36,5 +36,13 @@ Tools:
 - `ticktask_create_task`
 - `ticktask_complete_task`
 - `ticktask_today`
+- `ticktask_get_task`
+- `ticktask_update_task`
+- `ticktask_delete_task`
+- `ticktask_move_task`
+- `ticktask_completed`
+- `ticktask_export_tasks`
 
 Tool functions are importable from `ticktask.mcp.tools` for unit testing without launching stdio.
+
+Destructive MCP tools require explicit confirmation. For example, `ticktask_delete_task` returns `CONFIRMATION_REQUIRED` unless `yes=true`.

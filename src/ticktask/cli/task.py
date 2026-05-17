@@ -13,10 +13,17 @@ app = typer.Typer(help="Task commands.")
 def list_tasks(
     project: str | None = typer.Option(None, "--project", help="Project name or ID."),
     status: str = typer.Option("open", "--status", help="open, completed, or all."),
+    from_date: str | None = typer.Option(None, "--from", help="Completed start date, YYYY-MM-DD."),
+    to_date: str | None = typer.Option(None, "--to", help="Completed end date, YYYY-MM-DD."),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
     try:
-        tasks = TicktaskService().list_tasks(project=project, status=status)
+        tasks = TicktaskService().list_tasks(
+            project=project,
+            status=status,
+            start_date=from_date,
+            end_date=to_date,
+        )
         if json_output:
             emit_json(ok(tasks, {"count": len(tasks)}))
         else:
@@ -72,5 +79,90 @@ def complete_task(
             emit_json(ok(result))
         else:
             typer.echo(f"Completed {task_id} in project {project_id}.")
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("get")
+def get_task(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().get_task(task_id=task_id, project_id=project_id)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("update")
+def update_task(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    title: str | None = typer.Option(None, "--title", help="New title."),
+    content: str | None = typer.Option(None, "--content", help="New task body/content."),
+    due: str | None = typer.Option(None, "--due", help="New due date string accepted by the API."),
+    priority: str | None = typer.Option(None, "--priority", help="none, low, medium, or high."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().update_task(
+            task_id=task_id,
+            project_id=project_id,
+            title=title,
+            content=content,
+            due=due,
+            priority=priority,
+        )
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("delete")
+def delete_task(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm deletion."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().delete_task(
+            task_id=task_id,
+            project_id=project_id,
+            confirmed=yes,
+        )
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(f"Deleted {task_id} from project {project_id}.")
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("move")
+def move_task(
+    task_id: str,
+    from_project_id: str = typer.Option(..., "--from-project-id", help="Source project ID."),
+    to_project_id: str = typer.Option(..., "--to-project-id", help="Destination project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().move_task(
+            task_id=task_id,
+            from_project_id=from_project_id,
+            to_project_id=to_project_id,
+        )
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(f"Moved {task_id} from {from_project_id} to {to_project_id}.")
     except Exception as exc:
         emit_error(exc, json_output)

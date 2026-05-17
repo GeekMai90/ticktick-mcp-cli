@@ -56,8 +56,11 @@ Human-readable commands:
 uv run ticktask doctor
 uv run ticktask config path
 uv run ticktask auth status
+uv run ticktask auth login --no-browser
+uv run ticktask auth refresh
 uv run ticktask project list
 uv run ticktask task list
+uv run ticktask task get TASK_ID --project-id PROJECT_ID
 uv run ticktask today
 uv run ticktask add "Plan release"
 ```
@@ -69,11 +72,17 @@ uv run ticktask doctor --json
 uv run ticktask auth status --json
 uv run ticktask project list --json
 uv run ticktask task list --json
-uv run ticktask task list --status completed --json
+uv run ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
 uv run ticktask task search "release" --json
 uv run ticktask task add "Plan release" --project Inbox --json
+uv run ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 uv run ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID --json
 uv run ticktask done TASK_ID --project-id PROJECT_ID --yes --json
+uv run ticktask completed today --json
+uv run ticktask export tasks --format jsonl --status all
+uv run ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
 ```
 
 All machine-facing successes use:
@@ -114,6 +123,12 @@ MCP tools:
 - `ticktask_create_task`
 - `ticktask_complete_task`
 - `ticktask_today`
+- `ticktask_get_task`
+- `ticktask_update_task`
+- `ticktask_delete_task`
+- `ticktask_move_task`
+- `ticktask_completed`
+- `ticktask_export_tasks`
 
 ## Docs
 

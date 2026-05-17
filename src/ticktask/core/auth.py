@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Any
+from urllib.parse import urlencode
 
+import httpx
+
+from ticktask.core.client import request_json_without_auth
 from ticktask.core.config import ConfigStore, ProfileConfig
 from ticktask.core.errors import AuthError, ConfigError
 
@@ -83,6 +88,66 @@ class AuthManager:
             expires_at=profile.expires_at,
         )
 
+    def authorization_url(self, service: str | None = None, scope: str | None = None) -> str:
+        profile = self._require_configured_profile(service)
+        params = {
+            "client_id": profile.client_id or "",
+            "redirect_uri": profile.redirect_uri or "",
+            "response_type": "code",
+        }
+        if scope:
+            params["scope"] = scope
+        return f"{profile.base_url}/oauth/authorize?{urlencode(params)}"
+
+    def login_with_code(
+        self,
+        code: str,
+        service: str | None = None,
+        http_client: httpx.Client | None = None,
+    ) -> ProfileConfig:
+        profile = self._require_configured_profile(service)
+        payload = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "client_id": profile.client_id,
+            "client_secret": profile.client_secret,
+            "redirect_uri": profile.redirect_uri,
+        }
+        token_payload = request_json_without_auth(
+            profile.base_url,
+            "POST",
+            "/oauth/token",
+            data=payload,
+            http_client=http_client,
+        )
+        return self._store_tokens(profile, token_payload)
+
+    def refresh(
+        self,
+        service: str | None = None,
+        http_client: httpx.Client | None = None,
+    ) -> ProfileConfig:
+        profile = self._require_configured_profile(service)
+        if not profile.refresh_token:
+            raise AuthError(
+                f"Service profile `{profile.service}` has no refresh token.",
+                hint="Run `ticktask auth login` to obtain a refresh token first.",
+            )
+        payload = {
+            "grant_type": "refresh_token",
+            "refresh_token": profile.refresh_token,
+            "client_id": profile.client_id,
+            "client_secret": profile.client_secret,
+        }
+        token_payload = request_json_without_auth(
+            profile.base_url,
+            "POST",
+            "/oauth/token",
+            data=payload,
+            http_client=http_client,
+        )
+        return self._store_tokens(profile, token_payload)
+
     def require_token(self, service: str | None = None) -> ProfileConfig:
         config = self.store.load()
         profile = config.get_profile(service)
@@ -94,4 +159,34 @@ class AuthManager:
                     "the OAuth browser flow when it is configured."
                 ),
             )
+        return profile
+
+    def _require_configured_profile(self, service: str | None = None) -> ProfileConfig:
+        config = self.store.load()
+        profile = config.get_profile(service)
+        if not profile.is_configured():
+            raise AuthError(
+                f"Service profile `{profile.service}` is missing OAuth client config.",
+                hint="Run `ticktask auth init --service SERVICE --client-id ... --client-secret ... --redirect-uri ...`.",
+            )
+        return profile
+
+    def _store_tokens(self, profile: ProfileConfig, token_payload: dict[str, Any]) -> ProfileConfig:
+        access_token = token_payload.get("access_token")
+        if not access_token:
+            raise AuthError("OAuth token response did not include an access_token.")
+        profile.access_token = str(access_token)
+        refresh_token = token_payload.get("refresh_token")
+        if refresh_token:
+            profile.refresh_token = str(refresh_token)
+        expires_in = token_payload.get("expires_in")
+        if expires_in is not None:
+            try:
+                expires_at = datetime.now(UTC) + timedelta(seconds=int(expires_in))
+            except (TypeError, ValueError) as exc:
+                raise AuthError("OAuth token response included an invalid expires_in value.") from exc
+            profile.expires_at = expires_at.isoformat()
+        config = self.store.load()
+        config.set_profile(profile)
+        self.store.save(config)
         return profile

@@ -9,6 +9,25 @@ import httpx
 from ticktask.core.errors import ApiError
 
 
+def request_json_without_auth(
+    base_url: str,
+    method: str,
+    path: str,
+    http_client: httpx.Client | None = None,
+    **kwargs: Any,
+) -> Any:
+    client = http_client or httpx.Client(timeout=20)
+    owns_client = http_client is None
+    try:
+        response = client.request(method, f"{base_url.rstrip('/')}{path}", **kwargs)
+    except httpx.HTTPError as exc:
+        raise ApiError(f"HTTP request failed: {exc}") from exc
+    finally:
+        if owns_client:
+            client.close()
+    return _decode_response(response, method, path)
+
+
 class TicktaskClient:
     def __init__(
         self,
@@ -40,23 +59,7 @@ class TicktaskClient:
             response = self.http.request(method, url, headers=headers, **kwargs)
         except httpx.HTTPError as exc:
             raise ApiError(f"HTTP request failed: {exc}") from exc
-        if response.status_code >= 400:
-            message = response.text
-            try:
-                body = response.json()
-                message = body.get("error") or body.get("message") or message
-            except ValueError:
-                pass
-            raise ApiError(
-                f"{method.upper()} {path} failed with HTTP {response.status_code}: {message}",
-                details={"status_code": response.status_code, "path": path},
-            )
-        if response.status_code == 204 or not response.content:
-            return {}
-        try:
-            return response.json()
-        except ValueError as exc:
-            raise ApiError(f"{method.upper()} {path} did not return JSON.") from exc
+        return _decode_response(response, method, path)
 
     def list_projects(self) -> list[dict[str, Any]]:
         return self.request("GET", "/open/v1/project")
@@ -69,6 +72,23 @@ class TicktaskClient:
 
     def complete_task(self, project_id: str, task_id: str) -> dict[str, Any]:
         return self.request("POST", f"/open/v1/project/{project_id}/task/{task_id}/complete")
+
+    def get_task(self, project_id: str, task_id: str) -> dict[str, Any]:
+        return self.request("GET", f"/open/v1/project/{project_id}/task/{task_id}")
+
+    def update_task(self, task_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.request("POST", f"/open/v1/task/{task_id}", json=payload)
+
+    def delete_task(self, project_id: str, task_id: str) -> dict[str, Any]:
+        return self.request("DELETE", f"/open/v1/project/{project_id}/task/{task_id}")
+
+    def move_task(self, task_id: str, from_project_id: str, to_project_id: str) -> dict[str, Any]:
+        payload = {
+            "taskIds": [task_id],
+            "fromProjectId": from_project_id,
+            "toProjectId": to_project_id,
+        }
+        return self.request("POST", "/open/v1/task/move", json=payload)
 
     def completed_tasks(
         self,
@@ -100,3 +120,24 @@ class TicktaskClient:
         if isinstance(project_ids, str):
             return [project_ids] if project_ids else []
         return [project_id for project_id in project_ids if project_id]
+
+
+def _decode_response(response: httpx.Response, method: str, path: str) -> Any:
+    if response.status_code >= 400:
+        message = response.text
+        try:
+            body = response.json()
+            if isinstance(body, dict):
+                message = body.get("error") or body.get("message") or message
+        except ValueError:
+            pass
+        raise ApiError(
+            f"{method.upper()} {path} failed with HTTP {response.status_code}: {message}",
+            details={"status_code": response.status_code, "path": path},
+        )
+    if response.status_code == 204 or not response.content:
+        return {}
+    try:
+        return response.json()
+    except ValueError as exc:
+        raise ApiError(f"{method.upper()} {path} did not return JSON.") from exc

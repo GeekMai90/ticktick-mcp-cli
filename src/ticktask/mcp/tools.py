@@ -47,9 +47,16 @@ def ticktask_list_projects() -> dict[str, Any]:
 def ticktask_list_tasks(
     project: str | None = None,
     status: str = "open",
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> dict[str, Any]:
     try:
-        tasks = _make_service().list_tasks(project=project, status=status)
+        tasks = _make_service().list_tasks(
+            project=project,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+        )
         return ok(tasks, {"count": len(tasks)})
     except Exception as exc:
         return err(exc)
@@ -99,5 +106,93 @@ def ticktask_today() -> dict[str, Any]:
     try:
         tasks = _make_service().list_tasks(status="open", today_only=True)
         return ok(tasks, {"count": len(tasks)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_get_task(task_id: str, project_id: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().get_task(task_id=task_id, project_id=project_id))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_update_task(
+    task_id: str,
+    project_id: str,
+    title: str | None = None,
+    content: str | None = None,
+    due: str | None = None,
+    priority: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().update_task(
+                task_id=task_id,
+                project_id=project_id,
+                title=title,
+                content=content,
+                due=due,
+                priority=priority,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_delete_task(task_id: str, project_id: str, yes: bool = False) -> dict[str, Any]:
+    try:
+        return ok(_make_service().delete_task(task_id=task_id, project_id=project_id, confirmed=yes))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_move_task(task_id: str, from_project_id: str, to_project_id: str) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().move_task(
+                task_id=task_id,
+                from_project_id=from_project_id,
+                to_project_id=to_project_id,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_completed(
+    period: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    project: str | None = None,
+) -> dict[str, Any]:
+    try:
+        tasks = _make_service().completed_tasks(
+            preset=period,
+            start_date=start_date,
+            end_date=end_date,
+            project=project,
+        )
+        return ok(tasks, {"count": len(tasks)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_export_tasks(
+    output_format: str,
+    project: str | None = None,
+    status: str = "open",
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
+    try:
+        content = _make_service().export_tasks(
+            output_format=output_format,
+            project=project,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return ok({"format": output_format, "content": content})
     except Exception as exc:
         return err(exc)

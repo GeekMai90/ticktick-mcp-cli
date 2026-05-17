@@ -7,11 +7,14 @@ from typing import Any
 from ticktask.core.auth import AuthManager
 from ticktask.core.client import TicktaskClient
 from ticktask.core.config import ProfileConfig
+from ticktask.core.dates import parse_date_range
 from ticktask.core.errors import (
     AmbiguousOperationError,
     ConfirmationRequiredError,
     NotFoundError,
+    ValidationError,
 )
+from ticktask.core.exporters import serialize_tasks
 from ticktask.core.models import PRIORITY_MAP, Project, Task
 
 
@@ -65,13 +68,15 @@ class TicktaskService:
             selected = self._select_projects(projects, project)
             tasks: list[Task] = []
             if status == "completed":
-                completed_start = start_date or "1970-01-01"
-                completed_end = end_date or date.today()
+                completed_range = parse_date_range(
+                    from_date=str(start_date) if start_date is not None else None,
+                    to_date=str(end_date) if end_date is not None else None,
+                )
                 if project:
                     project_ids = [item.id for item in selected]
                     data = client.completed_tasks(
-                        start_date=completed_start,
-                        end_date=completed_end,
+                        start_date=completed_range.start,
+                        end_date=completed_range.end,
                         project_ids=project_ids,
                     )
                     project_id = project_ids[0] if len(project_ids) == 1 else None
@@ -79,8 +84,8 @@ class TicktaskService:
                         tasks.append(Task.from_api(raw_task, project_id=project_id))
                 else:
                     data = client.completed_tasks(
-                        start_date=completed_start,
-                        end_date=completed_end,
+                        start_date=completed_range.start,
+                        end_date=completed_range.end,
                     )
                     for raw_task in self._extract_tasks(data):
                         tasks.append(Task.from_api(raw_task))
@@ -101,6 +106,25 @@ class TicktaskService:
             return [task.to_dict() for task in tasks]
         finally:
             client.close()
+
+    def completed_tasks(
+        self,
+        preset: str | None = None,
+        start_date: str | date | datetime | None = None,
+        end_date: str | date | datetime | None = None,
+        project: str | None = None,
+    ) -> list[dict[str, Any]]:
+        range_ = parse_date_range(
+            preset,
+            str(start_date) if start_date is not None else None,
+            str(end_date) if end_date is not None else None,
+        )
+        return self.list_tasks(
+            project=project,
+            status="completed",
+            start_date=range_.start,
+            end_date=range_.end,
+        )
 
     def search_tasks(self, query: str, status: str = "all") -> list[dict[str, Any]]:
         needle = query.casefold()
@@ -150,6 +174,107 @@ class TicktaskService:
             return {"task_id": task_id, "project_id": project_id, "result": result}
         finally:
             client.close()
+
+    def get_task(self, task_id: str, project_id: str) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Getting a task requires `project_id`.")
+        client = self._with_client()
+        try:
+            return Task.from_api(client.get_task(project_id, task_id), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
+    def update_task(
+        self,
+        task_id: str,
+        project_id: str,
+        title: str | None = None,
+        content: str | None = None,
+        due: str | None = None,
+        priority: str | None = None,
+    ) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Updating a task requires `project_id`.")
+        payload: dict[str, Any] = {"id": task_id, "projectId": project_id}
+        if title is not None:
+            payload["title"] = title
+        if content is not None:
+            payload["content"] = content
+        if due is not None:
+            payload["dueDate"] = due
+        if priority is not None:
+            if priority not in PRIORITY_MAP:
+                raise ValidationError(
+                    f"Unknown priority `{priority}`.",
+                    hint="Use one of: none, low, medium, high.",
+                )
+            payload["priority"] = PRIORITY_MAP[priority]
+        if len(payload) == 2:
+            raise ValidationError("Updating a task requires at least one changed field.")
+
+        client = self._with_client()
+        try:
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
+    def delete_task(self, task_id: str, project_id: str, confirmed: bool) -> dict[str, Any]:
+        if not confirmed:
+            raise ConfirmationRequiredError("Deleting a task requires explicit confirmation.")
+        if not project_id:
+            raise AmbiguousOperationError("Deleting a task requires `project_id`.")
+        client = self._with_client()
+        try:
+            result = client.delete_task(project_id, task_id)
+            return {"task_id": task_id, "project_id": project_id, "result": result}
+        finally:
+            client.close()
+
+    def move_task(self, task_id: str, from_project_id: str, to_project_id: str) -> dict[str, Any]:
+        if not from_project_id or not to_project_id:
+            raise AmbiguousOperationError("Moving a task requires source and destination project IDs.")
+        client = self._with_client()
+        try:
+            result = client.move_task(task_id, from_project_id, to_project_id)
+            return {
+                "task_id": task_id,
+                "from_project_id": from_project_id,
+                "to_project_id": to_project_id,
+                "result": result,
+            }
+        finally:
+            client.close()
+
+    def export_tasks(
+        self,
+        output_format: str,
+        project: str | None = None,
+        status: str = "open",
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> str:
+        if status == "completed":
+            tasks = self.completed_tasks(start_date=start_date, end_date=end_date, project=project)
+        elif status == "all":
+            open_tasks = self.list_tasks(project=project, status="open")
+            completed_tasks = self.completed_tasks(
+                start_date=start_date,
+                end_date=end_date,
+                project=project,
+            )
+            tasks_by_key = {
+                (task.get("project_id"), task.get("id")): task
+                for task in [*open_tasks, *completed_tasks]
+            }
+            tasks = list(tasks_by_key.values())
+        else:
+            tasks = self.list_tasks(
+                project=project,
+                status=status,
+                start_date=start_date,
+                end_date=end_date,
+            )
+        return serialize_tasks(tasks, output_format)
 
     @staticmethod
     def _extract_tasks(data: Any) -> list[dict[str, Any]]:

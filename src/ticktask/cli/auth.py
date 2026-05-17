@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import webbrowser
+
 import typer
 
-from ticktask.cli.formatters import emit_error, emit_result
+from ticktask.cli.formatters import emit_error, emit_json, emit_result
 from ticktask.core.auth import AuthManager
+from ticktask.core.results import ok
 
 app = typer.Typer(help="Configure OAuth credentials and inspect login status.")
 
@@ -54,5 +57,66 @@ def auth_status(
     try:
         status = AuthManager().status(service)
         emit_result(status.to_dict(), json_output=json_output)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("login")
+def auth_login(
+    service: str | None = typer.Option(None, "--service", help="Service profile: ticktick or dida365."),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Print the authorization URL instead of opening it."),
+    code: str | None = typer.Option(
+        None,
+        "--code",
+        help="OAuth callback code. Useful for non-browser and testable local flows.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        manager = AuthManager()
+        authorization_url = manager.authorization_url(service)
+        if code:
+            profile = manager.login_with_code(code, service)
+            data = {
+                "service": profile.service,
+                "authenticated": profile.has_token(),
+                "has_refresh_token": bool(profile.refresh_token),
+                "expires_at": profile.expires_at,
+            }
+            emit_result(data, json_output=json_output)
+            return
+
+        if not no_browser:
+            webbrowser.open(authorization_url)
+        data = {
+            "authorization_url": authorization_url,
+            "authenticated": False,
+            "next": "Open the URL, copy the callback code, then run `ticktask auth login --code CODE`.",
+        }
+        if json_output:
+            emit_json(ok(data))
+        else:
+            typer.echo(authorization_url)
+            typer.echo(data["next"])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("refresh")
+def auth_refresh(
+    service: str | None = typer.Option(None, "--service", help="Service profile: ticktick or dida365."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        profile = AuthManager().refresh(service)
+        emit_result(
+            {
+                "service": profile.service,
+                "authenticated": profile.has_token(),
+                "has_refresh_token": bool(profile.refresh_token),
+                "expires_at": profile.expires_at,
+            },
+            json_output=json_output,
+        )
     except Exception as exc:
         emit_error(exc, json_output)

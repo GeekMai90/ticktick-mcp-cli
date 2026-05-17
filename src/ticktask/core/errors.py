@@ -76,3 +76,12 @@ class ConfirmationRequiredError(TicktaskError):
             message,
             hint or "Pass `--yes` only after verifying the target ID.",
         )
+
+
+class ValidationError(TicktaskError):
+    def __init__(self, message: str, hint: str | None = None) -> None:
+        super().__init__(
+            "VALIDATION_ERROR",
+            message,
+            hint or "Check the command arguments and try again.",
+        )

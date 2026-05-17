@@ -35,3 +35,33 @@ def test_auth_init_and_status_json(tmp_path, monkeypatch) -> None:
     payload = json.loads(status.stdout)
     assert payload["data"]["configured"] is True
     assert payload["data"]["authenticated"] is True
+
+
+def test_auth_login_code_and_refresh_json(monkeypatch) -> None:
+    class FakeProfile:
+        service = "ticktick"
+        refresh_token = "refresh"
+        expires_at = "2026-01-01T00:00:00+00:00"
+
+        def has_token(self):
+            return True
+
+    class FakeManager:
+        def authorization_url(self, service=None):
+            return "https://api.ticktick.com/oauth/authorize?client_id=client"
+
+        def login_with_code(self, code, service=None):
+            assert code == "abc"
+            return FakeProfile()
+
+        def refresh(self, service=None):
+            return FakeProfile()
+
+    monkeypatch.setattr("ticktask.cli.auth.AuthManager", lambda: FakeManager())
+    login = runner.invoke(app, ["auth", "login", "--code", "abc", "--json"])
+    assert login.exit_code == 0
+    assert json.loads(login.stdout)["data"]["authenticated"] is True
+
+    refresh = runner.invoke(app, ["auth", "refresh", "--json"])
+    assert refresh.exit_code == 0
+    assert json.loads(refresh.stdout)["data"]["has_refresh_token"] is True

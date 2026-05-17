@@ -26,6 +26,12 @@ def build_server():
     server.tool()(tools.ticktask_create_task)
     server.tool()(tools.ticktask_complete_task)
     server.tool()(tools.ticktask_today)
+    server.tool()(tools.ticktask_get_task)
+    server.tool()(tools.ticktask_update_task)
+    server.tool()(tools.ticktask_delete_task)
+    server.tool()(tools.ticktask_move_task)
+    server.tool()(tools.ticktask_completed)
+    server.tool()(tools.ticktask_export_tasks)
     return server
 
 
