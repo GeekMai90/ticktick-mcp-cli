@@ -413,6 +413,7 @@ Project notes:
 - [OAuth](docs/oauth.md)
 - [CLI Usage](docs/cli-usage.md)
 - [MCP Usage](docs/mcp-usage.md)
+- [MCP Integration Examples for Claude Desktop, Hermes, Cursor, Claude Code, and OpenClaw](docs/integrations.md)
 - [Agent Usage](docs/agent-usage.md)
 - [Release Checklist](docs/release.md)
 - [Roadmap: competitive parity and best-in-class agent workflows](docs/roadmap.md)
