@@ -37,6 +37,7 @@ Current capabilities:
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.
 - Incremental sync/export state file for checkpointed task exports.
+- Date/project backup files with Markdown, JSONL, CSV, or JSON outputs plus a manifest.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
 - Export tasks, completed tasks, or focus-session reports as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
@@ -197,6 +198,15 @@ ticktask sync mark tasks:all --timestamp 2026-05-01T00:00:00Z --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --save-state --json
 ```
 
+Backup examples:
+
+```bash
+ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl,csv --status all --json
+ticktask backup tasks --output-dir ~/ticktask-backups --date 2026-05-17 --project Inbox --from 2026-05-01 --to 2026-05-17 --json
+```
+
+Backups are written under `OUTPUT_DIR/YYYY-MM-DD/project-slug/` with a date-level `manifest.json`.
+
 ## Quick start for AI agents
 
 ### Agent operating contract
@@ -243,6 +253,7 @@ ticktask task list --tag agent --filter high-priority --json
 ticktask task filter --tag agent --priority high --json
 ticktask task analytics week --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --json
+ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl --status all --json
 
 # Mutate only after exact IDs are known
 ticktask task add "Plan release" --project Inbox --json

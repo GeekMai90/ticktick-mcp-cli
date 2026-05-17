@@ -1,3 +1,5 @@
+import json
+
 from ticktask.core.auth import AuthManager
 from ticktask.core.config import ConfigStore
 from ticktask.core.errors import ConfirmationRequiredError
@@ -554,3 +556,38 @@ def test_batch_task_operations_validate_inputs(tmp_path) -> None:
             assert exc.code == "VALIDATION_ERROR"
         else:
             raise AssertionError("expected ValidationError")
+
+
+def test_backup_tasks_writes_project_date_exports_and_manifest(tmp_path) -> None:
+    output_dir = tmp_path / "backups"
+    result = service(tmp_path).backup_tasks(
+        output_dir=output_dir,
+        output_formats=["markdown", "jsonl", "csv"],
+        backup_date="2026-05-17",
+        project="Inbox",
+        status="all",
+    )
+
+    assert result["backup_date"] == "2026-05-17"
+    assert result["status"] == "all"
+    assert result["project"] == "Inbox"
+    assert result["count"] == 4
+    assert result["output_dir"] == str(output_dir)
+    paths = {item["format"]: output_dir / item["path"] for item in result["files"]}
+    assert set(paths) == {"markdown", "jsonl", "csv"}
+    assert paths["markdown"].read_text(encoding="utf-8").startswith("# Ticktask backup")
+    assert '"title": "Buy milk"' in paths["jsonl"].read_text(encoding="utf-8")
+    assert paths["csv"].read_text(encoding="utf-8").splitlines()[0] == "id,project_id,title,content,due_date,priority,status"
+
+    manifest = json.loads((output_dir / result["manifest_path"]).read_text(encoding="utf-8"))
+    assert manifest["backup_date"] == "2026-05-17"
+    assert manifest["files"] == result["files"]
+
+
+def test_backup_tasks_rejects_empty_formats(tmp_path) -> None:
+    try:
+        service(tmp_path).backup_tasks(output_dir=tmp_path, output_formats=[])
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")

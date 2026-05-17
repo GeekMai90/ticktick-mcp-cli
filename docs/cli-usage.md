@@ -75,6 +75,15 @@ uv run ticktick-mcp-cli sync export tasks --format jsonl --state-key tasks:all -
 
 The sync state file is stored next to the CLI config as `sync-state.json`. `sync export tasks` uses `--since` when supplied; otherwise it reads `last_synced_at` from `--state-key` and maps it to the task export `--from` date. `--save-state` records the current UTC timestamp after a successful export.
 
+## Backups
+
+```bash
+uv run ticktick-mcp-cli backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl,csv --status all --json
+uv run ticktick-mcp-cli backup tasks --output-dir ~/ticktask-backups --date 2026-05-17 --project Inbox --from 2026-05-01 --to 2026-05-17 --json
+```
+
+`backup tasks` writes local files under `OUTPUT_DIR/YYYY-MM-DD/project-slug/` and creates a date-level `manifest.json` that records the formats, relative paths, byte sizes, filters, and task count. Supported backup formats are `json`, `jsonl`, `csv`, and `markdown`; the default is `markdown,jsonl,csv`.
+
 ## Habits
 
 ```bash

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+import re
 from collections import Counter
 from collections.abc import Callable
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -1004,9 +1007,88 @@ class TicktaskService:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> str:
+        tasks = self._task_export_rows(project=project, status=status, start_date=start_date, end_date=end_date)
+        return serialize_tasks(tasks, output_format)
+
+    def backup_tasks(
+        self,
+        output_dir: str | Path,
+        output_formats: list[str],
+        backup_date: str | None = None,
+        project: str | None = None,
+        status: str = "all",
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        formats = [item.casefold().strip() for item in output_formats if item and item.strip()]
+        if not formats:
+            raise ValidationError("Backing up tasks requires at least one output format.")
+        if len(set(formats)) != len(formats):
+            raise ValidationError("Backup output formats must be unique.")
+        tasks = self._task_export_rows(project=project, status=status, start_date=start_date, end_date=end_date)
+        backup_day = backup_date or date.today().isoformat()
+        # Validate eagerly so backup paths are deterministic and sortable.
+        date.fromisoformat(backup_day)
+        root = Path(output_dir).expanduser()
+        scope_slug = self._backup_slug(project or "all-projects")
+        backup_dir = root / backup_day / scope_slug
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        files: list[dict[str, Any]] = []
+        for output_format in formats:
+            extension = "md" if output_format == "markdown" else output_format
+            filename = f"tasks.{extension}"
+            path = backup_dir / filename
+            content = serialize_tasks(tasks, output_format)
+            if output_format == "markdown":
+                title = f"# Ticktask backup — {backup_day}\n\n"
+                details = [
+                    f"- Project: {project or 'all'}",
+                    f"- Status: {status}",
+                    f"- Count: {len(tasks)}",
+                ]
+                if start_date:
+                    details.append(f"- From: {start_date}")
+                if end_date:
+                    details.append(f"- To: {end_date}")
+                content = title + "\n".join(details) + "\n\n" + content
+            path.write_text(content, encoding="utf-8")
+            files.append(
+                {
+                    "format": output_format,
+                    "path": path.relative_to(root).as_posix(),
+                    "bytes": path.stat().st_size,
+                }
+            )
+
+        manifest = {
+            "version": 1,
+            "backup_date": backup_day,
+            "project": project,
+            "status": status,
+            "start_date": start_date,
+            "end_date": end_date,
+            "count": len(tasks),
+            "output_dir": str(root),
+            "files": files,
+        }
+        manifest_path = root / backup_day / "manifest.json"
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        result = dict(manifest)
+        result["manifest_path"] = manifest_path.relative_to(root).as_posix()
+        return result
+
+    def _task_export_rows(
+        self,
+        project: str | None = None,
+        status: str = "open",
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> list[dict[str, Any]]:
         if status == "completed":
-            tasks = self.completed_tasks(start_date=start_date, end_date=end_date, project=project)
-        elif status == "all":
+            return self.completed_tasks(start_date=start_date, end_date=end_date, project=project)
+        if status == "all":
             open_tasks = self.list_tasks(project=project, status="open")
             completed_tasks = self.completed_tasks(
                 start_date=start_date,
@@ -1017,15 +1099,20 @@ class TicktaskService:
                 (task.get("project_id"), task.get("id")): task
                 for task in [*open_tasks, *completed_tasks]
             }
-            tasks = list(tasks_by_key.values())
-        else:
-            tasks = self.list_tasks(
-                project=project,
-                status=status,
-                start_date=start_date,
-                end_date=end_date,
-            )
-        return serialize_tasks(tasks, output_format)
+            return list(tasks_by_key.values())
+        if status != "open":
+            raise NotFoundError(f"Unknown task status filter `{status}`.")
+        return self.list_tasks(
+            project=project,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    @staticmethod
+    def _backup_slug(value: str) -> str:
+        slug = re.sub(r"[^\w]+", "-", value.casefold()).strip("-_")
+        return slug or "all-projects"
 
     def sync_state(self) -> dict[str, Any]:
         return SyncStateStore().as_dict()
