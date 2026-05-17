@@ -4,6 +4,7 @@
 
 ```bash
 uv run ticktick-mcp-cli doctor --json
+uv run ticktick-mcp-cli doctor bundle --output ./ticktask-diagnostics.zip --json
 uv run ticktick-mcp-cli auth status --json
 uv run ticktick-mcp-cli auth login --service ticktick --no-browser --json
 uv run ticktick-mcp-cli auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=***&state=STATE' --json
@@ -12,6 +13,8 @@ uv run ticktick-mcp-cli auth refresh --service ticktick --json
 uv run ticktick-mcp-cli config path
 uv run ticktick-mcp-cli integration smoke --json
 ```
+
+`doctor bundle` writes a redacted ZIP containing `diagnostics.json` and `report.md` for support or agent handoff. It includes runtime, config path/existence, active service, auth booleans, MCP buildability, and tool counts. It never writes client secrets, access tokens, refresh tokens, OAuth state, or PKCE verifier values.
 
 ## Projects
 

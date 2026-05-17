@@ -42,6 +42,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 按日期/项目写入本地备份文件，支持 Markdown、JSONL、CSV 或 JSON，并生成 manifest。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
 - 将任务、已完成任务或专注会话报表导出为 `json`、`jsonl`、`csv`、`markdown`。
+- 生成已脱敏诊断包，便于支持排查和 Agent 交接；配置与 token 密钥只以 `*_configured` 布尔字段呈现。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
 - 基于同一套 Core 的 MCP 工具和只读 MCP resources。
 
@@ -218,6 +219,14 @@ ticktask sync mark tasks:all --timestamp 2026-05-01T00:00:00Z --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --save-state --json
 ```
 
+诊断包示例：
+
+```bash
+ticktask doctor bundle --output ./ticktask-diagnostics.zip --json
+```
+
+诊断包是一个 ZIP，包含 `diagnostics.json` 和 `report.md`，用于 bug report 和 Agent 交接。它会包含配置路径、当前服务、运行环境、MCP 是否可构建、工具数量等信息，但不会写入 client secret、access token、refresh token、OAuth state 或 PKCE verifier。
+
 备份示例：
 
 ```bash
@@ -259,6 +268,7 @@ Agent 使用 `ticktask` 时应遵守：
 ```bash
 # 发现当前状态
 ticktask doctor --json
+ticktask doctor bundle --output ./ticktask-diagnostics.zip --json
 ticktask auth status --json
 ticktask project list --json
 ticktask project create "Focus" --json
@@ -315,6 +325,7 @@ MCP 工具：
 - `ticktask_describe_tools`
 - `ticktask_cli_parity`
 - `ticktask_doctor`
+- `ticktask_diagnostic_bundle`
 - `ticktask_auth_status`
 - `ticktask_list_projects`
 - `ticktask_create_project`

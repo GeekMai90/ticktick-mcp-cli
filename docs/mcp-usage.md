@@ -31,6 +31,7 @@ Tools:
 - `ticktask_describe_tools`
 - `ticktask_cli_parity`
 - `ticktask_doctor`
+- `ticktask_diagnostic_bundle`
 - `ticktask_auth_status`
 - `ticktask_list_projects`
 - `ticktask_create_project`
@@ -78,7 +79,7 @@ Tools:
 - `ticktask_backup_tasks`
 - `ticktask_export_focuses`
 
-`ticktask_describe_tools` returns agent-facing metadata for every MCP tool: descriptions, CLI parity, parameters, enum constraints, examples, destructive-operation flags, and confirmation requirements. `ticktask_cli_parity` returns the same mapping as rows for audits and planning.
+`ticktask_describe_tools` returns agent-facing metadata for every MCP tool: descriptions, CLI parity, parameters, enum constraints, examples, destructive-operation flags, and confirmation requirements. `ticktask_cli_parity` returns the same mapping as rows for audits and planning. `ticktask_diagnostic_bundle(output_path="ticktask-diagnostics.zip")` writes the same redacted support ZIP as `ticktask doctor bundle`.
 
 Resources:
 

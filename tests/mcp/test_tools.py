@@ -7,6 +7,9 @@ from ticktask.mcp.server import INSTALL_HINT, build_server
 
 
 class FakeService:
+    def diagnostic_bundle(self, output_path):
+        return {"bundle_path": str(output_path), "redacted": True, "files": [{"path": "diagnostics.json"}]}
+
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
 
@@ -198,6 +201,14 @@ def test_mcp_tool_functions_use_stable_result_shape(monkeypatch) -> None:
     assert payload["meta"]["count"] == 1
 
 
+def test_mcp_diagnostic_bundle_uses_stable_result_shape(monkeypatch) -> None:
+    monkeypatch.setattr(tools, "_make_service", lambda: FakeService())
+    payload = tools.ticktask_diagnostic_bundle("/tmp/ticktask-diagnostics.zip")
+    assert payload["ok"] is True
+    assert payload["data"]["bundle_path"] == "/tmp/ticktask-diagnostics.zip"
+    assert payload["data"]["redacted"] is True
+
+
 def test_mcp_complete_requires_confirmation(monkeypatch) -> None:
     monkeypatch.setattr(tools, "_make_service", lambda: FakeService())
     payload = tools.ticktask_complete_task("t1", "p1")
@@ -257,6 +268,7 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
     public_tools = [
         tools.ticktask_describe_tools,
         tools.ticktask_doctor,
+        tools.ticktask_diagnostic_bundle,
         tools.ticktask_auth_status,
         tools.ticktask_list_projects,
         tools.ticktask_list_tasks,
@@ -353,6 +365,9 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
             assert "description" in example
 
     assert definitions["ticktask_list_tasks"]["parameters"]["status"]["enum"] == ["open", "completed", "all"]
+    assert definitions["ticktask_diagnostic_bundle"]["cli_command"] == "ticktask doctor bundle"
+    assert definitions["ticktask_diagnostic_bundle"]["destructive"] is False
+    assert definitions["ticktask_diagnostic_bundle"]["parameters"]["output_path"]["description"]
     assert definitions["ticktask_list_tasks"]["parameters"]["filter_preset"]["enum"] == [
         "today",
         "overdue",
@@ -407,6 +422,7 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     matrix = tools.ticktask_cli_parity()["data"]
     commands = {row["cli_command"] for row in matrix}
     assert "ticktask project list" in commands
+    assert "ticktask doctor bundle" in commands
     assert "ticktask task list" in commands
     assert "ticktask task tag add" in commands
     assert "ticktask task batch complete" in commands

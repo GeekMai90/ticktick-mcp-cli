@@ -42,6 +42,7 @@ Current capabilities:
 - Date/project backup files with Markdown, JSONL, CSV, or JSON outputs plus a manifest.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
 - Export tasks, completed tasks, or focus-session reports as `json`, `jsonl`, `csv`, or `markdown`.
+- Redacted diagnostic bundles for support and agent handoff, with config/token secrets represented only as boolean `*_configured` flags.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
 - MCP tools and read-only MCP resources over the same core behavior.
 
@@ -218,6 +219,14 @@ ticktask sync mark tasks:all --timestamp 2026-05-01T00:00:00Z --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --save-state --json
 ```
 
+Diagnostic bundle example:
+
+```bash
+ticktask doctor bundle --output ./ticktask-diagnostics.zip --json
+```
+
+The diagnostic bundle is a ZIP containing `diagnostics.json` and `report.md`. It is designed for bug reports and agent handoff: config paths, active service, runtime, MCP buildability, and tool counts are included, while client secrets, access tokens, refresh tokens, OAuth state, and PKCE verifier values are never written.
+
 Backup examples:
 
 ```bash
@@ -259,6 +268,7 @@ Error:
 ```bash
 # Discover state
 ticktask doctor --json
+ticktask doctor bundle --output ./ticktask-diagnostics.zip --json
 ticktask auth status --json
 ticktask project list --json
 ticktask project create "Focus" --json
@@ -325,6 +335,7 @@ MCP tools:
 - `ticktask_describe_tools`
 - `ticktask_cli_parity`
 - `ticktask_doctor`
+- `ticktask_diagnostic_bundle`
 - `ticktask_auth_status`
 - `ticktask_list_projects`
 - `ticktask_create_project`
