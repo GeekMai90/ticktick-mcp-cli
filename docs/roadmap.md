@@ -44,9 +44,9 @@ Source projects: `jacepark12/ticktick-mcp`, `ticktick-sdk`, `dida365-ai-tools`.
 
 Source projects: `jen6/ticktick-mcp`, `dida365-ai-tools`, `ticktick-sdk`.
 
-- [ ] Tag-aware task list/search/filter
-- [ ] Tag add/remove operations
-- [ ] Smart filters: today, overdue, upcoming, high-priority, no-date, completed range
+- [x] Tag-aware task list/search/filter
+- [x] Tag add/remove operations
+- [x] Smart filters: today, overdue, upcoming, high-priority, no-date, completed range
 - [ ] Saved query presets for common agent workflows
 - [ ] Natural-language query adapter that compiles to deterministic filters
 
@@ -77,11 +77,11 @@ Source projects: all MCP-first competitors.
 
 - [x] MCP server over shared core
 - [x] Core task tools
-- [ ] One MCP tool for every CLI capability
-- [ ] Rich JSON schemas with examples and enum constraints
+- [x] One MCP tool for every CLI capability
+- [x] Rich JSON schemas with examples and enum constraints
 - [ ] MCP resource endpoints for projects, config, and saved views
 - [ ] Prompt templates for common workflows: daily planning, weekly review, cleanup, export
-- [ ] Golden tests for MCP tool outputs
+- [x] Golden tests for MCP tool outputs
 
 ### 7. Distribution and developer experience
 
@@ -124,7 +124,7 @@ Project differentiator.
 - Add project create/update/delete.
 - Add subtasks/checklist CRUD.
 - Add tag-aware filters and tag operations. ✅
-- Ensure MCP parity for all new CLI commands.
+- Ensure MCP parity for all new CLI commands. ✅
 
 ### Phase 3 — Power-user features
 
@@ -145,7 +145,7 @@ Project differentiator.
 1. `feat(project): add create/update/delete project commands and MCP tools`
 2. `feat(task): add checklist item CRUD for subtasks`
 3. ✅ `feat(task): add tag filters and tag mutation helpers`
-4. `feat(mcp): expose one tool per CLI capability with schema examples`
+4. ✅ `feat(mcp): expose one tool per CLI capability with schema examples`
 5. `feat(habit): add official habit list/checkin support`
 6. `feat(focus): add official focus session query/export support`
 7. `feat(batch): add dry-run guarded bulk operations`

@@ -349,3 +349,230 @@ def ticktask_export_tasks(
         return ok({"format": output_format, "content": content})
     except Exception as exc:
         return err(exc)
+
+
+
+# Rich MCP metadata ---------------------------------------------------------
+# FastMCP can infer JSON schemas from Python signatures. This registry adds the
+# agent-facing layer that plain signatures cannot express well: CLI parity,
+# examples, enum hints, and confirmation/destructive-operation notes.
+
+_STATUS_ENUM = ["open", "completed", "all"]
+_PRIORITY_ENUM = ["none", "low", "medium", "high"]
+_FILTER_PRESET_ENUM = ["today", "overdue", "upcoming", "high-priority", "no-date"]
+_CHECKLIST_STATUS_ENUM = ["open", "completed"]
+_PERIOD_ENUM = ["today", "yesterday", "week"]
+_EXPORT_FORMAT_ENUM = ["json", "jsonl", "csv", "markdown"]
+_SERVICE_ENUM = ["ticktick", "dida365"]
+_VIEW_MODE_ENUM = ["list", "kanban", "timeline"]
+_PROJECT_KIND_ENUM = ["TASK", "NOTE"]
+
+_TOOL_CLI_COMMANDS: dict[str, str] = {
+    "ticktask_doctor": "ticktask doctor",
+    "ticktask_auth_status": "ticktask auth status",
+    "ticktask_list_projects": "ticktask project list",
+    "ticktask_create_project": "ticktask project create",
+    "ticktask_update_project": "ticktask project update",
+    "ticktask_delete_project": "ticktask project delete",
+    "ticktask_list_tasks": "ticktask task list",
+    "ticktask_filter_tasks": "ticktask task filter",
+    "ticktask_search_tasks": "ticktask task search",
+    "ticktask_create_task": "ticktask task add",
+    "ticktask_complete_task": "ticktask task complete",
+    "ticktask_today": "ticktask today",
+    "ticktask_get_task": "ticktask task get",
+    "ticktask_update_task": "ticktask task update",
+    "ticktask_delete_task": "ticktask task delete",
+    "ticktask_move_task": "ticktask task move",
+    "ticktask_add_task_tag": "ticktask task tag add",
+    "ticktask_remove_task_tag": "ticktask task tag remove",
+    "ticktask_add_checklist_item": "ticktask task item add",
+    "ticktask_update_checklist_item": "ticktask task item update",
+    "ticktask_complete_checklist_item": "ticktask task item complete",
+    "ticktask_delete_checklist_item": "ticktask task item delete",
+    "ticktask_completed": "ticktask completed",
+    "ticktask_export_tasks": "ticktask export tasks",
+    "ticktask_cli_parity": "ticktask --help",
+}
+
+_TOOL_DESCRIPTIONS: dict[str, str] = {
+    "ticktask_doctor": "Return local configuration and authentication health for the active TickTick/Dida365 profile.",
+    "ticktask_auth_status": "Return OAuth configuration and token status for a service profile without exposing secrets.",
+    "ticktask_list_projects": "List projects available to the authenticated account.",
+    "ticktask_create_project": "Create a project/list. Use exact returned IDs for later mutations.",
+    "ticktask_update_project": "Update project metadata by exact project ID.",
+    "ticktask_delete_project": "Delete a project by exact project ID; requires yes=true confirmation.",
+    "ticktask_list_tasks": "List tasks from one or all projects, with local status/tag/smart-filter constraints.",
+    "ticktask_filter_tasks": "Filter tasks using the official Open API filter endpoint.",
+    "ticktask_search_tasks": "Search listed tasks by title, content, or ID.",
+    "ticktask_create_task": "Create a task, optionally resolving a project name/ID and priority.",
+    "ticktask_complete_task": "Complete a task by exact task/project IDs; requires yes=true confirmation.",
+    "ticktask_today": "List open tasks due today.",
+    "ticktask_get_task": "Get one task by exact task/project IDs.",
+    "ticktask_update_task": "Update task fields by exact task/project IDs.",
+    "ticktask_delete_task": "Delete a task by exact task/project IDs; requires yes=true confirmation.",
+    "ticktask_move_task": "Move a task between projects by exact source/destination project IDs.",
+    "ticktask_add_task_tag": "Add one tag to a task by exact task/project IDs.",
+    "ticktask_remove_task_tag": "Remove one tag from a task by exact task/project IDs.",
+    "ticktask_add_checklist_item": "Append a checklist item/subtask to a CHECKLIST task.",
+    "ticktask_update_checklist_item": "Update a checklist item title and/or status by exact item ID.",
+    "ticktask_complete_checklist_item": "Mark a checklist item/subtask completed by exact item ID.",
+    "ticktask_delete_checklist_item": "Delete a checklist item/subtask; requires yes=true confirmation.",
+    "ticktask_completed": "List completed tasks for a preset or date range.",
+    "ticktask_export_tasks": "Export tasks as JSON, JSONL, CSV, or Markdown content.",
+    "ticktask_cli_parity": "Return the MCP-to-CLI parity matrix for agent planning and auditing.",
+}
+
+_PARAM_DESCRIPTIONS: dict[str, str] = {
+    "service": "Service profile: ticktick for international TickTick, dida365 for China Dida365.",
+    "name": "Project name.",
+    "color": "Project color as a hex string, for example #00aa00.",
+    "sort_order": "Project sort order integer.",
+    "view_mode": "Project view mode.",
+    "kind": "Project kind.",
+    "closed": "Whether the project is archived/closed.",
+    "project": "Project name or ID. Mutations still require exact project_id.",
+    "project_id": "Exact project ID. Required for task/project-scoped mutations.",
+    "task_id": "Exact task ID.",
+    "item_id": "Exact checklist item/subtask ID.",
+    "from_project_id": "Exact source project ID.",
+    "to_project_id": "Exact destination project ID.",
+    "title": "Task, project, or checklist item title.",
+    "content": "Task body/content.",
+    "due": "Due date string accepted by the API.",
+    "priority": "Task priority.",
+    "status": "Task or checklist status filter/value.",
+    "start_date": "Start date, usually YYYY-MM-DD.",
+    "end_date": "End date, usually YYYY-MM-DD.",
+    "tag": "Tag name. Leading # is accepted and normalized away by mutation helpers.",
+    "filter_preset": "Local smart filter for listed tasks.",
+    "query": "Search query matched against task title, content, and ID.",
+    "period": "Completed-task preset.",
+    "output_format": "Export format.",
+    "yes": "Explicit confirmation for destructive or irreversible operations.",
+}
+
+_PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
+    "service": _SERVICE_ENUM,
+    "priority": _PRIORITY_ENUM,
+    "filter_preset": _FILTER_PRESET_ENUM,
+    "period": _PERIOD_ENUM,
+    "output_format": _EXPORT_FORMAT_ENUM,
+    "view_mode": _VIEW_MODE_ENUM,
+    "kind": _PROJECT_KIND_ENUM,
+    ("ticktask_list_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_filter_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_export_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_update_checklist_item", "status"): _CHECKLIST_STATUS_ENUM,
+}
+
+_EXAMPLES: dict[str, list[dict[str, Any]]] = {
+    "ticktask_doctor": [{"description": "Check local setup", "arguments": {}}],
+    "ticktask_auth_status": [{"description": "Check Dida365 auth status", "arguments": {"service": "dida365"}}],
+    "ticktask_list_projects": [{"description": "List all projects", "arguments": {}}],
+    "ticktask_create_project": [{"description": "Create a list-style project", "arguments": {"name": "Focus", "view_mode": "list", "kind": "TASK"}}],
+    "ticktask_update_project": [{"description": "Rename a project", "arguments": {"project_id": "PROJECT_ID", "name": "Renamed"}}],
+    "ticktask_delete_project": [{"description": "Delete after exact ID verification", "arguments": {"project_id": "PROJECT_ID", "yes": True}}],
+    "ticktask_list_tasks": [{"description": "Open high-priority agent-tagged tasks", "arguments": {"status": "open", "tag": "agent", "filter_preset": "high-priority"}}],
+    "ticktask_filter_tasks": [{"description": "Use official filter endpoint", "arguments": {"tag": "agent", "project": "Inbox", "priority": "high", "status": "open"}}],
+    "ticktask_search_tasks": [{"description": "Find tasks mentioning release", "arguments": {"query": "release"}}],
+    "ticktask_create_task": [{"description": "Create a task in Inbox", "arguments": {"title": "Plan release", "project": "Inbox", "priority": "medium"}}],
+    "ticktask_complete_task": [{"description": "Complete after exact target verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "yes": True}}],
+    "ticktask_today": [{"description": "List open tasks due today", "arguments": {}}],
+    "ticktask_get_task": [{"description": "Load a task by exact IDs", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID"}}],
+    "ticktask_update_task": [{"description": "Rename and reprioritize", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "title": "New title", "priority": "high"}}],
+    "ticktask_delete_task": [{"description": "Delete after exact target verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "yes": True}}],
+    "ticktask_move_task": [{"description": "Move to another project", "arguments": {"task_id": "TASK_ID", "from_project_id": "PROJECT_ID", "to_project_id": "OTHER_PROJECT_ID"}}],
+    "ticktask_add_task_tag": [{"description": "Add an agent tag", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "tag": "agent"}}],
+    "ticktask_remove_task_tag": [{"description": "Remove an agent tag", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "tag": "agent"}}],
+    "ticktask_add_checklist_item": [{"description": "Add checklist item", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "title": "Checklist item"}}],
+    "ticktask_update_checklist_item": [{"description": "Complete and rename checklist item", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "item_id": "ITEM_ID", "title": "Renamed", "status": "completed"}}],
+    "ticktask_complete_checklist_item": [{"description": "Complete checklist item", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "item_id": "ITEM_ID"}}],
+    "ticktask_delete_checklist_item": [{"description": "Delete checklist item after verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "item_id": "ITEM_ID", "yes": True}}],
+    "ticktask_completed": [{"description": "Completed tasks for today", "arguments": {"period": "today"}}],
+    "ticktask_export_tasks": [{"description": "Export all tasks as JSONL", "arguments": {"output_format": "jsonl", "status": "all"}}],
+    "ticktask_cli_parity": [{"description": "Audit MCP and CLI parity", "arguments": {}}],
+}
+
+_CONFIRMATION_TOOLS = {
+    "ticktask_delete_project",
+    "ticktask_complete_task",
+    "ticktask_delete_task",
+    "ticktask_delete_checklist_item",
+}
+
+_DESTRUCTIVE_TOOLS = {
+    "ticktask_delete_project",
+    "ticktask_complete_task",
+    "ticktask_delete_task",
+    "ticktask_move_task",
+    "ticktask_remove_task_tag",
+    "ticktask_update_project",
+    "ticktask_update_task",
+    "ticktask_delete_checklist_item",
+    "ticktask_update_checklist_item",
+    "ticktask_complete_checklist_item",
+}
+
+
+def _parameter_metadata(tool_name: str) -> dict[str, dict[str, Any]]:
+    import inspect
+
+    params: dict[str, dict[str, Any]] = {}
+    if tool_name not in globals():
+        return params
+    for param_name, param in inspect.signature(globals()[tool_name]).parameters.items():
+        if param_name.startswith("_"):
+            continue
+        metadata: dict[str, Any] = {
+            "description": _PARAM_DESCRIPTIONS.get(param_name, param_name.replace("_", " ").capitalize()),
+            "required": param.default is inspect._empty,
+        }
+        enum = _PARAM_ENUMS.get((tool_name, param_name)) or _PARAM_ENUMS.get(param_name)
+        if enum:
+            metadata["enum"] = list(enum)
+        params[param_name] = metadata
+    return params
+
+
+def _build_tool_definitions() -> dict[str, dict[str, Any]]:
+    definitions: dict[str, dict[str, Any]] = {}
+    for name, cli_command in _TOOL_CLI_COMMANDS.items():
+        description = _TOOL_DESCRIPTIONS[name]
+        definitions[name] = {
+            "name": name,
+            "description": description,
+            "cli_command": cli_command,
+            "parameters": _parameter_metadata(name),
+            "examples": _EXAMPLES[name],
+            "destructive": name in _DESTRUCTIVE_TOOLS,
+            "confirmation_required": name in _CONFIRMATION_TOOLS,
+            "result_shape": {"ok": "boolean", "data": "object|array|string", "meta": "object", "error": "object"},
+        }
+        if name in globals():
+            globals()[name].__doc__ = description
+    return definitions
+
+
+TOOL_DEFINITIONS = _build_tool_definitions()
+
+
+def ticktask_describe_tools() -> dict[str, Any]:
+    """Return rich MCP tool metadata, examples, enums, and confirmation requirements."""
+    return ok(TOOL_DEFINITIONS, {"count": len(TOOL_DEFINITIONS)})
+
+
+def ticktask_cli_parity() -> dict[str, Any]:
+    """Return a CLI-to-MCP parity matrix for agent planning and documentation."""
+    rows = [
+        {
+            "mcp_tool": name,
+            "cli_command": definition["cli_command"],
+            "description": definition["description"],
+            "examples": definition["examples"],
+            "destructive": definition["destructive"],
+            "confirmation_required": definition["confirmation_required"],
+        }
+        for name, definition in TOOL_DEFINITIONS.items()
+    ]
+    return ok(rows, {"count": len(rows)})
