@@ -30,6 +30,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
 - 项目列表、项目数据读取、创建、更新和删除。
 - 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动。
+- 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）和任务标签增删。
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 将任务或已完成任务导出为 `json`、`jsonl`、`csv`、`markdown`。
@@ -140,6 +141,8 @@ ticktask task list
 ticktask today
 ticktask add "Plan release" --project Inbox
 ticktask task search "release"
+ticktask task list --tag agent --filter high-priority
+ticktask task filter --tag agent --priority high
 ticktask completed today
 ```
 
@@ -151,6 +154,8 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+ticktask task tag add TASK_ID agent --project-id PROJECT_ID
+ticktask task tag remove TASK_ID agent --project-id PROJECT_ID
 ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
 ```
 
@@ -210,6 +215,8 @@ ticktask task add "Plan release" --project Inbox --json
 ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+ticktask task tag add TASK_ID agent --project-id PROJECT_ID --json
+ticktask task tag remove TASK_ID agent --project-id PROJECT_ID --json
 ticktask task item add TASK_ID "Checklist item" --project-id PROJECT_ID --json
 ticktask task item update TASK_ID ITEM_ID --project-id PROJECT_ID --title "Renamed" --status completed --json
 ticktask task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
@@ -246,6 +253,7 @@ MCP 工具：
 - `ticktask_update_project`
 - `ticktask_delete_project`
 - `ticktask_list_tasks`
+- `ticktask_filter_tasks`
 - `ticktask_search_tasks`
 - `ticktask_create_task`
 - `ticktask_complete_task`
@@ -254,6 +262,8 @@ MCP 工具：
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_add_task_tag`
+- `ticktask_remove_task_tag`
 - `ticktask_add_checklist_item`
 - `ticktask_update_checklist_item`
 - `ticktask_complete_checklist_item`

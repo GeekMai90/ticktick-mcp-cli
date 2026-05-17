@@ -39,6 +39,7 @@ class Task:
     priority: int | str | None
     kind: str | None
     items: list[dict[str, Any]]
+    tags: list[str]
     raw: dict[str, Any]
 
     @classmethod
@@ -56,6 +57,7 @@ class Task:
             priority=_first(raw, "priority"),
             kind=_first(raw, "kind"),
             items=list(raw.get("items") or []),
+            tags=[str(tag) for tag in (raw.get("tags") or []) if tag is not None],
             raw=raw,
         )
 

@@ -136,6 +136,8 @@ class TicktaskService:
         today_only: bool = False,
         start_date: str | date | datetime | None = None,
         end_date: str | date | datetime | None = None,
+        tag: str | None = None,
+        filter_preset: str | None = None,
     ) -> list[dict[str, Any]]:
         client = self._with_client()
         try:
@@ -178,7 +180,50 @@ class TicktaskService:
             if today_only:
                 today = date.today().isoformat()
                 tasks = [task for task in tasks if task.due_date and task.due_date[:10] == today]
+            tasks = self._apply_task_filters(tasks, tag=tag, filter_preset=filter_preset)
             return [task.to_dict() for task in tasks]
+        finally:
+            client.close()
+
+    def filter_tasks(
+        self,
+        tag: str | None = None,
+        project: str | None = None,
+        status: str = "open",
+        priority: str | None = None,
+        start_date: str | date | datetime | None = None,
+        end_date: str | date | datetime | None = None,
+    ) -> list[dict[str, Any]]:
+        payload: dict[str, Any] = {}
+        if tag is not None:
+            normalized_tag = self._normalize_tag(tag)
+            payload["tag"] = normalized_tag
+        if status == "open":
+            payload["status"] = 0
+        elif status == "completed":
+            payload["status"] = 2
+        elif status != "all":
+            raise NotFoundError(f"Unknown task status filter `{status}`.")
+        if priority is not None:
+            if priority not in PRIORITY_MAP:
+                raise ValidationError(
+                    f"Unknown priority `{priority}`.",
+                    hint="Use one of: none, low, medium, high.",
+                )
+            payload["priority"] = [PRIORITY_MAP[priority]]
+        if start_date is not None:
+            payload["startDate"] = str(start_date)
+        if end_date is not None:
+            payload["endDate"] = str(end_date)
+
+        client = self._with_client()
+        try:
+            if project:
+                projects = [Project.from_api(item) for item in client.list_projects()]
+                selected = self._select_one_project(projects, project)
+                payload["projectIds"] = [selected.id]
+            data = client.filter_tasks(payload)
+            return [Task.from_api(raw_task).to_dict() for raw_task in self._extract_tasks(data)]
         finally:
             client.close()
 
@@ -235,6 +280,43 @@ class TicktaskService:
                 selected = self._select_one_project(projects, project)
                 payload["projectId"] = selected.id
             return Task.from_api(client.create_task(payload), payload.get("projectId")).to_dict()
+        finally:
+            client.close()
+
+
+    def add_task_tag(self, task_id: str, project_id: str, tag: str) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Adding a task tag requires `project_id`.")
+        normalized_tag = self._normalize_tag(tag)
+        client = self._with_client()
+        try:
+            task = client.get_task(project_id, task_id)
+            tags = self._task_tags(task)
+            if normalized_tag in tags:
+                raise ValidationError(f"Task already has tag `{normalized_tag}`.")
+            tags.append(normalized_tag)
+            payload = self._tag_update_payload(task, task_id, project_id, tags)
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
+    def remove_task_tag(self, task_id: str, project_id: str, tag: str) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Removing a task tag requires `project_id`.")
+        normalized_tag = self._normalize_tag(tag)
+        client = self._with_client()
+        try:
+            task = client.get_task(project_id, task_id)
+            tags = self._task_tags(task)
+            if normalized_tag not in tags:
+                raise ValidationError(f"Task does not have tag `{normalized_tag}`.")
+            payload = self._tag_update_payload(
+                task,
+                task_id,
+                project_id,
+                [existing for existing in tags if existing != normalized_tag],
+            )
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
         finally:
             client.close()
 
@@ -328,6 +410,59 @@ class TicktaskService:
             return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
         finally:
             client.close()
+
+
+    @staticmethod
+    def _normalize_tag(tag: str) -> str:
+        normalized = tag.strip().lstrip("#")
+        if not normalized:
+            raise ValidationError("Tag cannot be empty.")
+        return normalized
+
+    @staticmethod
+    def _task_tags(task: dict[str, Any]) -> list[str]:
+        return [str(tag) for tag in (task.get("tags") or []) if tag is not None]
+
+    @staticmethod
+    def _tag_update_payload(
+        task: dict[str, Any],
+        task_id: str,
+        project_id: str,
+        tags: list[str],
+    ) -> dict[str, Any]:
+        payload = dict(task)
+        payload["id"] = task_id
+        payload["projectId"] = project_id
+        payload["tags"] = tags
+        return payload
+
+    @staticmethod
+    def _apply_task_filters(
+        tasks: list[Task],
+        tag: str | None = None,
+        filter_preset: str | None = None,
+    ) -> list[Task]:
+        filtered = tasks
+        if tag is not None:
+            normalized_tag = TicktaskService._normalize_tag(tag)
+            filtered = [task for task in filtered if normalized_tag in task.tags]
+        if filter_preset is None:
+            return filtered
+        today = date.today().isoformat()
+        if filter_preset == "today":
+            return [task for task in filtered if task.due_date and task.due_date[:10] == today]
+        if filter_preset == "overdue":
+            return [task for task in filtered if task.due_date and task.due_date[:10] < today]
+        if filter_preset == "upcoming":
+            return [task for task in filtered if task.due_date and task.due_date[:10] > today]
+        if filter_preset == "high-priority":
+            return [task for task in filtered if task.priority in {5, "5", "high"}]
+        if filter_preset == "no-date":
+            return [task for task in filtered if not task.due_date]
+        raise NotFoundError(
+            f"Unknown smart filter `{filter_preset}`.",
+            hint="Use one of: today, overdue, upcoming, high-priority, no-date.",
+        )
 
     @staticmethod
     def _task_items(task: dict[str, Any]) -> list[dict[str, Any]]:

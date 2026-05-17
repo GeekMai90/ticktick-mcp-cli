@@ -10,8 +10,11 @@ class FakeService:
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
 
-    def list_tasks(self, project=None, status="open", today_only=False, start_date=None, end_date=None):
-        return [{"id": "t1", "title": "Task", "project_id": "p1"}]
+    def list_tasks(self, project=None, status="open", today_only=False, start_date=None, end_date=None, tag=None, filter_preset=None):
+        return [{"id": "t1", "title": "Task", "project_id": "p1", "tags": [tag] if tag else []}]
+
+    def filter_tasks(self, tag=None, project=None, status="open", priority=None, start_date=None, end_date=None):
+        return [{"id": "ft1", "title": "Filtered", "tags": [tag]}]
 
     def search_tasks(self, query):
         return [{"id": "t1", "title": query}]
@@ -31,6 +34,12 @@ class FakeService:
 
     def update_task(self, task_id, project_id, title=None, content=None, due=None, priority=None):
         return {"id": task_id, "project_id": project_id, "title": title}
+
+    def add_task_tag(self, task_id, project_id, tag):
+        return {"id": task_id, "project_id": project_id, "tags": [tag]}
+
+    def remove_task_tag(self, task_id, project_id, tag):
+        return {"id": task_id, "project_id": project_id, "tags": []}
 
     def delete_task(self, task_id, project_id, confirmed):
         if not confirmed:
@@ -111,6 +120,10 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_complete_checklist_item("t1", "p1", "i1")["data"]["items"][0]["status"] == 1
     assert tools.ticktask_delete_checklist_item("t1", "p1", "i1")["error"]["code"] == "CONFIRMATION_REQUIRED"
     assert tools.ticktask_delete_checklist_item("t1", "p1", "i1", yes=True)["data"]["items"] == []
+    assert tools.ticktask_list_tasks(tag="agent", filter_preset="high-priority")["data"][0]["tags"] == ["agent"]
+    assert tools.ticktask_filter_tasks(tag="agent", priority="high")["data"][0]["id"] == "ft1"
+    assert tools.ticktask_add_task_tag("t1", "p1", "agent")["data"]["tags"] == ["agent"]
+    assert tools.ticktask_remove_task_tag("t1", "p1", "agent")["data"]["tags"] == []
 
 
 def test_public_mcp_tool_signatures_are_json_serializable() -> None:
@@ -127,6 +140,9 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_update_task,
         tools.ticktask_delete_task,
         tools.ticktask_move_task,
+        tools.ticktask_filter_tasks,
+        tools.ticktask_add_task_tag,
+        tools.ticktask_remove_task_tag,
         tools.ticktask_completed,
         tools.ticktask_export_tasks,
         tools.ticktask_create_project,
