@@ -70,13 +70,26 @@ def auth_login(
         "--code",
         help="OAuth callback code. Useful for non-browser and testable local flows.",
     ),
+    callback_url: str | None = typer.Option(
+        None,
+        "--callback-url",
+        help="Full OAuth callback URL. Extracts code and validates the stored state.",
+    ),
+    state: str | None = typer.Option(
+        None,
+        "--state",
+        help="OAuth state printed by `auth login --no-browser`; used with --code.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
     try:
         manager = AuthManager()
-        authorization_url = manager.authorization_url(service)
+        if callback_url:
+            callback = manager.parse_callback_url(callback_url, service)
+            code = callback["code"]
+            state = callback.get("state") or None
         if code:
-            profile = manager.login_with_code(code, service)
+            profile = manager.login_with_code(code, service, state=state)
             data = {
                 "service": profile.service,
                 "authenticated": profile.has_token(),
@@ -86,10 +99,13 @@ def auth_login(
             emit_result(data, json_output=json_output)
             return
 
+        flow = manager.begin_login(service)
+        authorization_url = flow.authorization_url
         if not no_browser:
             webbrowser.open(authorization_url)
         data = {
             "authorization_url": authorization_url,
+            "state": flow.state,
             "authenticated": False,
             "next": "Open the URL, copy the callback code, then run `ticktask auth login --code CODE`.",
         }

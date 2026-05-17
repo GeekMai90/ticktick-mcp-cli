@@ -46,21 +46,49 @@ def test_auth_login_code_and_refresh_json(monkeypatch) -> None:
         def has_token(self):
             return True
 
-    class FakeManager:
-        def authorization_url(self, service=None):
-            return "https://ticktick.com/oauth/authorize?client_id=client"
+    class FakeFlow:
+        authorization_url = "https://ticktick.com/oauth/authorize?client_id=client&state=state"
+        state = "state"
 
-        def login_with_code(self, code, service=None):
+    class FakeManager:
+        def begin_login(self, service=None):
+            return FakeFlow()
+
+        def parse_callback_url(self, callback_url, service=None):
+            assert callback_url == "http://localhost/callback?code=abc&state=state"
+            return {"code": "abc", "state": "state"}
+
+        def login_with_code(self, code, service=None, state=None):
             assert code == "abc"
+            assert state in (None, "state")
             return FakeProfile()
 
         def refresh(self, service=None):
             return FakeProfile()
 
     monkeypatch.setattr("ticktask.cli.auth.AuthManager", lambda: FakeManager())
-    login = runner.invoke(app, ["auth", "login", "--code", "abc", "--json"])
+    login = runner.invoke(app, ["auth", "login", "--code", "abc", "--state", "state", "--json"])
     assert login.exit_code == 0
     assert json.loads(login.stdout)["data"]["authenticated"] is True
+
+    callback_login = runner.invoke(
+        app,
+        [
+            "auth",
+            "login",
+            "--callback-url",
+            "http://localhost/callback?code=abc&state=state",
+            "--json",
+        ],
+    )
+    assert callback_login.exit_code == 0
+    assert json.loads(callback_login.stdout)["data"]["authenticated"] is True
+
+    begin = runner.invoke(app, ["auth", "login", "--no-browser", "--json"])
+    assert begin.exit_code == 0
+    begin_payload = json.loads(begin.stdout)["data"]
+    assert begin_payload["authorization_url"].endswith("state=state")
+    assert begin_payload["state"] == "state"
 
     refresh = runner.invoke(app, ["auth", "refresh", "--json"])
     assert refresh.exit_code == 0

@@ -6,7 +6,8 @@
 uv run ticktask doctor --json
 uv run ticktask auth status --json
 uv run ticktask auth login --service ticktick --no-browser --json
-uv run ticktask auth login --service ticktick --code CALLBACK_CODE --json
+uv run ticktask auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
+uv run ticktask auth login --service ticktick --code CALLBACK_CODE --state STATE --json
 uv run ticktask auth refresh --service ticktick --json
 uv run ticktask config path
 ```

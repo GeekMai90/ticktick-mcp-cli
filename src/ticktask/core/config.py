@@ -22,6 +22,8 @@ class ProfileConfig:
     access_token: str | None = None
     refresh_token: str | None = None
     expires_at: str | None = None
+    oauth_state: str | None = None
+    code_verifier: str | None = None
 
     @classmethod
     def for_service(
@@ -59,6 +61,8 @@ class ProfileConfig:
             access_token=raw.get("access_token"),
             refresh_token=raw.get("refresh_token"),
             expires_at=raw.get("expires_at"),
+            oauth_state=raw.get("oauth_state"),
+            code_verifier=raw.get("code_verifier"),
         )
 
     def is_configured(self) -> bool:

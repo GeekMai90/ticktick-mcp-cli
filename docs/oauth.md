@@ -25,11 +25,20 @@ Login flow:
 
 ```bash
 uv run ticktask auth login --service ticktick --no-browser --json
-uv run ticktask auth login --service ticktick --code CALLBACK_CODE --json
+uv run ticktask auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
+uv run ticktask auth login --service ticktick --code CALLBACK_CODE --state STATE --json
 uv run ticktask auth refresh --service ticktick --json
 ```
 
-`auth login --no-browser` prints a deterministic authorization URL. After the provider redirects to your configured callback URL, copy the `code` query parameter and pass it with `--code`. The code exchange and refresh calls use `/oauth/token`, update the local access token, preserve refresh tokens when the provider omits a new one, and track `expires_at` from `expires_in`.
+`auth login --no-browser` now starts a hardened browser flow:
+
+- generates and stores an OAuth `state` value;
+- generates a PKCE code verifier and sends a `S256` code challenge;
+- prints the authorization URL and state in JSON mode.
+
+After the provider redirects to your configured callback URL, prefer passing the full callback URL with `--callback-url`; ticktask extracts the `code` and validates `state`. You can alternatively pass `--code` plus the printed `--state`. The code exchange sends the stored PKCE verifier, clears one-time OAuth state/verifier after success, uses `/oauth/token`, updates the local access token, preserves refresh tokens when the provider omits a new one, and tracks `expires_at` from `expires_in`.
+
+Before API calls, ticktask automatically refreshes expired or near-expired access tokens when a refresh token is available. If the access token is expired and no refresh token exists, commands fail with an explicit login hint.
 
 This phase intentionally does not run a full local browser callback server. The implemented flow is robust and testable with mocked HTTP, and keeps all credentials local.
 
