@@ -97,7 +97,8 @@ class AuthManager:
         }
         if scope:
             params["scope"] = scope
-        return f"{profile.base_url}/oauth/authorize?{urlencode(params)}"
+        authorize_base_url = profile.oauth_authorize_base_url.rstrip("/")
+        return f"{authorize_base_url}/oauth/authorize?{urlencode(params)}"
 
     def login_with_code(
         self,
@@ -114,7 +115,7 @@ class AuthManager:
             "redirect_uri": profile.redirect_uri,
         }
         token_payload = request_json_without_auth(
-            profile.base_url,
+            profile.oauth_token_base_url,
             "POST",
             "/oauth/token",
             data=payload,
@@ -140,7 +141,7 @@ class AuthManager:
             "client_secret": profile.client_secret,
         }
         token_payload = request_json_without_auth(
-            profile.base_url,
+            profile.oauth_token_base_url,
             "POST",
             "/oauth/token",
             data=payload,

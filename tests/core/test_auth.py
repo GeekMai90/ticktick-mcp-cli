@@ -30,7 +30,7 @@ def test_auth_authorization_url_and_code_exchange_are_mockable(tmp_path) -> None
     manager = AuthManager(ConfigStore(tmp_path / "config.json"))
     manager.init("ticktick", "client", "secret", "http://localhost/callback")
     assert manager.authorization_url() == (
-        "https://api.ticktick.com/oauth/authorize?"
+        "https://ticktick.com/oauth/authorize?"
         "client_id=client&redirect_uri=http%3A%2F%2Flocalhost%2Fcallback&response_type=code"
     )
     seen = {}
@@ -48,12 +48,22 @@ def test_auth_authorization_url_and_code_exchange_are_mockable(tmp_path) -> None
         http_client=httpx.Client(transport=httpx.MockTransport(handler)),
     )
 
-    assert seen["url"] == "https://api.ticktick.com/oauth/token"
+    assert seen["url"] == "https://ticktick.com/oauth/token"
     assert "grant_type=authorization_code" in seen["body"]
     assert "code=callback-code" in seen["body"]
     assert profile.access_token == "new-access"
     assert profile.refresh_token == "new-refresh"
     assert profile.expires_at is not None
+
+
+def test_auth_authorization_url_uses_dida365_web_host(tmp_path) -> None:
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("dida365", "client", "secret", "http://localhost/callback")
+
+    assert manager.authorization_url() == (
+        "https://dida365.com/oauth/authorize?"
+        "client_id=client&redirect_uri=http%3A%2F%2Flocalhost%2Fcallback&response_type=code"
+    )
 
 
 def test_auth_refresh_is_mockable(tmp_path) -> None:
@@ -67,7 +77,7 @@ def test_auth_refresh_is_mockable(tmp_path) -> None:
     )
 
     def handler(request: httpx.Request) -> httpx.Response:
-        assert str(request.url) == "https://api.dida365.com/oauth/token"
+        assert str(request.url) == "https://dida365.com/oauth/token"
         assert "grant_type=refresh_token" in request.read().decode()
         return httpx.Response(200, json={"access_token": "new-access", "expires_in": 60})
 

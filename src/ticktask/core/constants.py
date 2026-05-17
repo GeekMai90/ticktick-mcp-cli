@@ -7,11 +7,23 @@ from dataclasses import dataclass
 class ServiceProfile:
     name: str
     base_url: str
+    oauth_authorize_base_url: str
+    oauth_token_base_url: str
 
 
 SERVICE_PROFILES: dict[str, ServiceProfile] = {
-    "ticktick": ServiceProfile("ticktick", "https://api.ticktick.com"),
-    "dida365": ServiceProfile("dida365", "https://api.dida365.com"),
+    "ticktick": ServiceProfile(
+        "ticktick",
+        "https://api.ticktick.com",
+        "https://ticktick.com",
+        "https://ticktick.com",
+    ),
+    "dida365": ServiceProfile(
+        "dida365",
+        "https://api.dida365.com",
+        "https://dida365.com",
+        "https://dida365.com",
+    ),
 }
 
 DEFAULT_SERVICE = "ticktick"

@@ -14,6 +14,8 @@ from ticktask.core.errors import ConfigError
 class ProfileConfig:
     service: str
     base_url: str
+    oauth_authorize_base_url: str
+    oauth_token_base_url: str
     client_id: str | None = None
     client_secret: str | None = None
     redirect_uri: str | None = None
@@ -33,6 +35,8 @@ class ProfileConfig:
         return cls(
             service=profile.name,
             base_url=profile.base_url,
+            oauth_authorize_base_url=profile.oauth_authorize_base_url,
+            oauth_token_base_url=profile.oauth_token_base_url,
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri=redirect_uri,
@@ -45,6 +49,10 @@ class ProfileConfig:
         return cls(
             service=profile.name,
             base_url=raw.get("base_url") or profile.base_url,
+            oauth_authorize_base_url=(
+                raw.get("oauth_authorize_base_url") or profile.oauth_authorize_base_url
+            ),
+            oauth_token_base_url=raw.get("oauth_token_base_url") or profile.oauth_token_base_url,
             client_id=raw.get("client_id"),
             client_secret=raw.get("client_secret"),
             redirect_uri=raw.get("redirect_uri"),

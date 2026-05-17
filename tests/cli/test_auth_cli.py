@@ -48,7 +48,7 @@ def test_auth_login_code_and_refresh_json(monkeypatch) -> None:
 
     class FakeManager:
         def authorization_url(self, service=None):
-            return "https://api.ticktick.com/oauth/authorize?client_id=client"
+            return "https://ticktick.com/oauth/authorize?client_id=client"
 
         def login_with_code(self, code, service=None):
             assert code == "abc"
