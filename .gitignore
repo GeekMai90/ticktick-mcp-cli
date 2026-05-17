@@ -6,6 +6,9 @@ __pycache__/
 .env
 .env.*
 !.env.example
+dist/
+build/
+*.egg-info/
 ticktask-config*.json
 ticktask-token*.json
 config.json

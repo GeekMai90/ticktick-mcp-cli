@@ -10,6 +10,7 @@ uv run ticktask auth login --service ticktick --callback-url 'http://localhost:8
 uv run ticktask auth login --service ticktick --code CALLBACK_CODE --state STATE --json
 uv run ticktask auth refresh --service ticktick --json
 uv run ticktask config path
+uv run ticktask integration smoke --json
 ```
 
 ## Projects

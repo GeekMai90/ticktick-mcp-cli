@@ -79,6 +79,7 @@ uv run ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" 
 uv run ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 uv run ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
 uv run ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID --json
+uv run ticktask integration smoke --json
 uv run ticktask done TASK_ID --project-id PROJECT_ID --yes --json
 uv run ticktask completed today --json
 uv run ticktask export tasks --format jsonl --status all
@@ -137,4 +138,5 @@ MCP tools:
 - [CLI Usage](docs/cli-usage.md)
 - [MCP Usage](docs/mcp-usage.md)
 - [Agent Usage](docs/agent-usage.md)
+- [Release Checklist](docs/release.md)
 - [Implementation Plan](docs/plans/2026-05-17-ticktask-cli-mcp-plan.md)

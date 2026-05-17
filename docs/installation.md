@@ -3,11 +3,19 @@
 ## Development
 
 ```bash
-uv sync
+uv sync --all-extras --dev
 uv run pytest -q
 uv run ticktask --help
 uv run tt --help
 ```
+
+## Build from source
+
+```bash
+uv build
+```
+
+This creates a source distribution and wheel under `dist/`. Build artifacts are ignored by git.
 
 ## Optional MCP Support
 

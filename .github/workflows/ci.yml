@@ -35,5 +35,8 @@ jobs:
       - name: Run tests
         run: uv run pytest -q
 
+      - name: Build distributions
+        run: uv build
+
       - name: Build MCP server schema smoke
         run: uv run python -c 'from ticktask.mcp.server import build_server; build_server(); print("mcp_build_ok")'
