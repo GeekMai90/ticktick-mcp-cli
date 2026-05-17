@@ -94,7 +94,7 @@ Source projects: `kvanland/ticktick-cli`, npm-based MCP servers.
 - [ ] Homebrew tap or install script
 - [ ] Optional npm wrapper for `npx ticktick-mcp-cli`
 - [ ] Prebuilt docs site or GitHub Pages
-- [ ] Example configs for Claude Desktop, Hermes, Cursor, Claude Code, and OpenClaw
+- [x] Example configs for Claude Desktop, Hermes, Cursor, Claude Code, and OpenClaw
 
 ### 8. Security and reliability
 
@@ -156,6 +156,7 @@ Project differentiator.
 11. ✅ `feat(report): add goal/progress reporting from tasks, habits, and focus`
 12. ✅ `feat(reliability): add conflict-safe retries and rate-limit handling`
 13. ✅ `feat(dx): add PyPI publish workflow and install docs`
+14. ✅ `feat(config): add MCP integration examples for agent runtimes`
 
 
 
