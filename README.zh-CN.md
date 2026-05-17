@@ -306,9 +306,9 @@ uv run ticktick-mcp
 ticktask-mcp
 ```
 
-MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。它也提供只读 MCP resources，方便 Agent 获取规划上下文。
+MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。它也提供只读 MCP resources 和可复用 MCP prompt templates，方便 Agent 获取规划上下文并执行常见工作流。
 
-对于 AI Agent，建议先调用 `ticktask_describe_tools` 查看描述、参数枚举、确认要求和 examples；再用 `ticktask_cli_parity` 映射 MCP tool 与 CLI 命令。需要项目上下文、脱敏本地配置或智能筛选预设时，可读取 `ticktask://projects`、`ticktask://config` 和 `ticktask://saved-views`。
+对于 AI Agent，建议先调用 `ticktask_describe_tools` 查看描述、参数枚举、确认要求和 examples；再用 `ticktask_cli_parity` 映射 MCP tool 与 CLI 命令。需要项目上下文、脱敏本地配置或智能筛选预设时，可读取 `ticktask://projects`、`ticktask://config` 和 `ticktask://saved-views`。日计划、周复盘、安全清理、导出备份等常见场景可直接使用内置 prompt templates。
 
 MCP 工具：
 
@@ -367,6 +367,13 @@ MCP resources：
 - `ticktask://projects`：只读项目列表，用于规划和精确 ID 查询。
 - `ticktask://config`：已脱敏的当前服务 / profile 配置，不暴露 secrets。
 - `ticktask://saved-views`：内置智能筛选预设，以及对应 MCP/CLI 参数。
+
+MCP prompts：
+
+- `ticktask_daily_planning`：基于项目上下文和 saved views 做今日计划。
+- `ticktask_weekly_review`：结合任务分析、已完成任务、习惯和专注记录做周复盘。
+- `ticktask_cleanup`：先 dry-run 批量操作，安全识别待清理任务。
+- `ticktask_export`：导出、备份或增量同步任务数据。
 
 ## 真实 API integration smoke
 
