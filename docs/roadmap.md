@@ -67,7 +67,7 @@ Source projects: `dida365-ai-tools`, `GalaxyXieyu/didatodolist-mcp`, `ticktick-s
 - [x] Batch task operations with dry-run preview
 - [ ] Incremental sync/export state file
 - [ ] Markdown/CSV/JSONL backups by project/date
-- [ ] Task analytics: completed count, overdue count, project throughput, tag distribution
+- [x] Task analytics: completed count, overdue count, project throughput, tag distribution
 - [ ] Goal/progress reporting derived from tasks, habits, and focus sessions
 - [ ] Conflict-safe retries and rate-limit handling
 
@@ -149,7 +149,8 @@ Project differentiator.
 5. ✅ `feat(habit-focus): add official habit and focus APIs`
 6. `feat(focus): add focus reporting exports`
 7. ✅ `feat(batch): add dry-run guarded bulk operations`
-8. `feat(dx): add PyPI publish workflow and install docs`
+8. ✅ `feat(analytics): add task analytics reports`
+9. `feat(dx): add PyPI publish workflow and install docs`
 
 
 

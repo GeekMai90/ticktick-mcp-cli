@@ -60,6 +60,7 @@ Tools:
 - `ticktask_complete_checklist_item`
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
+- `ticktask_task_analytics`
 - `ticktask_list_habits`
 - `ticktask_get_habit`
 - `ticktask_create_habit`
@@ -74,7 +75,7 @@ Tools:
 
 `ticktask_describe_tools` returns agent-facing metadata for every MCP tool: descriptions, CLI parity, parameters, enum constraints, examples, destructive-operation flags, and confirmation requirements. `ticktask_cli_parity` returns the same mapping as rows for audits and planning.
 
-`ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. Batch tools default to `dry_run=true`; pass `dry_run=false` and `yes=true` to execute. Reminder, repeat, and tag mutation tools update the parent task through the official task update API. Habit tools cover list/get/create/update, check-in, and history. Focus tools cover list/get/delete plus report-friendly exports, and enforce the official 30-day list/export range limit.
+`ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. `ticktask_task_analytics` returns open/completed/overdue counts, project throughput, tag distribution, and priority distribution for a preset or explicit date range. Batch tools default to `dry_run=true`; pass `dry_run=false` and `yes=true` to execute. Reminder, repeat, and tag mutation tools update the parent task through the official task update API. Habit tools cover list/get/create/update, check-in, and history. Focus tools cover list/get/delete plus report-friendly exports, and enforce the official 30-day query window.
 
 Tool functions are importable from `ticktask.mcp.tools` for unit testing without launching stdio.
 

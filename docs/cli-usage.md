@@ -33,6 +33,7 @@ uv run ticktick-mcp-cli task list --status completed --from 2026-05-01 --to 2026
 uv run ticktick-mcp-cli task list --tag agent --filter high-priority --json
 uv run ticktick-mcp-cli task filter --tag agent --project Inbox --priority high --json
 uv run ticktick-mcp-cli task search "invoice" --json
+uv run ticktick-mcp-cli task analytics week --project Inbox --json
 uv run ticktick-mcp-cli task add "Send invoice" --project Inbox --content "Include May details" --json
 uv run ticktick-mcp-cli task get TASK_ID --project-id PROJECT_ID --json
 uv run ticktick-mcp-cli task update TASK_ID --project-id PROJECT_ID --title "Send paid invoice" --json
@@ -60,6 +61,8 @@ Batch commands default to dry-run previews; pass `--execute --yes` to mutate rem
 Checklist item operations update the parent task through the official task update API, preserve `kind=CHECKLIST`, and require exact task/project/item IDs. Deleting a checklist item requires `--yes`.
 
 Completed-task listing uses the official `POST /open/v1/task/completed` API. Global completed queries intentionally omit `projectIds`, which avoids missing completed Dida365 tasks.
+
+`task analytics` combines open project data with completed-task range data and returns `summary`, `project_throughput`, `tag_distribution`, and `priority_distribution`. It accepts the same date presets as completed-task listing (`today`, `yesterday`, `week`) or explicit `--from/--to` dates. Global analytics also omits `projectIds` for the completed-task query for Dida365 completeness.
 
 ## Habits
 

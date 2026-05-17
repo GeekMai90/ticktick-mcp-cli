@@ -203,6 +203,33 @@ def move_task(
         emit_error(exc, json_output)
 
 
+@app.command("analytics")
+def task_analytics(
+    period: str | None = typer.Argument(None, help="Date preset: today, yesterday, or week."),
+    from_date: str | None = typer.Option(None, "--from", help="Completed start date, YYYY-MM-DD."),
+    to_date: str | None = typer.Option(None, "--to", help="Completed end date, YYYY-MM-DD."),
+    project: str | None = typer.Option(None, "--project", help="Project name or ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        report = TicktaskService().task_analytics(
+            preset=period,
+            start_date=from_date,
+            end_date=to_date,
+            project=project,
+        )
+        if json_output:
+            emit_json(ok(report))
+        else:
+            summary = report["summary"]
+            typer.echo(
+                f"Open: {summary['open_count']} | Completed: {summary['completed_count']} | "
+                f"Overdue: {summary['overdue_count']}"
+            )
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
 item_app = typer.Typer(help="Checklist item/subtask commands.")
 
 

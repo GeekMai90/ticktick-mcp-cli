@@ -184,6 +184,26 @@ def test_list_completed_with_project_passes_project_ids_and_dates(tmp_path) -> N
     ]
 
 
+def test_task_analytics_summarizes_open_completed_projects_and_tags(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("dida365", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    report = svc.task_analytics(preset="week")
+
+    assert report["period"]["preset"] == "week"
+    assert report["summary"]["open_count"] == 3
+    assert report["summary"]["completed_count"] == 1
+    assert report["summary"]["overdue_count"] == 1
+    assert report["summary"]["total_count"] == 4
+    assert report["project_throughput"] == [
+        {"project_id": "p1", "project_name": "Inbox", "open_count": 3, "completed_count": 1, "overdue_count": 1}
+    ]
+    assert report["tag_distribution"] == {"agent": 2, "deep-work": 1}
+    assert fake.completed_calls[0]["project_ids"] is None
+
+
 def test_create_task_resolves_project(tmp_path) -> None:
     task = service(tmp_path).create_task("New task", project="Inbox", priority="high")
     assert task["id"] == "new"
