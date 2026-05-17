@@ -258,3 +258,40 @@ def test_task_tag_cli_json(monkeypatch) -> None:
     )
     assert removed.exit_code == 0
     assert json.loads(removed.stdout)["data"]["tags"] == []
+
+
+
+def test_task_reminder_and_repeat_cli_json(monkeypatch) -> None:
+    class FakeService:
+        def set_task_reminders(self, task_id, project_id, reminders):
+            return {"id": task_id, "project_id": project_id, "raw": {"reminders": reminders}}
+
+        def clear_task_reminders(self, task_id, project_id):
+            return {"id": task_id, "project_id": project_id, "raw": {"reminders": []}}
+
+        def set_task_repeat(self, task_id, project_id, preset=None, rrule=None):
+            return {"id": task_id, "project_id": project_id, "raw": {"repeatFlag": rrule or f"RRULE:FREQ={preset.upper()}"}}
+
+        def clear_task_repeat(self, task_id, project_id):
+            return {"id": task_id, "project_id": project_id, "raw": {"repeatFlag": ""}}
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+
+    reminded = runner.invoke(
+        app,
+        ["task", "reminder", "set", "t1", "--project-id", "p1", "--reminder", "TRIGGER:PT10M", "--json"],
+    )
+    assert reminded.exit_code == 0
+    assert json.loads(reminded.stdout)["data"]["raw"]["reminders"] == ["TRIGGER:PT10M"]
+
+    cleared_reminders = runner.invoke(app, ["task", "reminder", "clear", "t1", "--project-id", "p1", "--json"])
+    assert cleared_reminders.exit_code == 0
+    assert json.loads(cleared_reminders.stdout)["data"]["raw"]["reminders"] == []
+
+    repeated = runner.invoke(app, ["task", "repeat", "set", "t1", "--project-id", "p1", "--preset", "weekly", "--json"])
+    assert repeated.exit_code == 0
+    assert json.loads(repeated.stdout)["data"]["raw"]["repeatFlag"] == "RRULE:FREQ=WEEKLY"
+
+    cleared_repeat = runner.invoke(app, ["task", "repeat", "clear", "t1", "--project-id", "p1", "--json"])
+    assert cleared_repeat.exit_code == 0
+    assert json.loads(cleared_repeat.stdout)["data"]["raw"]["repeatFlag"] == ""

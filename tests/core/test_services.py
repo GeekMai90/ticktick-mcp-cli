@@ -418,3 +418,38 @@ def test_focus_delete_requires_confirmation(tmp_path) -> None:
         assert exc.code == "CONFIRMATION_REQUIRED"
     else:
         raise AssertionError("expected ConfirmationRequiredError")
+
+
+
+def test_task_reminder_and_repeat_helpers_update_existing_task_payload(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    reminded = svc.set_task_reminders("t1", "p1", ["TRIGGER:PT10M", "2026-01-01T09:00:00+0000"])
+    assert reminded["raw"]["reminders"] == ["TRIGGER:PT10M", "2026-01-01T09:00:00+0000"]
+    assert fake.updated_payloads[-1]["projectId"] == "p1"
+    assert fake.updated_payloads[-1]["reminders"] == ["TRIGGER:PT10M", "2026-01-01T09:00:00+0000"]
+
+    repeated = svc.set_task_repeat("t1", "p1", preset="weekly")
+    assert repeated["raw"]["repeatFlag"] == "RRULE:FREQ=WEEKLY"
+    assert fake.updated_payloads[-1]["repeatFlag"] == "RRULE:FREQ=WEEKLY"
+
+    cleared = svc.clear_task_repeat("t1", "p1")
+    assert cleared["raw"]["repeatFlag"] == ""
+
+
+def test_task_reminder_and_repeat_helpers_validate_inputs(tmp_path) -> None:
+    svc = service(tmp_path)
+    for call in (
+        lambda: svc.set_task_reminders("t1", "p1", []),
+        lambda: svc.set_task_repeat("t1", "p1"),
+        lambda: svc.set_task_repeat("t1", "p1", preset="fortnightly"),
+    ):
+        try:
+            call()
+        except ValidationError as exc:
+            assert exc.code == "VALIDATION_ERROR"
+        else:
+            raise AssertionError("expected ValidationError")

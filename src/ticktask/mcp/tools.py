@@ -140,6 +140,41 @@ def ticktask_filter_tasks(
         return err(exc)
 
 
+
+
+def ticktask_set_task_reminders(task_id: str, project_id: str, reminders: list[str]) -> dict[str, Any]:
+    try:
+        return ok(_make_service().set_task_reminders(task_id=task_id, project_id=project_id, reminders=reminders))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_clear_task_reminders(task_id: str, project_id: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().clear_task_reminders(task_id=task_id, project_id=project_id))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_set_task_repeat(
+    task_id: str,
+    project_id: str,
+    preset: str | None = None,
+    rrule: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(_make_service().set_task_repeat(task_id=task_id, project_id=project_id, preset=preset, rrule=rrule))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_clear_task_repeat(task_id: str, project_id: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().clear_task_repeat(task_id=task_id, project_id=project_id))
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_add_task_tag(task_id: str, project_id: str, tag: str) -> dict[str, Any]:
     try:
         return ok(_make_service().add_task_tag(task_id=task_id, project_id=project_id, tag=tag))
@@ -467,6 +502,7 @@ _SERVICE_ENUM = ["ticktick", "dida365"]
 _VIEW_MODE_ENUM = ["list", "kanban", "timeline"]
 _PROJECT_KIND_ENUM = ["TASK", "NOTE"]
 _FOCUS_TYPE_ENUM = ["0", "1"]
+_REPEAT_PRESET_ENUM = ["daily", "weekly", "monthly", "yearly"]
 
 _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_doctor": "ticktask doctor",
@@ -485,6 +521,10 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_update_task": "ticktask task update",
     "ticktask_delete_task": "ticktask task delete",
     "ticktask_move_task": "ticktask task move",
+    "ticktask_set_task_reminders": "ticktask task reminder set",
+    "ticktask_clear_task_reminders": "ticktask task reminder clear",
+    "ticktask_set_task_repeat": "ticktask task repeat set",
+    "ticktask_clear_task_repeat": "ticktask task repeat clear",
     "ticktask_add_task_tag": "ticktask task tag add",
     "ticktask_remove_task_tag": "ticktask task tag remove",
     "ticktask_add_checklist_item": "ticktask task item add",
@@ -523,6 +563,10 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_update_task": "Update task fields by exact task/project IDs.",
     "ticktask_delete_task": "Delete a task by exact task/project IDs; requires yes=true confirmation.",
     "ticktask_move_task": "Move a task between projects by exact source/destination project IDs.",
+    "ticktask_set_task_reminders": "Set one or more reminders on a task by exact task/project IDs.",
+    "ticktask_clear_task_reminders": "Clear all reminders from a task by exact task/project IDs.",
+    "ticktask_set_task_repeat": "Set a task repeat rule using a preset or raw RRULE by exact task/project IDs.",
+    "ticktask_clear_task_repeat": "Clear a task repeat rule by exact task/project IDs.",
     "ticktask_add_task_tag": "Add one tag to a task by exact task/project IDs.",
     "ticktask_remove_task_tag": "Remove one tag from a task by exact task/project IDs.",
     "ticktask_add_checklist_item": "Append a checklist item/subtask to a CHECKLIST task.",
@@ -566,6 +610,9 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "start_date": "Start date, usually YYYY-MM-DD.",
     "end_date": "End date, usually YYYY-MM-DD.",
     "tag": "Tag name. Leading # is accepted and normalized away by mutation helpers.",
+    "reminders": "One or more reminder strings accepted by the TickTick/Dida365 Open API, for example TRIGGER:PT10M.",
+    "preset": "Repeat preset converted to an RRULE.",
+    "rrule": "Raw repeat rule, with or without RRULE: prefix.",
     "filter_preset": "Local smart filter for listed tasks.",
     "query": "Search query matched against task title, content, and ID.",
     "period": "Completed-task preset.",
@@ -596,6 +643,7 @@ _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
     "view_mode": _VIEW_MODE_ENUM,
     "kind": _PROJECT_KIND_ENUM,
     "focus_type": _FOCUS_TYPE_ENUM,
+    "preset": _REPEAT_PRESET_ENUM,
     ("ticktask_list_tasks", "status"): _STATUS_ENUM,
     ("ticktask_filter_tasks", "status"): _STATUS_ENUM,
     ("ticktask_export_tasks", "status"): _STATUS_ENUM,
@@ -620,6 +668,10 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_update_task": [{"description": "Rename and reprioritize", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "title": "New title", "priority": "high"}}],
     "ticktask_delete_task": [{"description": "Delete after exact target verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "yes": True}}],
     "ticktask_move_task": [{"description": "Move to another project", "arguments": {"task_id": "TASK_ID", "from_project_id": "PROJECT_ID", "to_project_id": "OTHER_PROJECT_ID"}}],
+    "ticktask_set_task_reminders": [{"description": "Set a 10-minute reminder", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "reminders": ["TRIGGER:PT10M"]}}],
+    "ticktask_clear_task_reminders": [{"description": "Clear reminders", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID"}}],
+    "ticktask_set_task_repeat": [{"description": "Repeat weekly", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "preset": "weekly"}}],
+    "ticktask_clear_task_repeat": [{"description": "Clear repeat", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID"}}],
     "ticktask_add_task_tag": [{"description": "Add an agent tag", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "tag": "agent"}}],
     "ticktask_remove_task_tag": [{"description": "Remove an agent tag", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "tag": "agent"}}],
     "ticktask_add_checklist_item": [{"description": "Add checklist item", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "title": "Checklist item"}}],
@@ -654,6 +706,10 @@ _DESTRUCTIVE_TOOLS = {
     "ticktask_complete_task",
     "ticktask_delete_task",
     "ticktask_move_task",
+    "ticktask_set_task_reminders",
+    "ticktask_clear_task_reminders",
+    "ticktask_set_task_repeat",
+    "ticktask_clear_task_repeat",
     "ticktask_remove_task_tag",
     "ticktask_update_project",
     "ticktask_update_task",
@@ -727,4 +783,5 @@ def ticktask_cli_parity() -> dict[str, Any]:
         for name, definition in TOOL_DEFINITIONS.items()
     ]
     return ok(rows, {"count": len(rows)})
+
 

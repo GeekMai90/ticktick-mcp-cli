@@ -330,6 +330,81 @@ def remove_task_tag(
         emit_error(exc, json_output)
 
 
-app.add_typer(tag_app, name="tag")
 
+reminder_app = typer.Typer(help="Task reminder commands.")
+
+
+@reminder_app.command("set")
+def set_task_reminders(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    reminders: list[str] = typer.Option(..., "--reminder", help="Reminder value; repeat for multiple reminders."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().set_task_reminders(task_id=task_id, project_id=project_id, reminders=reminders)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@reminder_app.command("clear")
+def clear_task_reminders(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().clear_task_reminders(task_id=task_id, project_id=project_id)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+repeat_app = typer.Typer(help="Task repeat/RRULE commands.")
+
+
+@repeat_app.command("set")
+def set_task_repeat(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    preset: str | None = typer.Option(None, "--preset", help="daily, weekly, monthly, or yearly."),
+    rrule: str | None = typer.Option(None, "--rrule", help="Raw RRULE, with or without RRULE: prefix."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().set_task_repeat(task_id=task_id, project_id=project_id, preset=preset, rrule=rrule)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@repeat_app.command("clear")
+def clear_task_repeat(
+    task_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().clear_task_repeat(task_id=task_id, project_id=project_id)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+app.add_typer(tag_app, name="tag")
 app.add_typer(item_app, name="item")
+app.add_typer(reminder_app, name="reminder")
+app.add_typer(repeat_app, name="repeat")
+

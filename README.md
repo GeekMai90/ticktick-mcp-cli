@@ -30,6 +30,7 @@ Current capabilities:
 - Automatic access-token refresh when `expires_at` is near or past expiry.
 - Project list, project data retrieval, create, update, and delete.
 - Task list/search/create/get/update/complete/delete/move.
+- Task reminder set/clear and repeat/RRULE set/clear helpers.
 - Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), and task tag add/remove.
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
@@ -155,6 +156,10 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+ticktask task reminder set TASK_ID --project-id PROJECT_ID --reminder TRIGGER:PT10M
+ticktask task reminder clear TASK_ID --project-id PROJECT_ID
+ticktask task repeat set TASK_ID --project-id PROJECT_ID --preset weekly
+ticktask task repeat clear TASK_ID --project-id PROJECT_ID
 ticktask task tag add TASK_ID agent --project-id PROJECT_ID
 ticktask task tag remove TASK_ID agent --project-id PROJECT_ID
 ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
@@ -278,6 +283,10 @@ MCP tools:
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_set_task_reminders`
+- `ticktask_clear_task_reminders`
+- `ticktask_set_task_repeat`
+- `ticktask_clear_task_repeat`
 - `ticktask_add_task_tag`
 - `ticktask_remove_task_tag`
 - `ticktask_add_checklist_item`
@@ -356,4 +365,5 @@ Project notes:
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
 

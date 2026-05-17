@@ -30,6 +30,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
 - 项目列表、项目数据读取、创建、更新和删除。
 - 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动。
+- 任务提醒设置/清除，以及 repeat/RRULE 重复规则设置/清除。
 - 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）和任务标签增删。
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
@@ -155,6 +156,10 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+ticktask task reminder set TASK_ID --project-id PROJECT_ID --reminder TRIGGER:PT10M
+ticktask task reminder clear TASK_ID --project-id PROJECT_ID
+ticktask task repeat set TASK_ID --project-id PROJECT_ID --preset weekly
+ticktask task repeat clear TASK_ID --project-id PROJECT_ID
 ticktask task tag add TASK_ID agent --project-id PROJECT_ID
 ticktask task tag remove TASK_ID agent --project-id PROJECT_ID
 ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
@@ -268,6 +273,10 @@ MCP 工具：
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_set_task_reminders`
+- `ticktask_clear_task_reminders`
+- `ticktask_set_task_repeat`
+- `ticktask_clear_task_repeat`
 - `ticktask_add_task_tag`
 - `ticktask_remove_task_tag`
 - `ticktask_add_checklist_item`
@@ -340,4 +349,5 @@ uv build
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
 
