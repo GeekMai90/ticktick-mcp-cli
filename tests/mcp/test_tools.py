@@ -214,6 +214,9 @@ def test_mcp_complete_requires_confirmation(monkeypatch) -> None:
     payload = tools.ticktask_complete_task("t1", "p1")
     assert payload["ok"] is False
     assert payload["error"]["code"] == "CONFIRMATION_REQUIRED"
+    assert payload["error"]["category"] == "safety"
+    assert payload["error"]["retryable"] is False
+    assert payload["error"]["remediation"]["action"] == "verify_and_confirm"
 
 
 def test_mcp_new_tools(monkeypatch) -> None:
