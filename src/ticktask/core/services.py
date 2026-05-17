@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable
 from datetime import date, datetime
 from typing import Any
@@ -252,6 +253,114 @@ class TicktaskService:
             start_date=range_.start,
             end_date=range_.end,
         )
+
+    def task_analytics(
+        self,
+        preset: str | None = None,
+        start_date: str | date | datetime | None = None,
+        end_date: str | date | datetime | None = None,
+        project: str | None = None,
+    ) -> dict[str, Any]:
+        range_ = parse_date_range(
+            preset,
+            str(start_date) if start_date is not None else None,
+            str(end_date) if end_date is not None else None,
+        )
+        today = date.today().isoformat()
+        client = self._with_client()
+        try:
+            projects = [Project.from_api(item) for item in client.list_projects()]
+            selected = self._select_projects(projects, project)
+            project_names = {item.id: item.name for item in selected}
+            project_stats = {
+                item.id: {
+                    "project_id": item.id,
+                    "project_name": item.name,
+                    "open_count": 0,
+                    "completed_count": 0,
+                    "overdue_count": 0,
+                }
+                for item in selected
+            }
+
+            open_tasks: list[Task] = []
+            for item in selected:
+                data = client.project_data(item.id)
+                for raw_task in self._extract_tasks(data):
+                    task = Task.from_api(raw_task, project_id=item.id)
+                    if task.is_completed():
+                        continue
+                    open_tasks.append(task)
+                    stats = project_stats.setdefault(
+                        task.project_id or item.id,
+                        {
+                            "project_id": task.project_id or item.id,
+                            "project_name": project_names.get(task.project_id or item.id, task.project_id or item.id),
+                            "open_count": 0,
+                            "completed_count": 0,
+                            "overdue_count": 0,
+                        },
+                    )
+                    stats["open_count"] += 1
+                    if self._is_overdue(task, today):
+                        stats["overdue_count"] += 1
+
+            completed_data = client.completed_tasks(
+                start_date=range_.start,
+                end_date=range_.end,
+                project_ids=[item.id for item in selected] if project else None,
+            )
+            completed_tasks = [Task.from_api(raw_task) for raw_task in self._extract_tasks(completed_data)]
+            if project:
+                selected_ids = set(project_stats)
+                completed_tasks = [task for task in completed_tasks if task.project_id in selected_ids]
+            for task in completed_tasks:
+                project_id = task.project_id or (selected[0].id if len(selected) == 1 else None)
+                if not project_id:
+                    continue
+                stats = project_stats.setdefault(
+                    project_id,
+                    {
+                        "project_id": project_id,
+                        "project_name": project_names.get(project_id, project_id),
+                        "open_count": 0,
+                        "completed_count": 0,
+                        "overdue_count": 0,
+                    },
+                )
+                stats["completed_count"] += 1
+
+            tag_counts: Counter[str] = Counter()
+            priority_counts: Counter[str] = Counter()
+            for task in open_tasks + completed_tasks:
+                tag_counts.update(task.tags)
+                priority_counts.update([self._priority_label(task.priority)])
+
+            overdue_count = sum(1 for task in open_tasks if self._is_overdue(task, today))
+            return {
+                "period": {"preset": preset, "start": range_.start, "end": range_.end},
+                "scope": {"project": project},
+                "summary": {
+                    "open_count": len(open_tasks),
+                    "completed_count": len(completed_tasks),
+                    "overdue_count": overdue_count,
+                    "total_count": len(open_tasks) + len(completed_tasks),
+                },
+                "project_throughput": list(project_stats.values()),
+                "tag_distribution": dict(sorted(tag_counts.items())),
+                "priority_distribution": dict(sorted(priority_counts.items())),
+            }
+        finally:
+            client.close()
+
+    @staticmethod
+    def _is_overdue(task: Task, today: str) -> bool:
+        return bool(task.due_date and task.due_date[:10] < today and not task.is_completed())
+
+    @staticmethod
+    def _priority_label(priority: int | str | None) -> str:
+        mapping = {0: "none", "0": "none", 1: "low", "1": "low", 3: "medium", "3": "medium", 5: "high", "5": "high"}
+        return mapping.get(priority, str(priority or "none"))
 
     def search_tasks(self, query: str, status: str = "all") -> list[dict[str, Any]]:
         needle = query.casefold()

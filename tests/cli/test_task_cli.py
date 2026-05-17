@@ -118,6 +118,25 @@ def test_completed_command_json(monkeypatch) -> None:
     assert payload["data"][0]["title"] == "today"
 
 
+def test_task_analytics_cli_json(monkeypatch) -> None:
+    class FakeService:
+        def task_analytics(self, preset=None, start_date=None, end_date=None, project=None):
+            return {
+                "period": {"preset": preset, "start": start_date, "end": end_date},
+                "scope": {"project": project},
+                "summary": {"open_count": 3, "completed_count": 2, "overdue_count": 1, "total_count": 5},
+                "project_throughput": [],
+                "tag_distribution": {"agent": 2},
+            }
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+    result = runner.invoke(app, ["task", "analytics", "week", "--project", "Inbox", "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["data"]["summary"]["completed_count"] == 2
+    assert payload["data"]["scope"]["project"] == "Inbox"
+
+
 def test_checklist_item_cli_json(monkeypatch) -> None:
     class FakeService:
         def add_checklist_item(self, task_id, project_id, title):

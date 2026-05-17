@@ -35,6 +35,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）和任务标签增删。
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
+- 任务分析：统计 open/completed/overdue 数量、项目吞吐、标签分布和优先级分布。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
 - 将任务、已完成任务或专注会话报表导出为 `json`、`jsonl`、`csv`、`markdown`。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
@@ -147,6 +148,7 @@ ticktask task search "release"
 ticktask task list --tag agent --filter high-priority
 ticktask task filter --tag agent --priority high
 ticktask completed today
+ticktask task analytics week --project Inbox --json
 ```
 
 危险变更操作需要精确 ID 和显式确认：
@@ -176,6 +178,14 @@ ticktask export tasks --format jsonl --status all
 ticktask export tasks --format csv --project Inbox
 ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
 ticktask export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
+```
+
+分析示例：
+
+```bash
+ticktask task analytics today --json
+ticktask task analytics week --project Inbox --json
+ticktask task analytics --from 2026-05-01 --to 2026-05-17 --json
 ```
 
 ## AI Agent 快速开始
@@ -220,6 +230,7 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task list --json
 ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
 ticktask task search "release" --json
+ticktask task analytics week --json
 
 # 只有在获得精确 ID 后才做变更
 ticktask task add "Plan release" --project Inbox --json
@@ -291,6 +302,7 @@ MCP 工具：
 - `ticktask_complete_checklist_item`
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
+- `ticktask_task_analytics`
 - `ticktask_list_habits`
 - `ticktask_get_habit`
 - `ticktask_create_habit`

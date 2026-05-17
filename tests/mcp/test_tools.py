@@ -106,6 +106,15 @@ class FakeService:
     def completed_tasks(self, preset=None, start_date=None, end_date=None, project=None):
         return [{"id": "t2", "status": 2}]
 
+    def task_analytics(self, preset=None, start_date=None, end_date=None, project=None):
+        return {
+            "period": {"preset": preset, "start": start_date, "end": end_date},
+            "scope": {"project": project},
+            "summary": {"open_count": 3, "completed_count": 2, "overdue_count": 1, "total_count": 5},
+            "project_throughput": [],
+            "tag_distribution": {"agent": 2},
+        }
+
     def export_tasks(self, output_format, project=None, status="open", start_date=None, end_date=None):
         return "exported"
 
@@ -167,6 +176,7 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_batch_delete_tasks(["t1"], "p1", dry_run=False, yes=True)["data"]["confirmed"] is True
     assert tools.ticktask_batch_move_tasks(["t1"], "p1", "p2")["data"]["action"] == "move"
     assert tools.ticktask_completed(period="today")["meta"]["count"] == 1
+    assert tools.ticktask_task_analytics(period="week", project="Inbox")["data"]["summary"]["completed_count"] == 2
     assert tools.ticktask_export_tasks("json")["data"]["content"] == "exported"
     assert tools.ticktask_export_focuses("jsonl", "2026-01-01", "2026-01-30")["data"]["content"] == "focus-exported"
     assert tools.ticktask_create_project("Focus", color="#00aa00")["data"]["id"] == "p-new"
@@ -234,6 +244,7 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_get_focus,
         tools.ticktask_delete_focus,
         tools.ticktask_completed,
+        tools.ticktask_task_analytics,
         tools.ticktask_export_tasks,
         tools.ticktask_export_focuses,
         tools.ticktask_create_project,
@@ -325,6 +336,9 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
     ]
     assert definitions["ticktask_batch_delete_tasks"]["confirmation_required"] is True
     assert definitions["ticktask_batch_delete_tasks"]["destructive"] is True
+    assert definitions["ticktask_task_analytics"]["cli_command"] == "ticktask task analytics"
+    assert definitions["ticktask_task_analytics"]["destructive"] is False
+    assert definitions["ticktask_task_analytics"]["parameters"]["period"]["enum"] == ["today", "yesterday", "week"]
     assert definitions["ticktask_delete_task"]["confirmation_required"] is True
     assert definitions["ticktask_delete_checklist_item"]["confirmation_required"] is True
 

@@ -35,6 +35,7 @@ Current capabilities:
 - Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), and task tag add/remove.
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
+- Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
 - Export tasks, completed tasks, or focus-session reports as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
@@ -147,6 +148,7 @@ ticktask task search "release"
 ticktask task list --tag agent --filter high-priority
 ticktask task filter --tag agent --priority high
 ticktask completed today
+ticktask task analytics week --project Inbox --json
 ```
 
 Mutating dangerous operations require exact IDs and explicit confirmation:
@@ -176,6 +178,14 @@ ticktask export tasks --format jsonl --status all
 ticktask export tasks --format csv --project Inbox
 ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
 ticktask export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
+```
+
+Analytics examples:
+
+```bash
+ticktask task analytics today --json
+ticktask task analytics week --project Inbox --json
+ticktask task analytics --from 2026-05-01 --to 2026-05-17 --json
 ```
 
 ## Quick start for AI agents
@@ -222,6 +232,7 @@ ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
 ticktask task search "release" --json
 ticktask task list --tag agent --filter high-priority --json
 ticktask task filter --tag agent --priority high --json
+ticktask task analytics week --json
 
 # Mutate only after exact IDs are known
 ticktask task add "Plan release" --project Inbox --json
@@ -301,6 +312,7 @@ MCP tools:
 - `ticktask_complete_checklist_item`
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
+- `ticktask_task_analytics`
 - `ticktask_list_habits`
 - `ticktask_get_habit`
 - `ticktask_create_habit`
