@@ -18,6 +18,7 @@ from ticktask.core.errors import (
 )
 from ticktask.core.exporters import serialize_focuses, serialize_tasks
 from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
+from ticktask.core.sync_state import SyncStateStore, utc_now
 
 
 ClientFactory = Callable[[ProfileConfig], TicktaskClient]
@@ -1025,6 +1026,40 @@ class TicktaskService:
                 end_date=end_date,
             )
         return serialize_tasks(tasks, output_format)
+
+    def sync_state(self) -> dict[str, Any]:
+        return SyncStateStore().as_dict()
+
+    def mark_sync_state(self, state_key: str, timestamp: str | None = None) -> dict[str, Any]:
+        return SyncStateStore().mark(state_key, timestamp or utc_now())
+
+    def sync_export_tasks(
+        self,
+        output_format: str,
+        state_key: str,
+        project: str | None = None,
+        status: str = "all",
+        since: str | None = None,
+        save_state: bool = False,
+    ) -> dict[str, Any]:
+        store = SyncStateStore()
+        stored = store.get(state_key)
+        resolved_since = since or (stored or {}).get("last_synced_at")
+        start_date = resolved_since[:10] if resolved_since else None
+        content = self.export_tasks(
+            output_format=output_format,
+            project=project,
+            status=status,
+            start_date=start_date,
+        )
+        state = store.mark(state_key, utc_now()) if save_state else None
+        return {
+            "state_key": state_key,
+            "since": resolved_since,
+            "state_path": str(store.path),
+            "content": content,
+            "state": state,
+        }
 
     def export_focuses(self, output_format: str, from_time: str, to_time: str, focus_type: int = 0) -> str:
         focuses = self.list_focuses(from_time=from_time, to_time=to_time, focus_type=focus_type)

@@ -65,7 +65,7 @@ Source project: `ticktick-sdk`; official Open API exposes habit/focus endpoints.
 Source projects: `dida365-ai-tools`, `GalaxyXieyu/didatodolist-mcp`, `ticktick-sdk`.
 
 - [x] Batch task operations with dry-run preview
-- [ ] Incremental sync/export state file
+- [x] Incremental sync/export state file
 - [ ] Markdown/CSV/JSONL backups by project/date
 - [x] Task analytics: completed count, overdue count, project throughput, tag distribution
 - [ ] Goal/progress reporting derived from tasks, habits, and focus sessions
@@ -150,7 +150,8 @@ Project differentiator.
 6. `feat(focus): add focus reporting exports`
 7. ✅ `feat(batch): add dry-run guarded bulk operations`
 8. ✅ `feat(analytics): add task analytics reports`
-9. `feat(dx): add PyPI publish workflow and install docs`
+9. ✅ `feat(sync): add incremental sync/export state file`
+10. `feat(dx): add PyPI publish workflow and install docs`
 
 
 

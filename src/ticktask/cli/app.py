@@ -9,6 +9,7 @@ from ticktask.cli import focus as focus_commands
 from ticktask.cli import habit as habit_commands
 from ticktask.cli import integration as integration_commands
 from ticktask.cli import project as project_commands
+from ticktask.cli import sync as sync_commands
 from ticktask.cli import task as task_commands
 from ticktask.cli.formatters import emit_error, emit_json, print_tasks
 from ticktask.core.auth import AuthManager
@@ -23,6 +24,7 @@ app.add_typer(task_commands.app, name="task")
 app.add_typer(habit_commands.app, name="habit")
 app.add_typer(focus_commands.app, name="focus")
 app.add_typer(export_commands.app, name="export")
+app.add_typer(sync_commands.app, name="sync")
 app.add_typer(integration_commands.app, name="integration")
 
 

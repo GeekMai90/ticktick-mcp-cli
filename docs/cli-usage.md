@@ -64,6 +64,17 @@ Completed-task listing uses the official `POST /open/v1/task/completed` API. Glo
 
 `task analytics` combines open project data with completed-task range data and returns `summary`, `project_throughput`, `tag_distribution`, and `priority_distribution`. It accepts the same date presets as completed-task listing (`today`, `yesterday`, `week`) or explicit `--from/--to` dates. Global analytics also omits `projectIds` for the completed-task query for Dida365 completeness.
 
+## Incremental sync/export state
+
+```bash
+uv run ticktick-mcp-cli sync state --json
+uv run ticktick-mcp-cli sync mark tasks:all --timestamp 2026-05-01T00:00:00Z --json
+uv run ticktick-mcp-cli sync export tasks --format jsonl --state-key tasks:all --status all --json
+uv run ticktick-mcp-cli sync export tasks --format jsonl --state-key tasks:all --status all --save-state --json
+```
+
+The sync state file is stored next to the CLI config as `sync-state.json`. `sync export tasks` uses `--since` when supplied; otherwise it reads `last_synced_at` from `--state-key` and maps it to the task export `--from` date. `--save-state` records the current UTC timestamp after a successful export.
+
 ## Habits
 
 ```bash
