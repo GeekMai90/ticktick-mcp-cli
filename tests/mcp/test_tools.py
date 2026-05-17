@@ -42,6 +42,21 @@ class FakeService:
     def move_task(self, task_id, from_project_id, to_project_id):
         return {"task_id": task_id, "to_project_id": to_project_id}
 
+    def create_project(self, name, color=None, sort_order=None, view_mode=None, kind=None):
+        return {"id": "p-new", "name": name, "raw": {"color": color}}
+
+    def update_project(
+        self, project_id, name=None, color=None, sort_order=None, view_mode=None, kind=None, closed=None
+    ):
+        return {"id": project_id, "name": name, "raw": {"closed": closed}}
+
+    def delete_project(self, project_id, confirmed):
+        if not confirmed:
+            from ticktask.core.errors import ConfirmationRequiredError
+
+            raise ConfirmationRequiredError("confirm")
+        return {"project_id": project_id, "result": {}}
+
     def completed_tasks(self, preset=None, start_date=None, end_date=None, project=None):
         return [{"id": "t2", "status": 2}]
 
@@ -71,6 +86,10 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_move_task("t1", "p1", "p2")["data"]["to_project_id"] == "p2"
     assert tools.ticktask_completed(period="today")["meta"]["count"] == 1
     assert tools.ticktask_export_tasks("json")["data"]["content"] == "exported"
+    assert tools.ticktask_create_project("Focus", color="#00aa00")["data"]["id"] == "p-new"
+    assert tools.ticktask_update_project("p1", name="Renamed")["data"]["name"] == "Renamed"
+    assert tools.ticktask_delete_project("p1")["error"]["code"] == "CONFIRMATION_REQUIRED"
+    assert tools.ticktask_delete_project("p1", yes=True)["data"]["project_id"] == "p1"
 
 
 def test_public_mcp_tool_signatures_are_json_serializable() -> None:
@@ -89,6 +108,9 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_move_task,
         tools.ticktask_completed,
         tools.ticktask_export_tasks,
+        tools.ticktask_create_project,
+        tools.ticktask_update_project,
+        tools.ticktask_delete_project,
     ]
     for tool in public_tools:
         assert "service_obj" not in inspect.signature(tool).parameters

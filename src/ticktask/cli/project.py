@@ -59,3 +59,73 @@ def project_data(
             Console().print(data)
     except Exception as exc:
         emit_error(exc, json_output)
+
+
+@app.command("create")
+def create_project(
+    name: str,
+    color: str | None = typer.Option(None, "--color", help="Project color, e.g. #00aa00."),
+    sort_order: int | None = typer.Option(None, "--sort-order", help="Project sort order."),
+    view_mode: str | None = typer.Option(None, "--view-mode", help="list, kanban, or timeline."),
+    kind: str | None = typer.Option(None, "--kind", help="TASK or NOTE."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        project = TicktaskService().create_project(
+            name=name,
+            color=color,
+            sort_order=sort_order,
+            view_mode=view_mode,
+            kind=kind,
+        )
+        if json_output:
+            emit_json(ok(project))
+        else:
+            print_projects([project])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("update")
+def update_project(
+    project_id: str,
+    name: str | None = typer.Option(None, "--name", help="New project name."),
+    color: str | None = typer.Option(None, "--color", help="Project color, e.g. #00aa00."),
+    sort_order: int | None = typer.Option(None, "--sort-order", help="Project sort order."),
+    view_mode: str | None = typer.Option(None, "--view-mode", help="list, kanban, or timeline."),
+    kind: str | None = typer.Option(None, "--kind", help="TASK or NOTE."),
+    closed: bool | None = typer.Option(None, "--closed/--not-closed", help="Archive or restore."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        project = TicktaskService().update_project(
+            project_id=project_id,
+            name=name,
+            color=color,
+            sort_order=sort_order,
+            view_mode=view_mode,
+            kind=kind,
+            closed=closed,
+        )
+        if json_output:
+            emit_json(ok(project))
+        else:
+            print_projects([project])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("delete")
+def delete_project(
+    project_id: str,
+    yes: bool = typer.Option(False, "--yes", help="Confirm deletion."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().delete_project(project_id=project_id, confirmed=yes)
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(f"deleted project {project_id}")
+    except Exception as exc:
+        emit_error(exc, json_output)

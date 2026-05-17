@@ -67,6 +67,15 @@ class TicktaskClient:
     def project_data(self, project_id: str) -> dict[str, Any]:
         return self.request("GET", f"/open/v1/project/{project_id}/data")
 
+    def create_project(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.request("POST", "/open/v1/project", json=payload)
+
+    def update_project(self, project_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.request("POST", f"/open/v1/project/{project_id}", json=payload)
+
+    def delete_project(self, project_id: str) -> dict[str, Any]:
+        return self.request("DELETE", f"/open/v1/project/{project_id}")
+
     def create_task(self, payload: dict[str, Any]) -> dict[str, Any]:
         return self.request("POST", "/open/v1/task", json=payload)
 

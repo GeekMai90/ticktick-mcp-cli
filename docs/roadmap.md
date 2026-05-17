@@ -33,7 +33,7 @@ Source projects: `jacepark12/ticktick-mcp`, `alexarevalo9/ticktick-mcp-server`, 
 Source projects: `jacepark12/ticktick-mcp`, `ticktick-sdk`, `dida365-ai-tools`.
 
 - [x] Project list and project data
-- [ ] Project create/update/delete
+- [x] Project create/update/delete
 - [ ] Kanban columns list/create/update/delete when available through official APIs
 - [ ] Folder/group awareness and filtering
 - [ ] Archived/closed project handling

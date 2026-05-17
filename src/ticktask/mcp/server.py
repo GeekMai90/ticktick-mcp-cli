@@ -7,7 +7,7 @@ from ticktask.mcp import tools
 
 INSTALL_HINT = (
     "ticktask MCP server requires the optional `mcp` package. "
-    "Install with `uv pip install 'ticktask[mcp]'` or `pip install 'ticktask[mcp]'`."
+    "Install with `uv pip install 'ticktick-mcp-cli[mcp]'` or `pip install 'ticktick-mcp-cli[mcp]'`."
 )
 
 
@@ -21,6 +21,9 @@ def build_server():
     server.tool()(tools.ticktask_doctor)
     server.tool()(tools.ticktask_auth_status)
     server.tool()(tools.ticktask_list_projects)
+    server.tool()(tools.ticktask_create_project)
+    server.tool()(tools.ticktask_update_project)
+    server.tool()(tools.ticktask_delete_project)
     server.tool()(tools.ticktask_list_tasks)
     server.tool()(tools.ticktask_search_tasks)
     server.tool()(tools.ticktask_create_task)

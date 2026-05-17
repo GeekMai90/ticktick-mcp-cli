@@ -54,6 +54,80 @@ class TicktaskService:
         finally:
             client.close()
 
+    def create_project(
+        self,
+        name: str,
+        color: str | None = None,
+        sort_order: int | None = None,
+        view_mode: str | None = None,
+        kind: str | None = None,
+    ) -> dict[str, Any]:
+        if not name.strip():
+            raise ValidationError("Creating a project requires a non-empty name.")
+        payload: dict[str, Any] = {"name": name}
+        if color is not None:
+            payload["color"] = color
+        if sort_order is not None:
+            payload["sortOrder"] = sort_order
+        if view_mode is not None:
+            payload["viewMode"] = view_mode
+        if kind is not None:
+            payload["kind"] = kind
+
+        client = self._with_client()
+        try:
+            return Project.from_api(client.create_project(payload)).to_dict()
+        finally:
+            client.close()
+
+    def update_project(
+        self,
+        project_id: str,
+        name: str | None = None,
+        color: str | None = None,
+        sort_order: int | None = None,
+        view_mode: str | None = None,
+        kind: str | None = None,
+        closed: bool | None = None,
+    ) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Updating a project requires `project_id`.")
+        payload: dict[str, Any] = {"id": project_id}
+        if name is not None:
+            if not name.strip():
+                raise ValidationError("Project name cannot be empty.")
+            payload["name"] = name
+        if color is not None:
+            payload["color"] = color
+        if sort_order is not None:
+            payload["sortOrder"] = sort_order
+        if view_mode is not None:
+            payload["viewMode"] = view_mode
+        if kind is not None:
+            payload["kind"] = kind
+        if closed is not None:
+            payload["closed"] = closed
+        if len(payload) == 1:
+            raise ValidationError("Updating a project requires at least one changed field.")
+
+        client = self._with_client()
+        try:
+            return Project.from_api(client.update_project(project_id, payload)).to_dict()
+        finally:
+            client.close()
+
+    def delete_project(self, project_id: str, confirmed: bool) -> dict[str, Any]:
+        if not confirmed:
+            raise ConfirmationRequiredError("Deleting a project requires explicit confirmation.")
+        if not project_id:
+            raise AmbiguousOperationError("Deleting a project requires `project_id`.")
+        client = self._with_client()
+        try:
+            result = client.delete_project(project_id)
+            return {"project_id": project_id, "result": result}
+        finally:
+            client.close()
+
     def list_tasks(
         self,
         project: str | None = None,
