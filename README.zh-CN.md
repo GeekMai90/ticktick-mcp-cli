@@ -1,0 +1,295 @@
+# ticktask
+
+简体中文 | [English](README.md)
+
+面向人类和 AI Agent 的 TickTick 国际版 / 滴答清单 Dida365 国内版 CLI 与 MCP 服务器。
+
+`ticktask` 的目标是让人类用户和 AI Agent 都能安全、清楚、稳定地操作任务系统：
+
+- **人类用户**可以通过易读的命令行管理项目、任务、已完成任务、导出、OAuth 登录和诊断。
+- **AI Agent**可以使用稳定 JSON 输出、明确的安全约束、确定性的命令格式，以及基于同一套核心能力的 MCP 工具。
+
+如果你把这个仓库链接发给一个 Agent，它应该只读这份 README 就能理解如何安装、检查认证、列出项目/任务，并使用 MCP 工具。
+
+## 它能做什么
+
+`ticktask` 使用一个共享 Python Core，并在其上提供两个薄前端：
+
+- **CLI**：`ticktask` 和短别名 `tt`。
+- **MCP Server**：`ticktask-mcp`，供支持 Model Context Protocol 的 Agent Runtime 使用。
+
+支持的服务配置：
+
+- `ticktick` → `https://api.ticktick.com`
+- `dida365` → `https://api.dida365.com`
+
+当前能力：
+
+- OAuth 凭据初始化和登录。
+- 带 OAuth `state` + PKCE 的更安全授权流程。
+- 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
+- 项目列表和项目数据读取。
+- 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动。
+- 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
+- 将任务或已完成任务导出为 `json`、`jsonl`、`csv`、`markdown`。
+- 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
+- 基于同一套 Core 的 MCP 工具。
+
+## 安装
+
+### 方式 A：从 clone 直接使用
+
+```bash
+git clone https://github.com/GeekMai90/ticktask.git
+cd ticktask
+uv sync --all-extras --dev
+uv run ticktask --help
+uv run tt --help
+```
+
+### 方式 B：从 GitHub 安装为工具
+
+```bash
+uv tool install git+https://github.com/GeekMai90/ticktask.git
+# 或
+pipx install git+https://github.com/GeekMai90/ticktask.git
+```
+
+验证：
+
+```bash
+ticktask --version
+ticktask doctor --json
+```
+
+命令入口：
+
+- `ticktask`：主 CLI。
+- `tt`：短别名。
+- `ticktask-mcp`：stdio MCP Server。
+
+## 人类用户快速开始
+
+### 1. 初始化 OAuth 应用凭据
+
+先创建 TickTick 或 Dida365 开发者 OAuth App，然后把凭据保存在本机：
+
+```bash
+ticktask auth init \
+  --service ticktick \
+  --client-id "$TICKTICK_CLIENT_ID" \
+  --client-secret "$TICKTICK_CLIENT_SECRET" \
+  --redirect-uri "http://localhost:8080/callback"
+```
+
+如果使用 Dida365：
+
+```bash
+ticktask auth init \
+  --service dida365 \
+  --client-id "$DIDA365_CLIENT_ID" \
+  --client-secret "$DIDA365_CLIENT_SECRET" \
+  --redirect-uri "http://localhost:8080/callback"
+```
+
+查看本地配置路径：
+
+```bash
+ticktask config path
+```
+
+不要提交本地配置、client secret、access token 或 refresh token。
+
+### 2. OAuth 登录
+
+启动浏览器 / 手动登录流程：
+
+```bash
+ticktask auth login --service ticktick --no-browser --json
+```
+
+打开返回的 `authorization_url`。服务商跳转回 callback URL 后，可以用完整 callback URL 完成登录：
+
+```bash
+ticktask auth login \
+  --service ticktick \
+  --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' \
+  --json
+```
+
+也可以使用 code + state：
+
+```bash
+ticktask auth login --service ticktick --code CALLBACK_CODE --state STATE --json
+```
+
+检查状态：
+
+```bash
+ticktask auth status --json
+```
+
+### 3. 使用任务能力
+
+```bash
+ticktask project list
+ticktask task list
+ticktask today
+ticktask add "Plan release" --project Inbox
+ticktask task search "release"
+ticktask completed today
+```
+
+危险变更操作需要精确 ID 和显式确认：
+
+```bash
+ticktask task complete TASK_ID --project-id PROJECT_ID --yes
+ticktask task delete TASK_ID --project-id PROJECT_ID --yes
+ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+```
+
+导出示例：
+
+```bash
+ticktask export tasks --format jsonl --status all
+ticktask export tasks --format csv --project Inbox
+ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
+```
+
+## AI Agent 快速开始
+
+### Agent 操作契约
+
+Agent 使用 `ticktask` 时应遵守：
+
+1. 所有支持 `--json` 的 CLI 命令都优先使用 `--json`。
+2. 先判断 `ok`，如果 `ok` 为 false，再根据 `error.code` 分支处理。
+3. 变更任务前不要凭名称猜测任务或项目 ID；先 list/search，再使用精确 ID。
+4. 只有确认目标无误后，才给 `complete` 或 `delete` 传 `--yes`。
+5. 将 `TICKTASK_INTEGRATION=1` 视为“允许只读真实 API 调用”的显式授权。
+6. 不要打印或提交 OAuth client secret、access token、refresh token、本地 config 或 `.env` 文件。
+
+### 稳定 JSON 协议
+
+成功：
+
+```json
+{"ok": true, "data": {}, "meta": {}}
+```
+
+失败：
+
+```json
+{"ok": false, "error": {"code": "ERROR_CODE", "message": "Human message", "hint": "Next step"}}
+```
+
+### Agent 安全命令序列
+
+```bash
+# 发现当前状态
+ticktask doctor --json
+ticktask auth status --json
+ticktask project list --json
+
+# 读取任务
+ticktask task list --json
+ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
+ticktask task search "release" --json
+
+# 只有在获得精确 ID 后才做变更
+ticktask task add "Plan release" --project Inbox --json
+ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
+ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
+ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+
+# 安全真实 API smoke：默认跳过，显式开启才运行
+ticktask integration smoke --json
+TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
+```
+
+## MCP Server
+
+从 clone 开发时安装 MCP 依赖：
+
+```bash
+uv sync --extra mcp
+uv run ticktask-mcp
+```
+
+如果已经作为工具安装：
+
+```bash
+ticktask-mcp
+```
+
+MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。
+
+MCP 工具：
+
+- `ticktask_doctor`
+- `ticktask_auth_status`
+- `ticktask_list_projects`
+- `ticktask_list_tasks`
+- `ticktask_search_tasks`
+- `ticktask_create_task`
+- `ticktask_complete_task`
+- `ticktask_today`
+- `ticktask_get_task`
+- `ticktask_update_task`
+- `ticktask_delete_task`
+- `ticktask_move_task`
+- `ticktask_completed`
+- `ticktask_export_tasks`
+
+## 真实 API integration smoke
+
+默认是安全跳过：
+
+```bash
+ticktask integration smoke --json
+```
+
+除非显式开启，否则返回 `skipped: true`。
+
+执行只读真实 API 检查：
+
+```bash
+TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
+```
+
+它只会列出项目并返回 `project_count`，不会创建、更新、完成、移动或删除任务。
+
+## 开发
+
+```bash
+git clone https://github.com/GeekMai90/ticktask.git
+cd ticktask
+uv sync --all-extras --dev
+uv run pytest -q
+uv run ticktask --help
+uv run ticktask doctor --json
+uv run --with 'mcp>=1.0' python -c 'from ticktask.mcp.server import build_server; build_server(); print("mcp_build_ok")'
+uv build
+```
+
+## 文档
+
+- [Installation](docs/installation.md)
+- [OAuth](docs/oauth.md)
+- [CLI Usage](docs/cli-usage.md)
+- [MCP Usage](docs/mcp-usage.md)
+- [Agent Usage](docs/agent-usage.md)
+- [Release Checklist](docs/release.md)
+- [Original Implementation Plan](docs/plans/2026-05-17-ticktask-cli-mcp-plan.md)
+
+## 安全说明
+
+- 本地配置默认保存在仓库外。
+- `.env`、token 文件、本地 config、`dist/` 和 build 输出都被 git 忽略。
+- OAuth 登录使用 state 和 PKCE。
+- API 调用会在 access token 过期或即将过期时自动 refresh。
+- 全局查询已完成任务时会故意省略 `projectIds`，避免漏掉 Dida365 已完成任务。
+
+## License
+
+MIT. See [LICENSE](LICENSE).
