@@ -489,6 +489,31 @@ def ticktask_sync_export_tasks(
         return err(exc)
 
 
+def ticktask_backup_tasks(
+    output_dir: str,
+    output_formats: list[str],
+    backup_date: str | None = None,
+    project: str | None = None,
+    status: str = "all",
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().backup_tasks(
+                output_dir=output_dir,
+                output_formats=output_formats,
+                backup_date=backup_date,
+                project=project,
+                status=status,
+                start_date=start_date,
+                end_date=end_date,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_export_focuses(
     output_format: str,
     from_time: str,
@@ -648,6 +673,7 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_sync_state": "ticktask sync state",
     "ticktask_mark_sync_state": "ticktask sync mark",
     "ticktask_sync_export_tasks": "ticktask sync export tasks",
+    "ticktask_backup_tasks": "ticktask backup tasks",
     "ticktask_export_focuses": "ticktask export focus",
     "ticktask_cli_parity": "ticktask --help",
 }
@@ -697,6 +723,7 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_sync_state": "Return the local incremental sync/export state file contents.",
     "ticktask_mark_sync_state": "Set a sync state key to an ISO timestamp, defaulting to current UTC time.",
     "ticktask_sync_export_tasks": "Export tasks incrementally from a stored sync timestamp and optionally save a new timestamp.",
+    "ticktask_backup_tasks": "Write local date/project task backup files in Markdown, JSONL, CSV, or JSON plus a manifest.",
     "ticktask_export_focuses": "Export focus sessions as report-friendly JSON, JSONL, CSV, or Markdown content.",
     "ticktask_cli_parity": "Return the MCP-to-CLI parity matrix for agent planning and auditing.",
 }
@@ -731,6 +758,9 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "query": "Search query matched against task title, content, and ID.",
     "period": "Completed-task or analytics date preset.",
     "output_format": "Export format.",
+    "output_formats": "One or more backup export formats.",
+    "output_dir": "Local directory that will receive date/project backup folders.",
+    "backup_date": "Backup date folder, YYYY-MM-DD. Defaults to today.",
     "state_key": "Incremental sync/export state key, for example tasks:all or weekly-review.",
     "timestamp": "ISO-8601 timestamp to persist in the sync state file.",
     "since": "Override stored sync timestamp for one export run.",
@@ -768,6 +798,7 @@ _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
     ("ticktask_task_analytics", "period"): _PERIOD_ENUM,
     ("ticktask_export_tasks", "status"): _STATUS_ENUM,
     ("ticktask_sync_export_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_backup_tasks", "status"): _STATUS_ENUM,
     ("ticktask_sync_export_tasks", "output_format"): _EXPORT_FORMAT_ENUM,
     ("ticktask_export_focuses", "output_format"): _EXPORT_FORMAT_ENUM,
     ("ticktask_update_checklist_item", "status"): _CHECKLIST_STATUS_ENUM,
@@ -818,6 +849,7 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_sync_state": [{"description": "Read incremental sync state", "arguments": {}}],
     "ticktask_mark_sync_state": [{"description": "Mark a task export checkpoint", "arguments": {"state_key": "tasks:all", "timestamp": "2026-05-17T00:00:00Z"}}],
     "ticktask_sync_export_tasks": [{"description": "Export tasks since stored checkpoint and save a new checkpoint", "arguments": {"output_format": "jsonl", "state_key": "tasks:all", "status": "all", "save_state": True}}],
+    "ticktask_backup_tasks": [{"description": "Write Markdown and JSONL backup files under a date/project folder", "arguments": {"output_dir": "~/ticktask-backups", "output_formats": ["markdown", "jsonl"], "backup_date": "2026-05-17", "project": "Inbox", "status": "all"}}],
     "ticktask_export_focuses": [{"description": "Export Pomodoro sessions as CSV", "arguments": {"output_format": "csv", "from_time": "2026-01-01", "to_time": "2026-01-30", "focus_type": 0}}],
     "ticktask_cli_parity": [{"description": "Audit MCP and CLI parity", "arguments": {}}],
 }
@@ -873,6 +905,8 @@ def _parameter_metadata(tool_name: str) -> dict[str, dict[str, Any]]:
         enum = _PARAM_ENUMS.get((tool_name, param_name)) or _PARAM_ENUMS.get(param_name)
         if enum:
             metadata["enum"] = list(enum)
+        if param_name == "output_formats":
+            metadata["items"] = {"enum": list(_EXPORT_FORMAT_ENUM)}
         params[param_name] = metadata
     return params
 

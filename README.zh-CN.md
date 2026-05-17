@@ -37,6 +37,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 任务分析：统计 open/completed/overdue 数量、项目吞吐、标签分布和优先级分布。
 - 增量 sync/export 状态文件，用于带 checkpoint 的任务导出。
+- 按日期/项目写入本地备份文件，支持 Markdown、JSONL、CSV 或 JSON，并生成 manifest。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
 - 将任务、已完成任务或专注会话报表导出为 `json`、`jsonl`、`csv`、`markdown`。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
@@ -197,6 +198,15 @@ ticktask sync mark tasks:all --timestamp 2026-05-01T00:00:00Z --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --save-state --json
 ```
 
+备份示例：
+
+```bash
+ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl,csv --status all --json
+ticktask backup tasks --output-dir ~/ticktask-backups --date 2026-05-17 --project Inbox --from 2026-05-01 --to 2026-05-17 --json
+```
+
+备份文件会写入 `OUTPUT_DIR/YYYY-MM-DD/project-slug/`，并在日期目录生成 `manifest.json`。
+
 ## AI Agent 快速开始
 
 ### Agent 操作契约
@@ -241,6 +251,7 @@ ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
 ticktask task search "release" --json
 ticktask task analytics week --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --json
+ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl --status all --json
 
 # 只有在获得精确 ID 后才做变更
 ticktask task add "Plan release" --project Inbox --json
