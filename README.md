@@ -36,6 +36,7 @@ Current capabilities:
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.
+- Progress reporting that combines tasks, habits, and focus sessions into one scorecard.
 - Incremental sync/export state file for checkpointed task exports.
 - Date/project backup files with Markdown, JSONL, CSV, or JSON outputs plus a manifest.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
@@ -182,12 +183,14 @@ ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
 ticktask export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
 ```
 
-Analytics examples:
+Analytics and progress examples:
 
 ```bash
 ticktask task analytics today --json
 ticktask task analytics week --project Inbox --json
 ticktask task analytics --from 2026-05-01 --to 2026-05-17 --json
+ticktask report progress week --project Inbox --json
+ticktask report progress --from 2026-05-01 --to 2026-05-17 --focus-type 1 --json
 ```
 
 Incremental sync/export examples:
@@ -252,6 +255,7 @@ ticktask task search "release" --json
 ticktask task list --tag agent --filter high-priority --json
 ticktask task filter --tag agent --priority high --json
 ticktask task analytics week --json
+ticktask report progress week --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --json
 ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl --status all --json
 

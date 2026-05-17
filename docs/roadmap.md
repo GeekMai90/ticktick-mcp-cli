@@ -68,7 +68,7 @@ Source projects: `dida365-ai-tools`, `GalaxyXieyu/didatodolist-mcp`, `ticktick-s
 - [x] Incremental sync/export state file
 - [x] Markdown/CSV/JSONL backups by project/date
 - [x] Task analytics: completed count, overdue count, project throughput, tag distribution
-- [ ] Goal/progress reporting derived from tasks, habits, and focus sessions
+- [x] Goal/progress reporting derived from tasks, habits, and focus sessions
 - [ ] Conflict-safe retries and rate-limit handling
 
 ### 6. MCP excellence
@@ -152,7 +152,8 @@ Project differentiator.
 8. ✅ `feat(analytics): add task analytics reports`
 9. ✅ `feat(sync): add incremental sync/export state file`
 10. ✅ `feat(backup): add Markdown/CSV/JSONL backups by project/date`
-11. `feat(dx): add PyPI publish workflow and install docs`
+11. ✅ `feat(report): add goal/progress reporting from tasks, habits, and focus`
+12. `feat(dx): add PyPI publish workflow and install docs`
 
 
 

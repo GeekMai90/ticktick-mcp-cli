@@ -357,6 +357,83 @@ class TicktaskService:
         finally:
             client.close()
 
+    def progress_report(
+        self,
+        period: str | None = None,
+        start_date: str | date | datetime | None = None,
+        end_date: str | date | datetime | None = None,
+        project: str | None = None,
+        focus_type: int = 0,
+    ) -> dict[str, Any]:
+        range_ = parse_date_range(
+            period,
+            str(start_date) if start_date is not None else None,
+            str(end_date) if end_date is not None else None,
+        )
+        analytics = self.task_analytics(
+            preset=None,
+            start_date=range_.start,
+            end_date=range_.end,
+            project=project,
+        )
+        summary = analytics["summary"]
+        total_tasks = int(summary.get("total_count") or 0)
+        completed_tasks = int(summary.get("completed_count") or 0)
+        open_tasks = int(summary.get("open_count") or 0)
+        overdue_tasks = int(summary.get("overdue_count") or 0)
+        completion_rate = round(completed_tasks / total_tasks, 4) if total_tasks else 0
+        overdue_rate = round(overdue_tasks / open_tasks, 4) if open_tasks else 0
+
+        habits = self.list_habits()
+        habit_ids = [habit["id"] for habit in habits if habit.get("id")]
+        habit_history = self.habit_checkins(
+            habit_ids=habit_ids,
+            from_stamp=self._date_to_stamp(range_.start),
+            to_stamp=self._date_to_stamp(range_.end),
+        ) if habit_ids else []
+        habit_checkin_count = sum(len(item.get("checkins") or []) for item in habit_history if isinstance(item, dict))
+        total_checkins_all_time = sum(int(habit.get("total_checkins") or 0) for habit in habits)
+
+        focuses = self.list_focuses(from_time=range_.start, to_time=range_.end, focus_type=focus_type)
+        focus_seconds = sum(int(focus.get("duration") or 0) for focus in focuses)
+        focus_minutes = round(focus_seconds / 60, 2)
+        if focus_minutes == int(focus_minutes):
+            focus_minutes = int(focus_minutes)
+
+        return {
+            "period": {"preset": period, "start": range_.start, "end": range_.end},
+            "scope": {"project": project, "focus_type": focus_type},
+            "tasks": {
+                **summary,
+                "completion_rate": completion_rate,
+                "overdue_rate": overdue_rate,
+                "project_throughput": analytics.get("project_throughput", []),
+                "tag_distribution": analytics.get("tag_distribution", {}),
+                "priority_distribution": analytics.get("priority_distribution", {}),
+            },
+            "habits": {
+                "habit_count": len(habits),
+                "checkin_count": habit_checkin_count,
+                "total_checkins_all_time": total_checkins_all_time,
+                "history_count": len(habit_history),
+            },
+            "focus": {
+                "session_count": len(focuses),
+                "duration_seconds": focus_seconds,
+                "duration_minutes": focus_minutes,
+            },
+            "scorecard": {
+                "completed_tasks": completed_tasks,
+                "habit_checkins": habit_checkin_count,
+                "focus_minutes": focus_minutes,
+                "overdue_tasks": overdue_tasks,
+            },
+        }
+
+    @staticmethod
+    def _date_to_stamp(value: str) -> int:
+        return int(value[:10].replace("-", ""))
+
     @staticmethod
     def _is_overdue(task: Task, today: str) -> bool:
         return bool(task.due_date and task.due_date[:10] < today and not task.is_completed())

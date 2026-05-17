@@ -36,6 +36,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 任务分析：统计 open/completed/overdue 数量、项目吞吐、标签分布和优先级分布。
+- 进度报告：把任务、习惯打卡和专注时长汇总成一个 scorecard。
 - 增量 sync/export 状态文件，用于带 checkpoint 的任务导出。
 - 按日期/项目写入本地备份文件，支持 Markdown、JSONL、CSV 或 JSON，并生成 manifest。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
@@ -182,12 +183,14 @@ ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
 ticktask export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
 ```
 
-分析示例：
+分析和进度报告示例：
 
 ```bash
 ticktask task analytics today --json
 ticktask task analytics week --project Inbox --json
 ticktask task analytics --from 2026-05-01 --to 2026-05-17 --json
+ticktask report progress week --project Inbox --json
+ticktask report progress --from 2026-05-01 --to 2026-05-17 --focus-type 1 --json
 ```
 
 增量 sync/export 示例：
@@ -250,6 +253,7 @@ ticktask task list --json
 ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
 ticktask task search "release" --json
 ticktask task analytics week --json
+ticktask report progress week --json
 ticktask sync export tasks --format jsonl --state-key tasks:all --status all --json
 ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl --status all --json
 

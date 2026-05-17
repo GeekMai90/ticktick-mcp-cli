@@ -105,7 +105,10 @@ class FakeClient:
         ]
 
     def list_habits(self):
-        return [{"id": "h1", "name": "Read", "status": 0, "totalCheckIns": 2}]
+        return [
+            {"id": "h1", "name": "Read", "status": 0, "totalCheckIns": 2},
+            {"id": "h2", "name": "Write", "status": 0, "totalCheckIns": 5},
+        ]
 
     def get_habit(self, habit_id):
         return {"id": habit_id, "name": "Read", "status": 0}
@@ -120,7 +123,10 @@ class FakeClient:
         return {"habitId": habit_id, **payload}
 
     def habit_checkins(self, habit_ids, from_stamp, to_stamp):
-        return [{"habitId": habit_ids[0], "from": from_stamp, "to": to_stamp, "checkins": []}]
+        return [
+            {"habitId": habit_ids[0], "from": from_stamp, "to": to_stamp, "checkins": [{"stamp": from_stamp}]},
+            {"habitId": habit_ids[-1], "from": from_stamp, "to": to_stamp, "checkins": [{"stamp": to_stamp}]},
+        ]
 
     def get_focus(self, focus_id, focus_type):
         return {"id": focus_id, "type": focus_type, "duration": 1500}
@@ -591,3 +597,24 @@ def test_backup_tasks_rejects_empty_formats(tmp_path) -> None:
         assert exc.code == "VALIDATION_ERROR"
     else:
         raise AssertionError("expected ValidationError")
+
+
+def test_progress_report_combines_tasks_habits_and_focus(tmp_path) -> None:
+    report = service(tmp_path).progress_report(period="week", project="Inbox", focus_type=0)
+
+    assert report["period"]["preset"] == "week"
+    assert report["scope"]["project"] == "Inbox"
+    assert report["tasks"]["open_count"] == 3
+    assert report["tasks"]["completed_count"] == 1
+    assert report["tasks"]["completion_rate"] == 0.25
+    assert report["habits"]["habit_count"] == 2
+    assert report["habits"]["checkin_count"] == 2
+    assert report["habits"]["total_checkins_all_time"] == 7
+    assert report["focus"]["session_count"] == 1
+    assert report["focus"]["duration_minutes"] == 25
+    assert report["scorecard"] == {
+        "completed_tasks": 1,
+        "habit_checkins": 2,
+        "focus_minutes": 25,
+        "overdue_tasks": 1,
+    }
