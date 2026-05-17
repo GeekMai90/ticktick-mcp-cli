@@ -29,7 +29,7 @@ Current capabilities:
 - OAuth state + PKCE hardened authorization flow.
 - Automatic access-token refresh when `expires_at` is near or past expiry.
 - Project list, project data retrieval, create, update, and delete, with project kind/view-mode validation.
-- Task list/search/create/get/update/complete/delete/move, with due-date convenience parsing (`today`, `tomorrow`, `next monday`, `YYYY-MM-DD`).
+- Task list/search/natural-query/create/get/update/complete/delete/move, with due-date convenience parsing (`today`, `tomorrow`, `next monday`, `YYYY-MM-DD`).
 - Agent-safe task creation idempotency keys to avoid duplicate remote tasks when retrying after interruptions.
 - Task reminder set/clear and repeat/RRULE set/clear helpers.
 - Dry-run guarded batch complete/delete/move operations.
@@ -169,6 +169,7 @@ ticktask today
 ticktask add "Plan release" --project Inbox
 ticktask task add "Plan release" --project Inbox --idempotency-key agent-run-123:create-plan-release --json
 ticktask task search "release"
+ticktask task query "high priority #agent release" --json
 ticktask task list --tag agent --filter high-priority
 ticktask task filter --tag agent --priority high
 ticktask completed today

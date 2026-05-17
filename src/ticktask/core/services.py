@@ -23,6 +23,7 @@ from ticktask.core.errors import (
 from ticktask.core.exporters import serialize_focuses, serialize_tasks
 from ticktask.core.idempotency import IdempotencyStore
 from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
+from ticktask.core.natural_query import compile_task_query
 from ticktask.core.sync_state import SyncStateStore, utc_now
 from ticktask.core.validation import (
     normalize_priority,
@@ -467,6 +468,28 @@ class TicktaskService:
             or needle in (task.get("id") or "").casefold()
         ]
         return [task.to_dict() for task in tasks]
+
+    def query_tasks(self, query: str) -> dict[str, Any]:
+        compiled = compile_task_query(query)
+        tasks = self.list_tasks(
+            project=compiled.get("project"),
+            status=compiled.get("status", "open"),
+            start_date=compiled.get("start_date"),
+            end_date=compiled.get("end_date"),
+            tag=compiled.get("tag"),
+            filter_preset=compiled.get("filter_preset"),
+        )
+        search = compiled.get("search")
+        if search:
+            needle = str(search).casefold()
+            tasks = [
+                task
+                for task in tasks
+                if needle in (task.get("title") or "").casefold()
+                or needle in (task.get("content") or "").casefold()
+                or needle in (task.get("id") or "").casefold()
+            ]
+        return {"query": query, "compiled": compiled, "tasks": tasks}
 
     def create_task(
         self,

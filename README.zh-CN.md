@@ -29,7 +29,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 带 OAuth `state` + PKCE 的更安全授权流程。
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
 - 项目列表、项目数据读取、创建、更新和删除，并校验项目 kind / view mode。
-- 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动，并支持 due 日期便捷解析（`today`、`tomorrow`、`next monday`、`YYYY-MM-DD`）。
+- 任务列表 / 搜索 / 自然语言查询 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动，并支持 due 日期便捷解析（`today`、`tomorrow`、`next monday`、`YYYY-MM-DD`）。
 - 面向 Agent 重试的任务创建幂等 key，避免中断/重试时重复创建远端任务。
 - 任务提醒设置/清除，以及 repeat/RRULE 重复规则设置/清除。
 - 默认 dry-run 的批量完成、删除、移动任务操作。
@@ -169,6 +169,7 @@ ticktask today
 ticktask add "Plan release" --project Inbox
 ticktask task add "Plan release" --project Inbox --idempotency-key agent-run-123:create-plan-release --json
 ticktask task search "release"
+ticktask task query "high priority #agent release" --json
 ticktask task list --tag agent --filter high-priority
 ticktask task filter --tag agent --priority high
 ticktask completed today

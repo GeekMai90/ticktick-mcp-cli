@@ -36,6 +36,7 @@ uv run ticktick-mcp-cli task list --status completed --from 2026-05-01 --to 2026
 uv run ticktick-mcp-cli task list --tag agent --filter high-priority --json
 uv run ticktick-mcp-cli task filter --tag agent --project Inbox --priority high --json
 uv run ticktick-mcp-cli task search "invoice" --json
+uv run ticktick-mcp-cli task query "high priority #agent invoice" --json
 uv run ticktick-mcp-cli task analytics week --project Inbox --json
 uv run ticktick-mcp-cli task add "Send invoice" --project Inbox --content "Include May details" --due tomorrow --priority high --json
 uv run ticktick-mcp-cli task add "Send invoice" --project Inbox --idempotency-key agent-run-123:send-invoice --json
@@ -61,6 +62,8 @@ uv run ticktick-mcp-cli task item delete TASK_ID ITEM_ID --project-id PROJECT_ID
 ```
 
 Date arguments for task due dates and task filters accept `YYYY-MM-DD`, `today`, `tomorrow`, and `next <weekday>` (for example, `next monday`). Priority aliases such as `p1`, `p2`, `p3`, `high`, `medium`, `low`, and `normal` are normalized before API calls. Task status aliases such as `done`/`completed` and `all` are validated. Project `--kind` accepts `TASK` or `NOTE`; `--view-mode` accepts `list`, `kanban`, or `timeline`.
+
+`task query` compiles a small deterministic natural-language query into the same task filters plus optional local search. Supported hints include `#tag`, `tag:name`, `project:Inbox`, `project:"Deep Work"`, `today`, `overdue`, `upcoming`, `high priority`, `no date`, `open`, `completed`, `all`, `from YYYY-MM-DD`, and `to YYYY-MM-DD`. Remaining words are matched locally against task title/content/ID, and JSON output includes `meta.compiled` so agents can inspect the exact filters used.
 
 Batch commands default to dry-run previews; pass `--execute --yes` to mutate remote tasks. Reminder, repeat, and tag operations update the parent task through the official task update API and require exact task/project IDs. Repeat presets are `daily`, `weekly`, `monthly`, and `yearly`; `--rrule` also accepts raw RRULE strings. `task filter` uses the official `POST /open/v1/task/filter` endpoint; `task list --tag/--filter` applies deterministic local filtering over listed tasks. Smart filters: `today`, `overdue`, `upcoming`, `high-priority`, `no-date`.
 
