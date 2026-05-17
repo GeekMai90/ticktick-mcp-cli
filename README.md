@@ -28,11 +28,11 @@ Current capabilities:
 - OAuth credential setup and login.
 - OAuth state + PKCE hardened authorization flow.
 - Automatic access-token refresh when `expires_at` is near or past expiry.
-- Project list, project data retrieval, create, update, and delete.
-- Task list/search/create/get/update/complete/delete/move.
+- Project list, project data retrieval, create, update, and delete, with project kind/view-mode validation.
+- Task list/search/create/get/update/complete/delete/move, with due-date convenience parsing (`today`, `tomorrow`, `next monday`, `YYYY-MM-DD`).
 - Task reminder set/clear and repeat/RRULE set/clear helpers.
 - Dry-run guarded batch complete/delete/move operations.
-- Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), and task tag add/remove.
+- Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), priority/status validation, and task tag add/remove.
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.

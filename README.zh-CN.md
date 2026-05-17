@@ -28,11 +28,11 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - OAuth 凭据初始化和登录。
 - 带 OAuth `state` + PKCE 的更安全授权流程。
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
-- 项目列表、项目数据读取、创建、更新和删除。
-- 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动。
+- 项目列表、项目数据读取、创建、更新和删除，并校验项目 kind / view mode。
+- 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动，并支持 due 日期便捷解析（`today`、`tomorrow`、`next monday`、`YYYY-MM-DD`）。
 - 任务提醒设置/清除，以及 repeat/RRULE 重复规则设置/清除。
 - 默认 dry-run 的批量完成、删除、移动任务操作。
-- 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）和任务标签增删。
+- 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）、priority/status 校验和任务标签增删。
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 任务分析：统计 open/completed/overdue 数量、项目吞吐、标签分布和优先级分布。

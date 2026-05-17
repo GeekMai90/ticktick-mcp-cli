@@ -22,6 +22,13 @@ from ticktask.core.errors import (
 from ticktask.core.exporters import serialize_focuses, serialize_tasks
 from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
 from ticktask.core.sync_state import SyncStateStore, utc_now
+from ticktask.core.validation import (
+    normalize_priority,
+    normalize_project_kind,
+    normalize_task_date,
+    normalize_task_status,
+    normalize_view_mode,
+)
 
 
 ClientFactory = Callable[[ProfileConfig], TicktaskClient]
@@ -77,15 +84,17 @@ class TicktaskService:
     ) -> dict[str, Any]:
         if not name.strip():
             raise ValidationError("Creating a project requires a non-empty name.")
+        normalized_view_mode = normalize_view_mode(view_mode)
+        normalized_kind = normalize_project_kind(kind)
         payload: dict[str, Any] = {"name": name}
         if color is not None:
             payload["color"] = color
         if sort_order is not None:
             payload["sortOrder"] = sort_order
-        if view_mode is not None:
-            payload["viewMode"] = view_mode
-        if kind is not None:
-            payload["kind"] = kind
+        if normalized_view_mode is not None:
+            payload["viewMode"] = normalized_view_mode
+        if normalized_kind is not None:
+            payload["kind"] = normalized_kind
 
         client = self._with_client()
         try:
@@ -105,6 +114,8 @@ class TicktaskService:
     ) -> dict[str, Any]:
         if not project_id:
             raise AmbiguousOperationError("Updating a project requires `project_id`.")
+        normalized_view_mode = normalize_view_mode(view_mode)
+        normalized_kind = normalize_project_kind(kind)
         payload: dict[str, Any] = {"id": project_id}
         if name is not None:
             if not name.strip():
@@ -114,10 +125,10 @@ class TicktaskService:
             payload["color"] = color
         if sort_order is not None:
             payload["sortOrder"] = sort_order
-        if view_mode is not None:
-            payload["viewMode"] = view_mode
-        if kind is not None:
-            payload["kind"] = kind
+        if normalized_view_mode is not None:
+            payload["viewMode"] = normalized_view_mode
+        if normalized_kind is not None:
+            payload["kind"] = normalized_kind
         if closed is not None:
             payload["closed"] = closed
         if len(payload) == 1:
@@ -151,12 +162,13 @@ class TicktaskService:
         tag: str | None = None,
         filter_preset: str | None = None,
     ) -> list[dict[str, Any]]:
+        normalized_status = normalize_task_status(status) or "open"
         client = self._with_client()
         try:
             projects = [Project.from_api(item) for item in client.list_projects()]
             selected = self._select_projects(projects, project)
             tasks: list[Task] = []
-            if status == "completed":
+            if normalized_status == "completed":
                 completed_range = parse_date_range(
                     from_date=str(start_date) if start_date is not None else None,
                     to_date=str(end_date) if end_date is not None else None,
@@ -183,12 +195,10 @@ class TicktaskService:
                     data = client.project_data(item.id)
                     for raw_task in self._extract_tasks(data):
                         tasks.append(Task.from_api(raw_task, project_id=item.id))
-            if status == "open":
+            if normalized_status == "open":
                 tasks = [task for task in tasks if not task.is_completed()]
-            elif status == "completed":
+            elif normalized_status == "completed":
                 pass
-            elif status != "all":
-                raise NotFoundError(f"Unknown task status filter `{status}`.")
             if today_only:
                 today = date.today().isoformat()
                 tasks = [task for task in tasks if task.due_date and task.due_date[:10] == today]
@@ -206,27 +216,24 @@ class TicktaskService:
         start_date: str | date | datetime | None = None,
         end_date: str | date | datetime | None = None,
     ) -> list[dict[str, Any]]:
+        normalized_status = normalize_task_status(status) or "open"
+        normalized_priority = normalize_priority(priority)
+        normalized_start_date = normalize_task_date(start_date) if start_date is not None else None
+        normalized_end_date = normalize_task_date(end_date) if end_date is not None else None
         payload: dict[str, Any] = {}
         if tag is not None:
             normalized_tag = self._normalize_tag(tag)
             payload["tag"] = normalized_tag
-        if status == "open":
+        if normalized_status == "open":
             payload["status"] = 0
-        elif status == "completed":
+        elif normalized_status == "completed":
             payload["status"] = 2
-        elif status != "all":
-            raise NotFoundError(f"Unknown task status filter `{status}`.")
-        if priority is not None:
-            if priority not in PRIORITY_MAP:
-                raise ValidationError(
-                    f"Unknown priority `{priority}`.",
-                    hint="Use one of: none, low, medium, high.",
-                )
-            payload["priority"] = [PRIORITY_MAP[priority]]
-        if start_date is not None:
-            payload["startDate"] = str(start_date)
-        if end_date is not None:
-            payload["endDate"] = str(end_date)
+        if normalized_priority is not None:
+            payload["priority"] = [PRIORITY_MAP[normalized_priority]]
+        if normalized_start_date is not None:
+            payload["startDate"] = normalized_start_date
+        if normalized_end_date is not None:
+            payload["endDate"] = normalized_end_date
 
         client = self._with_client()
         try:
@@ -462,13 +469,15 @@ class TicktaskService:
         due: str | None = None,
         priority: str = "none",
     ) -> dict[str, Any]:
+        normalized_due = normalize_task_date(due) if due else None
+        normalized_priority = normalize_priority(priority) or "none"
         payload: dict[str, Any] = {"title": title}
         if content:
             payload["content"] = content
-        if due:
-            payload["dueDate"] = due
-        if priority:
-            payload["priority"] = PRIORITY_MAP.get(priority, 0)
+        if normalized_due:
+            payload["dueDate"] = normalized_due
+        if normalized_priority:
+            payload["priority"] = PRIORITY_MAP[normalized_priority]
 
         client = self._with_client()
         try:
@@ -830,20 +839,17 @@ class TicktaskService:
     ) -> dict[str, Any]:
         if not project_id:
             raise AmbiguousOperationError("Updating a task requires `project_id`.")
+        normalized_due = normalize_task_date(due) if due is not None else None
+        normalized_priority = normalize_priority(priority) if priority is not None else None
         payload: dict[str, Any] = {"id": task_id, "projectId": project_id}
         if title is not None:
             payload["title"] = title
         if content is not None:
             payload["content"] = content
-        if due is not None:
-            payload["dueDate"] = due
-        if priority is not None:
-            if priority not in PRIORITY_MAP:
-                raise ValidationError(
-                    f"Unknown priority `{priority}`.",
-                    hint="Use one of: none, low, medium, high.",
-                )
-            payload["priority"] = PRIORITY_MAP[priority]
+        if normalized_due is not None:
+            payload["dueDate"] = normalized_due
+        if normalized_priority is not None:
+            payload["priority"] = PRIORITY_MAP[normalized_priority]
         if len(payload) == 2:
             raise ValidationError("Updating a task requires at least one changed field.")
 

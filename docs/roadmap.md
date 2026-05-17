@@ -25,8 +25,8 @@ Source projects: `jacepark12/ticktick-mcp`, `alexarevalo9/ticktick-mcp-server`, 
 - [x] Tag-aware filters and tag operations
 - [x] Reminder create/update/delete
 - [x] Repeat/RRULE helpers
-- [ ] Due/start date convenience parser and validator
-- [ ] Priority/status/kind validation helpers
+- [x] Due/start date convenience parser and validator
+- [x] Priority/status/kind validation helpers
 - [x] Bulk complete/delete/move guarded by dry-run + confirmation
 
 ### 2. Project, folder, and kanban management
@@ -159,6 +159,7 @@ Project differentiator.
 14. ✅ `feat(config): add MCP integration examples for agent runtimes`
 15. ✅ `feat(mcp): add resource endpoints for projects, config, and saved views`
 16. ✅ `feat(mcp): add prompt templates for common workflows`
+17. ✅ `feat(validation): add date and enum validation helpers`
 
 
 

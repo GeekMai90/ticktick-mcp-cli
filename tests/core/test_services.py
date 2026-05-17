@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from ticktask.core.auth import AuthManager
 from ticktask.core.config import ConfigStore
 from ticktask.core.errors import ConfirmationRequiredError
@@ -16,6 +18,8 @@ class FakeClient:
         self.completed_task_calls = []
         self.deleted_task_calls = []
         self.moved_task_calls = []
+        self.created_tasks = []
+        self.created_projects = []
 
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
@@ -45,6 +49,7 @@ class FakeClient:
         }
 
     def create_task(self, payload):
+        self.created_tasks.append(payload)
         return {"id": "new", **payload}
 
     def complete_task(self, project_id, task_id):
@@ -77,6 +82,7 @@ class FakeClient:
         return {"moved": True, "taskId": task_id, "from": from_project_id, "to": to_project_id}
 
     def create_project(self, payload):
+        self.created_projects.append(payload)
         return {"id": "new-project", **payload}
 
     def update_project(self, project_id, payload):
@@ -144,7 +150,10 @@ class FakeClient:
 def service(tmp_path) -> TicktaskService:
     manager = AuthManager(ConfigStore(tmp_path / "config.json"))
     manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
-    return TicktaskService(auth=manager, client_factory=lambda _profile: FakeClient())
+    fake_client = FakeClient()
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake_client)
+    svc.client = fake_client  # type: ignore[attr-defined]
+    return svc
 
 
 def test_list_tasks_filters_open(tmp_path) -> None:
@@ -618,3 +627,37 @@ def test_progress_report_combines_tasks_habits_and_focus(tmp_path) -> None:
         "focus_minutes": 25,
         "overdue_tasks": 1,
     }
+
+def test_create_task_normalizes_due_and_priority_alias(tmp_path) -> None:
+    svc = service(tmp_path)
+
+    task = svc.create_task("Relative date", project="Inbox", due="tomorrow", priority="p1")
+
+    assert task["priority"] == 5
+    created_payload = svc.client.created_tasks[-1]
+    assert created_payload["dueDate"] != "tomorrow"
+    assert created_payload["dueDate"].count("-") == 2
+    assert created_payload["priority"] == 5
+
+
+def test_create_project_validates_kind_and_view_mode_before_api_call(tmp_path) -> None:
+    svc = service(tmp_path)
+
+    with pytest.raises(ValidationError):
+        svc.create_project("Bad", view_mode="board", kind="TASK")
+    with pytest.raises(ValidationError):
+        svc.create_project("Bad", view_mode="list", kind="folder")
+
+    assert svc.client.created_projects == []
+
+
+def test_filter_tasks_normalizes_status_priority_and_dates(tmp_path) -> None:
+    svc = service(tmp_path)
+
+    svc.filter_tasks(status="done", priority="p2", start_date="today", end_date="tomorrow")
+
+    payload = svc.client.filtered_payloads[-1]
+    assert payload["status"] == 2
+    assert payload["priority"] == [3]
+    assert payload["startDate"].count("-") == 2
+    assert payload["endDate"].count("-") == 2
