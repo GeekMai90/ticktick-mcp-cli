@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from ticktask.mcp import tools
+from ticktask.mcp import resources, tools
 
 
 INSTALL_HINT = (
@@ -21,6 +21,14 @@ def build_server():
     server.tool()(tools.ticktask_describe_tools)
     for tool_name in tools.TOOL_DEFINITIONS:
         server.tool()(getattr(tools, tool_name))
+    for uri, definition in resources.RESOURCE_DEFINITIONS.items():
+        server.resource(
+            uri,
+            name=definition["name"],
+            title=definition["title"],
+            description=definition["description"],
+            mime_type=definition["mime_type"],
+        )(definition["function"])
     return server
 
 

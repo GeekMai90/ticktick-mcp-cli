@@ -47,7 +47,7 @@ Source projects: `jen6/ticktick-mcp`, `dida365-ai-tools`, `ticktick-sdk`.
 - [x] Tag-aware task list/search/filter
 - [x] Tag add/remove operations
 - [x] Smart filters: today, overdue, upcoming, high-priority, no-date, completed range
-- [ ] Saved query presets for common agent workflows
+- [x] Saved query presets for common agent workflows exposed as `ticktask://saved-views`
 - [ ] Natural-language query adapter that compiles to deterministic filters
 
 ### 4. Habits and focus sessions
@@ -79,7 +79,7 @@ Source projects: all MCP-first competitors.
 - [x] Core task tools
 - [x] One MCP tool for every CLI capability
 - [x] Rich JSON schemas with examples and enum constraints
-- [ ] MCP resource endpoints for projects, config, and saved views
+- [x] MCP resource endpoints for projects, config, and saved views
 - [ ] Prompt templates for common workflows: daily planning, weekly review, cleanup, export
 - [x] Golden tests for MCP tool outputs
 
@@ -157,6 +157,7 @@ Project differentiator.
 12. ✅ `feat(reliability): add conflict-safe retries and rate-limit handling`
 13. ✅ `feat(dx): add PyPI publish workflow and install docs`
 14. ✅ `feat(config): add MCP integration examples for agent runtimes`
+15. ✅ `feat(mcp): add resource endpoints for projects, config, and saved views`
 
 
 

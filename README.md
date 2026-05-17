@@ -43,7 +43,7 @@ Current capabilities:
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
 - Export tasks, completed tasks, or focus-session reports as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
-- MCP tools over the same core behavior.
+- MCP tools and read-only MCP resources over the same core behavior.
 
 ## Install
 
@@ -316,9 +316,9 @@ If installed as a tool, run:
 ticktick-mcp
 ```
 
-The MCP server uses stdio and exposes the same shared core behavior as the CLI.
+The MCP server uses stdio and exposes the same shared core behavior as the CLI. It also exposes read-only MCP resources for common agent planning context.
 
-For AI agents, start with `ticktask_describe_tools` to inspect descriptions, parameter enum hints, confirmation requirements, and examples. Use `ticktask_cli_parity` to map MCP tools back to CLI commands.
+For AI agents, start with `ticktask_describe_tools` to inspect descriptions, parameter enum hints, confirmation requirements, and examples. Use `ticktask_cli_parity` to map MCP tools back to CLI commands. Read `ticktask://projects`, `ticktask://config`, and `ticktask://saved-views` when you need project context, sanitized local configuration, or smart-filter presets without invoking a tool.
 
 MCP tools:
 
@@ -355,6 +355,7 @@ MCP tools:
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
 - `ticktask_task_analytics`
+- `ticktask_progress_report`
 - `ticktask_list_habits`
 - `ticktask_get_habit`
 - `ticktask_create_habit`
@@ -368,7 +369,14 @@ MCP tools:
 - `ticktask_sync_state`
 - `ticktask_mark_sync_state`
 - `ticktask_sync_export_tasks`
+- `ticktask_backup_tasks`
 - `ticktask_export_focuses`
+
+MCP resources:
+
+- `ticktask://projects` — read-only project list for planning and exact-ID lookup.
+- `ticktask://config` — sanitized active service/profile configuration with secrets redacted.
+- `ticktask://saved-views` — built-in smart-filter presets and equivalent MCP/CLI arguments.
 
 ## Real API integration smoke
 

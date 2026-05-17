@@ -43,7 +43,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
 - 将任务、已完成任务或专注会话报表导出为 `json`、`jsonl`、`csv`、`markdown`。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
-- 基于同一套 Core 的 MCP 工具。
+- 基于同一套 Core 的 MCP 工具和只读 MCP resources。
 
 ## 安装
 
@@ -306,9 +306,9 @@ uv run ticktick-mcp
 ticktask-mcp
 ```
 
-MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。
+MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。它也提供只读 MCP resources，方便 Agent 获取规划上下文。
 
-对于 AI Agent，建议先调用 `ticktask_describe_tools` 查看描述、参数枚举、确认要求和 examples；再用 `ticktask_cli_parity` 映射 MCP tool 与 CLI 命令。
+对于 AI Agent，建议先调用 `ticktask_describe_tools` 查看描述、参数枚举、确认要求和 examples；再用 `ticktask_cli_parity` 映射 MCP tool 与 CLI 命令。需要项目上下文、脱敏本地配置或智能筛选预设时，可读取 `ticktask://projects`、`ticktask://config` 和 `ticktask://saved-views`。
 
 MCP 工具：
 
@@ -345,6 +345,7 @@ MCP 工具：
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
 - `ticktask_task_analytics`
+- `ticktask_progress_report`
 - `ticktask_list_habits`
 - `ticktask_get_habit`
 - `ticktask_create_habit`
@@ -358,7 +359,14 @@ MCP 工具：
 - `ticktask_sync_state`
 - `ticktask_mark_sync_state`
 - `ticktask_sync_export_tasks`
+- `ticktask_backup_tasks`
 - `ticktask_export_focuses`
+
+MCP resources：
+
+- `ticktask://projects`：只读项目列表，用于规划和精确 ID 查询。
+- `ticktask://config`：已脱敏的当前服务 / profile 配置，不暴露 secrets。
+- `ticktask://saved-views`：内置智能筛选预设，以及对应 MCP/CLI 参数。
 
 ## 真实 API integration smoke
 
