@@ -47,7 +47,23 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 
 ## 安装
 
-### 方式 A：从 clone 直接使用
+### 方式 A：从 PyPI 安装
+
+```bash
+uv tool install ticktick-mcp-cli
+# 或
+pipx install ticktick-mcp-cli
+```
+
+如果希望同时安装 MCP server 依赖，请使用可选的 `mcp` extra：
+
+```bash
+uv tool install 'ticktick-mcp-cli[mcp]'
+# 或
+pipx install 'ticktick-mcp-cli[mcp]'
+```
+
+### 方式 B：从 clone 直接使用
 
 ```bash
 git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
@@ -57,7 +73,7 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### 方式 B：从 GitHub 安装为工具
+### 方式 C：从 GitHub 安装为工具
 
 ```bash
 uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git

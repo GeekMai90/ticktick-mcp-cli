@@ -1,5 +1,28 @@
 # Installation
 
+## Install from PyPI
+
+```bash
+uv tool install ticktick-mcp-cli
+# or
+pipx install ticktick-mcp-cli
+```
+
+Install the optional MCP server dependencies when you want to run `ticktick-mcp` from the installed tool:
+
+```bash
+uv tool install 'ticktick-mcp-cli[mcp]'
+# or
+pipx install 'ticktick-mcp-cli[mcp]'
+```
+
+Verify the installation:
+
+```bash
+ticktick-mcp-cli --version
+ticktick-mcp-cli doctor --json
+```
+
 ## Development
 
 ```bash

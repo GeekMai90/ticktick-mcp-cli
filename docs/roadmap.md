@@ -90,7 +90,7 @@ Source projects: `kvanland/ticktick-cli`, npm-based MCP servers.
 - [x] GitHub install via `uv tool` / `pipx`
 - [x] Public package name: `ticktick-mcp-cli`
 - [x] Backward-compatible legacy commands: `ticktask`, `tt`, `ticktask-mcp`
-- [ ] PyPI publishing workflow
+- [x] PyPI publishing workflow
 - [ ] Homebrew tap or install script
 - [ ] Optional npm wrapper for `npx ticktick-mcp-cli`
 - [ ] Prebuilt docs site or GitHub Pages
@@ -155,7 +155,7 @@ Project differentiator.
 10. ✅ `feat(backup): add Markdown/CSV/JSONL backups by project/date`
 11. ✅ `feat(report): add goal/progress reporting from tasks, habits, and focus`
 12. ✅ `feat(reliability): add conflict-safe retries and rate-limit handling`
-13. `feat(dx): add PyPI publish workflow and install docs`
+13. ✅ `feat(dx): add PyPI publish workflow and install docs`
 
 
 

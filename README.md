@@ -47,7 +47,23 @@ Current capabilities:
 
 ## Install
 
-### Option A: use directly from a clone
+### Option A: install from PyPI
+
+```bash
+uv tool install ticktick-mcp-cli
+# or
+pipx install ticktick-mcp-cli
+```
+
+If you want the MCP server dependencies installed with the tool, include the optional `mcp` extra:
+
+```bash
+uv tool install 'ticktick-mcp-cli[mcp]'
+# or
+pipx install 'ticktick-mcp-cli[mcp]'
+```
+
+### Option B: use directly from a clone
 
 ```bash
 git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
@@ -57,7 +73,7 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### Option B: install from GitHub
+### Option C: install from GitHub
 
 ```bash
 uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
