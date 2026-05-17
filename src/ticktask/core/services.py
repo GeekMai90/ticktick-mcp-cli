@@ -21,6 +21,13 @@ from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
 
 ClientFactory = Callable[[ProfileConfig], TicktaskClient]
 
+REPEAT_PRESETS = {
+    "daily": "RRULE:FREQ=DAILY",
+    "weekly": "RRULE:FREQ=WEEKLY",
+    "monthly": "RRULE:FREQ=MONTHLY",
+    "yearly": "RRULE:FREQ=YEARLY",
+}
+
 
 def default_client_factory(profile: ProfileConfig) -> TicktaskClient:
     return TicktaskClient(profile.base_url, profile.access_token or "")
@@ -545,6 +552,62 @@ class TicktaskService:
         finally:
             client.close()
 
+    def set_task_reminders(self, task_id: str, project_id: str, reminders: list[str]) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Setting task reminders requires `project_id`.")
+        normalized = [reminder.strip() for reminder in reminders if reminder and reminder.strip()]
+        if not normalized:
+            raise ValidationError("Setting task reminders requires at least one reminder value.")
+        return self._update_existing_task_fields(task_id, project_id, {"reminders": normalized})
+
+    def clear_task_reminders(self, task_id: str, project_id: str) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Clearing task reminders requires `project_id`.")
+        return self._update_existing_task_fields(task_id, project_id, {"reminders": []})
+
+    def set_task_repeat(
+        self,
+        task_id: str,
+        project_id: str,
+        preset: str | None = None,
+        rrule: str | None = None,
+    ) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Setting task repeat requires `project_id`.")
+        if bool(preset) == bool(rrule):
+            raise ValidationError("Setting task repeat requires exactly one of `preset` or `rrule`.")
+        repeat_flag = rrule.strip() if rrule else REPEAT_PRESETS.get(str(preset).casefold())
+        if not repeat_flag:
+            raise ValidationError(
+                f"Unknown repeat preset `{preset}`.",
+                hint="Use one of: daily, weekly, monthly, yearly, or pass a raw RRULE.",
+            )
+        if not repeat_flag.startswith("RRULE:"):
+            repeat_flag = f"RRULE:{repeat_flag}"
+        return self._update_existing_task_fields(task_id, project_id, {"repeatFlag": repeat_flag})
+
+    def clear_task_repeat(self, task_id: str, project_id: str) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Clearing task repeat requires `project_id`.")
+        return self._update_existing_task_fields(task_id, project_id, {"repeatFlag": ""})
+
+    def _update_existing_task_fields(
+        self,
+        task_id: str,
+        project_id: str,
+        changes: dict[str, Any],
+    ) -> dict[str, Any]:
+        client = self._with_client()
+        try:
+            task = client.get_task(project_id, task_id)
+            payload = dict(task)
+            payload["id"] = task_id
+            payload["projectId"] = project_id
+            payload.update(changes)
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
     def delete_task(self, task_id: str, project_id: str, confirmed: bool) -> dict[str, Any]:
         if not confirmed:
             raise ConfirmationRequiredError("Deleting a task requires explicit confirmation.")
@@ -788,3 +851,4 @@ class TicktaskService:
                 hint=f"Use a project ID. Matches: {names}.",
             )
         raise NotFoundError(f"Project `{value}` was not found.")
+

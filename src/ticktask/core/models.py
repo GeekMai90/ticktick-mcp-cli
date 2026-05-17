@@ -40,6 +40,8 @@ class Task:
     kind: str | None
     items: list[dict[str, Any]]
     tags: list[str]
+    reminders: list[str]
+    repeat_flag: str | None
     raw: dict[str, Any]
 
     @classmethod
@@ -58,6 +60,8 @@ class Task:
             kind=_first(raw, "kind"),
             items=list(raw.get("items") or []),
             tags=[str(tag) for tag in (raw.get("tags") or []) if tag is not None],
+            reminders=[str(reminder) for reminder in (raw.get("reminders") or []) if reminder is not None],
+            repeat_flag=_first(raw, "repeatFlag", "repeat_flag"),
             raw=raw,
         )
 
@@ -127,3 +131,4 @@ PRIORITY_MAP = {
     "medium": 3,
     "high": 5,
 }
+

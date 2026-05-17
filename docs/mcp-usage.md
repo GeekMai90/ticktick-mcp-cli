@@ -46,6 +46,10 @@ Tools:
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_set_task_reminders`
+- `ticktask_clear_task_reminders`
+- `ticktask_set_task_repeat`
+- `ticktask_clear_task_repeat`
 - `ticktask_add_task_tag`
 - `ticktask_remove_task_tag`
 - `ticktask_add_checklist_item`
@@ -67,7 +71,7 @@ Tools:
 
 `ticktask_describe_tools` returns agent-facing metadata for every MCP tool: descriptions, CLI parity, parameters, enum constraints, examples, destructive-operation flags, and confirmation requirements. `ticktask_cli_parity` returns the same mapping as rows for audits and planning.
 
-`ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. Tag mutation tools update the parent task tags through the official task update API. Habit tools cover list/get/create/update, check-in, and history. Focus tools cover list/get/delete plus report-friendly exports, and enforce the official 30-day list/export range limit.
+`ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. Reminder, repeat, and tag mutation tools update the parent task through the official task update API. Habit tools cover list/get/create/update, check-in, and history. Focus tools cover list/get/delete plus report-friendly exports, and enforce the official 30-day list/export range limit.
 
 Tool functions are importable from `ticktask.mcp.tools` for unit testing without launching stdio.
 
@@ -83,4 +87,5 @@ definitions = tools.ticktask_describe_tools()["data"]
 print(definitions["ticktask_list_tasks"]["parameters"]["status"]["enum"])
 print(definitions["ticktask_delete_task"]["confirmation_required"])
 ```
+
 

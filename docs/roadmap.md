@@ -23,8 +23,8 @@ Source projects: `jacepark12/ticktick-mcp`, `alexarevalo9/ticktick-mcp-server`, 
 - [x] Completed-task listing
 - [x] Subtasks/checklist item CRUD
 - [x] Tag-aware filters and tag operations
-- [ ] Reminder create/update/delete
-- [ ] Repeat/RRULE helpers
+- [x] Reminder create/update/delete
+- [x] Repeat/RRULE helpers
 - [ ] Due/start date convenience parser and validator
 - [ ] Priority/status/kind validation helpers
 - [ ] Bulk complete/delete/move guarded by dry-run + confirmation
@@ -150,4 +150,5 @@ Project differentiator.
 6. `feat(focus): add focus reporting exports`
 7. `feat(batch): add dry-run guarded bulk operations`
 8. `feat(dx): add PyPI publish workflow and install docs`
+
 

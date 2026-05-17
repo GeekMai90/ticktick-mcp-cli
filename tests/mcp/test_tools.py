@@ -35,6 +35,18 @@ class FakeService:
     def update_task(self, task_id, project_id, title=None, content=None, due=None, priority=None):
         return {"id": task_id, "project_id": project_id, "title": title}
 
+    def set_task_reminders(self, task_id, project_id, reminders):
+        return {"id": task_id, "project_id": project_id, "raw": {"reminders": reminders}}
+
+    def clear_task_reminders(self, task_id, project_id):
+        return {"id": task_id, "project_id": project_id, "raw": {"reminders": []}}
+
+    def set_task_repeat(self, task_id, project_id, preset=None, rrule=None):
+        return {"id": task_id, "project_id": project_id, "raw": {"repeatFlag": rrule or f"RRULE:FREQ={preset.upper()}"}}
+
+    def clear_task_repeat(self, task_id, project_id):
+        return {"id": task_id, "project_id": project_id, "raw": {"repeatFlag": ""}}
+
     def add_task_tag(self, task_id, project_id, tag):
         return {"id": task_id, "project_id": project_id, "tags": [tag]}
 
@@ -158,6 +170,10 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_filter_tasks(tag="agent", priority="high")["data"][0]["id"] == "ft1"
     assert tools.ticktask_add_task_tag("t1", "p1", "agent")["data"]["tags"] == ["agent"]
     assert tools.ticktask_remove_task_tag("t1", "p1", "agent")["data"]["tags"] == []
+    assert tools.ticktask_set_task_reminders("t1", "p1", ["TRIGGER:PT10M"])["data"]["raw"]["reminders"] == ["TRIGGER:PT10M"]
+    assert tools.ticktask_clear_task_reminders("t1", "p1")["data"]["raw"]["reminders"] == []
+    assert tools.ticktask_set_task_repeat("t1", "p1", preset="weekly")["data"]["raw"]["repeatFlag"] == "RRULE:FREQ=WEEKLY"
+    assert tools.ticktask_clear_task_repeat("t1", "p1")["data"]["raw"]["repeatFlag"] == ""
     assert tools.ticktask_list_habits()["data"][0]["id"] == "h1"
     assert tools.ticktask_get_habit("h1")["data"]["name"] == "Read"
     assert tools.ticktask_create_habit("Write")["data"]["id"] == "h-new"
@@ -185,6 +201,10 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_update_task,
         tools.ticktask_delete_task,
         tools.ticktask_move_task,
+        tools.ticktask_set_task_reminders,
+        tools.ticktask_clear_task_reminders,
+        tools.ticktask_set_task_repeat,
+        tools.ticktask_clear_task_repeat,
         tools.ticktask_filter_tasks,
         tools.ticktask_add_task_tag,
         tools.ticktask_remove_task_tag,
@@ -282,6 +302,12 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
         "csv",
         "markdown",
     ]
+    assert definitions["ticktask_set_task_repeat"]["parameters"]["preset"]["enum"] == [
+        "daily",
+        "weekly",
+        "monthly",
+        "yearly",
+    ]
     assert definitions["ticktask_delete_task"]["confirmation_required"] is True
     assert definitions["ticktask_delete_checklist_item"]["confirmation_required"] is True
 
@@ -293,7 +319,10 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     assert "ticktask task list" in commands
     assert "ticktask task tag add" in commands
     assert "ticktask task item delete" in commands
+    assert "ticktask task reminder set" in commands
+    assert "ticktask task repeat set" in commands
     assert "ticktask export tasks" in commands
     assert "ticktask export focus" in commands
     assert all(row["mcp_tool"].startswith("ticktask_") for row in matrix)
     assert all(row["examples"] for row in matrix)
+
