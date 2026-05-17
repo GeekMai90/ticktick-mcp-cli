@@ -88,6 +88,9 @@ class FakeService:
     def export_tasks(self, output_format, project=None, status="open", start_date=None, end_date=None):
         return "exported"
 
+    def export_focuses(self, output_format, from_time, to_time, focus_type=0):
+        return "focus-exported"
+
     def list_habits(self):
         return [{"id": "h1", "name": "Read"}]
 
@@ -141,6 +144,7 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_move_task("t1", "p1", "p2")["data"]["to_project_id"] == "p2"
     assert tools.ticktask_completed(period="today")["meta"]["count"] == 1
     assert tools.ticktask_export_tasks("json")["data"]["content"] == "exported"
+    assert tools.ticktask_export_focuses("jsonl", "2026-01-01", "2026-01-30")["data"]["content"] == "focus-exported"
     assert tools.ticktask_create_project("Focus", color="#00aa00")["data"]["id"] == "p-new"
     assert tools.ticktask_update_project("p1", name="Renamed")["data"]["name"] == "Renamed"
     assert tools.ticktask_delete_project("p1")["error"]["code"] == "CONFIRMATION_REQUIRED"
@@ -196,6 +200,7 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_delete_focus,
         tools.ticktask_completed,
         tools.ticktask_export_tasks,
+        tools.ticktask_export_focuses,
         tools.ticktask_create_project,
         tools.ticktask_update_project,
         tools.ticktask_delete_project,
@@ -271,6 +276,12 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
         "csv",
         "markdown",
     ]
+    assert definitions["ticktask_export_focuses"]["parameters"]["output_format"]["enum"] == [
+        "json",
+        "jsonl",
+        "csv",
+        "markdown",
+    ]
     assert definitions["ticktask_delete_task"]["confirmation_required"] is True
     assert definitions["ticktask_delete_checklist_item"]["confirmation_required"] is True
 
@@ -283,5 +294,6 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     assert "ticktask task tag add" in commands
     assert "ticktask task item delete" in commands
     assert "ticktask export tasks" in commands
+    assert "ticktask export focus" in commands
     assert all(row["mcp_tool"].startswith("ticktask_") for row in matrix)
     assert all(row["examples"] for row in matrix)

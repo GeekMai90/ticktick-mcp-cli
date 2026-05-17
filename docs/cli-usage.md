@@ -6,7 +6,7 @@
 uv run ticktick-mcp-cli doctor --json
 uv run ticktick-mcp-cli auth status --json
 uv run ticktick-mcp-cli auth login --service ticktick --no-browser --json
-uv run ticktick-mcp-cli auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' --json
+uv run ticktick-mcp-cli auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=***&state=STATE' --json
 uv run ticktick-mcp-cli auth login --service ticktick --code CALLBACK_CODE --state STATE --json
 uv run ticktick-mcp-cli auth refresh --service ticktick --json
 uv run ticktick-mcp-cli config path
@@ -92,9 +92,10 @@ uv run ticktick-mcp-cli export tasks --format json --status open
 uv run ticktick-mcp-cli export tasks --format jsonl --status all --from 2026-05-01 --to 2026-05-17
 uv run ticktick-mcp-cli export tasks --format csv --project Inbox
 uv run ticktick-mcp-cli export completed --format markdown --from 2026-05-01 --to 2026-05-17
+uv run ticktick-mcp-cli export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
 ```
 
-Supported formats are `json`, `jsonl`, `csv`, and `markdown`. Export commands emit raw export content instead of wrapping the output in the stable CLI result envelope.
+Supported formats are `json`, `jsonl`, `csv`, and `markdown`. Export commands emit raw export content instead of wrapping the output in the stable CLI result envelope. Focus exports include report-friendly `duration_seconds` and `duration_minutes` fields and use the same 30-day range validation as focus listing.
 
 Aliases:
 
@@ -119,3 +120,4 @@ Error:
 ```
 
 Agents should branch on `ok`, then on `error.code`.
+

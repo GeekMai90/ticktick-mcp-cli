@@ -15,7 +15,7 @@ from ticktask.core.errors import (
     NotFoundError,
     ValidationError,
 )
-from ticktask.core.exporters import serialize_tasks
+from ticktask.core.exporters import serialize_focuses, serialize_tasks
 from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
 
 
@@ -742,6 +742,10 @@ class TicktaskService:
                 end_date=end_date,
             )
         return serialize_tasks(tasks, output_format)
+
+    def export_focuses(self, output_format: str, from_time: str, to_time: str, focus_type: int = 0) -> str:
+        focuses = self.list_focuses(from_time=from_time, to_time=to_time, focus_type=focus_type)
+        return serialize_focuses(focuses, output_format)
 
     @staticmethod
     def _extract_tasks(data: Any) -> list[dict[str, Any]]:

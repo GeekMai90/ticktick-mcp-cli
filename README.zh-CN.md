@@ -34,7 +34,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
-- 将任务或已完成任务导出为 `json`、`jsonl`、`csv`、`markdown`。
+- 将任务、已完成任务或专注会话报表导出为 `json`、`jsonl`、`csv`、`markdown`。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
 - 基于同一套 Core 的 MCP 工具。
 
@@ -118,7 +118,7 @@ ticktask auth login --service ticktick --no-browser --json
 ```bash
 ticktask auth login \
   --service ticktick \
-  --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' \
+  --callback-url 'http://localhost:8080/callback?code=***&state=STATE' \
   --json
 ```
 
@@ -166,6 +166,7 @@ ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
 ticktask export tasks --format jsonl --status all
 ticktask export tasks --format csv --project Inbox
 ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
+ticktask export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
 ```
 
 ## AI Agent 快速开始
@@ -284,6 +285,7 @@ MCP 工具：
 - `ticktask_get_focus`
 - `ticktask_delete_focus`
 - `ticktask_export_tasks`
+- `ticktask_export_focuses`
 
 ## 真实 API integration smoke
 
@@ -338,3 +340,4 @@ uv build
 ## License
 
 MIT. See [LICENSE](LICENSE).
+

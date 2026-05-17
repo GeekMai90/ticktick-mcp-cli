@@ -57,7 +57,7 @@ Source project: `ticktick-sdk`; official Open API exposes habit/focus endpoints.
 - [x] Habit list/get/create/update
 - [x] Habit check-in create/update and history query
 - [x] Focus session list/get/delete
-- [ ] Focus reporting exports
+- [x] Focus reporting exports
 - [x] MCP tools for habit/focus workflows
 
 ### 5. Batch, sync, and analytics
@@ -150,3 +150,4 @@ Project differentiator.
 6. `feat(focus): add focus reporting exports`
 7. `feat(batch): add dry-run guarded bulk operations`
 8. `feat(dx): add PyPI publish workflow and install docs`
+
