@@ -161,10 +161,24 @@ Success:
 Error:
 
 ```json
-{"ok": false, "error": {"code": "ERROR_CODE", "message": "Human message", "hint": "Next step"}}
+{
+  "ok": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Human message",
+    "hint": "Next step",
+    "category": "validation",
+    "retryable": false,
+    "remediation": {
+      "action": "fix_arguments",
+      "command": "rerun with valid arguments",
+      "safe_to_retry": false
+    }
+  }
+}
 ```
 
-Agents should branch on `ok`, then on `error.code`.
+Agents should branch on `ok`, then on `error.code`. Error categories are `configuration`, `auth`, `api`, `lookup`, `validation`, `safety`, and `unexpected`; retry only when `retryable` and `remediation.safe_to_retry` are true.
 
 ## Reliability and retries
 

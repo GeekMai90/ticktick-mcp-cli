@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ticktask.core.errors import TicktaskError
+from ticktask.core.errors import TicktaskError, enrich_error_payload
 
 
 def ok(data: Any = None, meta: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -13,17 +13,18 @@ def err(error: TicktaskError | Exception) -> dict[str, Any]:
     if isinstance(error, TicktaskError):
         payload = error.to_dict()
     else:
-        payload = {
-            "code": "UNEXPECTED_ERROR",
-            "message": str(error),
-            "hint": "Run with a narrower command or report this issue.",
-        }
+        payload = enrich_error_payload(
+            {
+                "code": "UNEXPECTED_ERROR",
+                "message": str(error),
+                "hint": "Run `ticktask doctor bundle` and report this issue.",
+            }
+        )
     return {"ok": False, "error": payload}
 
 
 def normalize_error_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if payload.get("ok") is False and "error" in payload:
-        error = dict(payload["error"])
-        error.setdefault("hint", "")
+        error = enrich_error_payload(dict(payload["error"]))
         return {"ok": False, "error": error}
     return payload

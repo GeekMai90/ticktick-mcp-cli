@@ -38,6 +38,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 任务分析：统计 open/completed/overdue 数量、项目吞吐、标签分布和优先级分布。
 - 进度报告：把任务、习惯打卡和专注时长汇总成一个 scorecard。
 - 只读 API 调用支持冲突安全重试，包含 rate limit 的 `Retry-After` 与临时 5xx 处理。
+- 面向 Agent 的结构化错误分类：每个错误 payload 都包含 `category`、`retryable` 和 `remediation`。
 - 增量 sync/export 状态文件，用于带 checkpoint 的任务导出。
 - 按日期/项目写入本地备份文件，支持 Markdown、JSONL、CSV 或 JSON，并生成 manifest。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
@@ -260,8 +261,24 @@ Agent 使用 `ticktask` 时应遵守：
 失败：
 
 ```json
-{"ok": false, "error": {"code": "ERROR_CODE", "message": "Human message", "hint": "Next step"}}
+{
+  "ok": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Human message",
+    "hint": "Next step",
+    "category": "validation",
+    "retryable": false,
+    "remediation": {
+      "action": "fix_arguments",
+      "command": "rerun with valid arguments",
+      "safe_to_retry": false
+    }
+  }
+}
 ```
+
+结构化错误分类包括 `configuration`、`auth`、`api`、`lookup`、`validation`、`safety`、`unexpected`。Agent 应先判断 `ok`，再根据 `error.code` 分支；只有在 `retryable` 和 `remediation.safe_to_retry` 允许时才重试。
 
 ### Agent 安全命令序列
 

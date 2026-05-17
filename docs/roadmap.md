@@ -109,7 +109,7 @@ Project differentiator.
 - [x] Redacted diagnostic bundle command
 - [ ] End-to-end OAuth callback local server mode
 - [ ] Idempotency/deduplication helpers for agent retries
-- [ ] Structured error taxonomy with remediation hints
+- [x] Structured error taxonomy with remediation hints
 
 ## Suggested development phases
 
@@ -161,6 +161,7 @@ Project differentiator.
 16. ✅ `feat(mcp): add prompt templates for common workflows`
 17. ✅ `feat(validation): add date and enum validation helpers`
 18. ✅ `feat(diagnostics): add redacted diagnostic bundle command`
+19. ✅ `feat(errors): add remediation hints and stable error taxonomy`
 
 
 

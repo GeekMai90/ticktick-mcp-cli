@@ -38,6 +38,7 @@ Current capabilities:
 - Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.
 - Progress reporting that combines tasks, habits, and focus sessions into one scorecard.
 - Conflict-safe retries for read-only API calls, including `Retry-After` handling for rate limits and transient 5xx responses.
+- Structured error taxonomy for agents: `category`, `retryable`, and `remediation` hints accompany every error payload.
 - Incremental sync/export state file for checkpointed task exports.
 - Date/project backup files with Markdown, JSONL, CSV, or JSON outputs plus a manifest.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
@@ -260,8 +261,24 @@ Success:
 Error:
 
 ```json
-{"ok": false, "error": {"code": "ERROR_CODE", "message": "Human message", "hint": "Next step"}}
+{
+  "ok": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Human message",
+    "hint": "Next step",
+    "category": "validation",
+    "retryable": false,
+    "remediation": {
+      "action": "fix_arguments",
+      "command": "rerun with valid arguments",
+      "safe_to_retry": false
+    }
+  }
+}
 ```
+
+Structured error categories include `configuration`, `auth`, `api`, `lookup`, `validation`, `safety`, and `unexpected`. Agents should branch on `ok`, then `error.code`; use `retryable` and `remediation.safe_to_retry` before retrying.
 
 ### Agent-safe command sequence
 
