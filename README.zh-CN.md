@@ -33,6 +33,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）和任务标签增删。
 - 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
+- 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
 - 将任务或已完成任务导出为 `json`、`jsonl`、`csv`、`markdown`。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
 - 基于同一套 Core 的 MCP 工具。
@@ -273,6 +274,15 @@ MCP 工具：
 - `ticktask_complete_checklist_item`
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
+- `ticktask_list_habits`
+- `ticktask_get_habit`
+- `ticktask_create_habit`
+- `ticktask_update_habit`
+- `ticktask_checkin_habit`
+- `ticktask_habit_checkins`
+- `ticktask_list_focuses`
+- `ticktask_get_focus`
+- `ticktask_delete_focus`
 - `ticktask_export_tasks`
 
 ## 真实 API integration smoke

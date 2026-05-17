@@ -352,6 +352,86 @@ def ticktask_export_tasks(
 
 
 
+
+def ticktask_list_habits() -> dict[str, Any]:
+    try:
+        habits = _make_service().list_habits()
+        return ok(habits, {"count": len(habits)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_get_habit(habit_id: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().get_habit(habit_id))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_create_habit(
+    name: str,
+    goal: int | None = None,
+    step: int | None = None,
+    unit: str | None = None,
+    repeat_rule: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(_make_service().create_habit(name, goal=goal, step=step, unit=unit, repeat_rule=repeat_rule))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_update_habit(
+    habit_id: str,
+    name: str | None = None,
+    goal: int | None = None,
+    step: int | None = None,
+    unit: str | None = None,
+    repeat_rule: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(_make_service().update_habit(habit_id, name=name, goal=goal, step=step, unit=unit, repeat_rule=repeat_rule))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_checkin_habit(habit_id: str, stamp: int, value: int = 1) -> dict[str, Any]:
+    try:
+        return ok(_make_service().checkin_habit(habit_id, stamp=stamp, value=value))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_habit_checkins(habit_ids: list[str], from_stamp: int, to_stamp: int) -> dict[str, Any]:
+    try:
+        history = _make_service().habit_checkins(habit_ids, from_stamp=from_stamp, to_stamp=to_stamp)
+        return ok(history, {"count": len(history)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_list_focuses(from_time: str, to_time: str, focus_type: int = 0) -> dict[str, Any]:
+    try:
+        focuses = _make_service().list_focuses(from_time=from_time, to_time=to_time, focus_type=focus_type)
+        return ok(focuses, {"count": len(focuses)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_get_focus(focus_id: str, focus_type: int = 0) -> dict[str, Any]:
+    try:
+        return ok(_make_service().get_focus(focus_id=focus_id, focus_type=focus_type))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_delete_focus(focus_id: str, focus_type: int = 0, yes: bool = False) -> dict[str, Any]:
+    try:
+        return ok(_make_service().delete_focus(focus_id=focus_id, focus_type=focus_type, confirmed=yes))
+    except Exception as exc:
+        return err(exc)
+
+
 # Rich MCP metadata ---------------------------------------------------------
 # FastMCP can infer JSON schemas from Python signatures. This registry adds the
 # agent-facing layer that plain signatures cannot express well: CLI parity,
@@ -366,6 +446,7 @@ _EXPORT_FORMAT_ENUM = ["json", "jsonl", "csv", "markdown"]
 _SERVICE_ENUM = ["ticktick", "dida365"]
 _VIEW_MODE_ENUM = ["list", "kanban", "timeline"]
 _PROJECT_KIND_ENUM = ["TASK", "NOTE"]
+_FOCUS_TYPE_ENUM = ["0", "1"]
 
 _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_doctor": "ticktask doctor",
@@ -391,6 +472,15 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_complete_checklist_item": "ticktask task item complete",
     "ticktask_delete_checklist_item": "ticktask task item delete",
     "ticktask_completed": "ticktask completed",
+    "ticktask_list_habits": "ticktask habit list",
+    "ticktask_get_habit": "ticktask habit get",
+    "ticktask_create_habit": "ticktask habit create",
+    "ticktask_update_habit": "ticktask habit update",
+    "ticktask_checkin_habit": "ticktask habit checkin",
+    "ticktask_habit_checkins": "ticktask habit history",
+    "ticktask_list_focuses": "ticktask focus list",
+    "ticktask_get_focus": "ticktask focus get",
+    "ticktask_delete_focus": "ticktask focus delete",
     "ticktask_export_tasks": "ticktask export tasks",
     "ticktask_cli_parity": "ticktask --help",
 }
@@ -419,6 +509,15 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_complete_checklist_item": "Mark a checklist item/subtask completed by exact item ID.",
     "ticktask_delete_checklist_item": "Delete a checklist item/subtask; requires yes=true confirmation.",
     "ticktask_completed": "List completed tasks for a preset or date range.",
+    "ticktask_list_habits": "List habits for the authenticated account.",
+    "ticktask_get_habit": "Get one habit by exact habit ID.",
+    "ticktask_create_habit": "Create a habit using the official Open API.",
+    "ticktask_update_habit": "Update habit metadata by exact habit ID.",
+    "ticktask_checkin_habit": "Create or update a habit check-in using YYYYMMDD stamp.",
+    "ticktask_habit_checkins": "Query habit check-in history for one or more habit IDs.",
+    "ticktask_list_focuses": "List focus sessions for a max 30-day time range.",
+    "ticktask_get_focus": "Get one focus session by exact focus ID and type.",
+    "ticktask_delete_focus": "Delete a focus session; requires yes=true confirmation.",
     "ticktask_export_tasks": "Export tasks as JSON, JSONL, CSV, or Markdown content.",
     "ticktask_cli_parity": "Return the MCP-to-CLI parity matrix for agent planning and auditing.",
 }
@@ -449,6 +548,20 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "query": "Search query matched against task title, content, and ID.",
     "period": "Completed-task preset.",
     "output_format": "Export format.",
+    "habit_id": "Exact habit ID.",
+    "habit_ids": "One or more exact habit IDs.",
+    "stamp": "Habit check-in stamp as YYYYMMDD integer.",
+    "from_stamp": "Start habit history stamp as YYYYMMDD integer.",
+    "to_stamp": "End habit history stamp as YYYYMMDD integer.",
+    "value": "Habit check-in value.",
+    "goal": "Habit goal value.",
+    "step": "Habit step increment.",
+    "unit": "Habit unit label.",
+    "repeat_rule": "Habit recurrence rule in iCal RRULE format.",
+    "focus_id": "Exact focus session ID.",
+    "focus_type": "Focus type: 0=Pomodoro, 1=Timing.",
+    "from_time": "Focus query start time/date. Max 30-day range.",
+    "to_time": "Focus query end time/date. Max 30-day range.",
     "yes": "Explicit confirmation for destructive or irreversible operations.",
 }
 
@@ -460,6 +573,7 @@ _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
     "output_format": _EXPORT_FORMAT_ENUM,
     "view_mode": _VIEW_MODE_ENUM,
     "kind": _PROJECT_KIND_ENUM,
+    "focus_type": _FOCUS_TYPE_ENUM,
     ("ticktask_list_tasks", "status"): _STATUS_ENUM,
     ("ticktask_filter_tasks", "status"): _STATUS_ENUM,
     ("ticktask_export_tasks", "status"): _STATUS_ENUM,
@@ -490,6 +604,15 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_complete_checklist_item": [{"description": "Complete checklist item", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "item_id": "ITEM_ID"}}],
     "ticktask_delete_checklist_item": [{"description": "Delete checklist item after verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "item_id": "ITEM_ID", "yes": True}}],
     "ticktask_completed": [{"description": "Completed tasks for today", "arguments": {"period": "today"}}],
+    "ticktask_list_habits": [{"description": "List habits", "arguments": {}}],
+    "ticktask_get_habit": [{"description": "Get habit details", "arguments": {"habit_id": "HABIT_ID"}}],
+    "ticktask_create_habit": [{"description": "Create a reading habit", "arguments": {"name": "Read", "goal": 1, "unit": "time"}}],
+    "ticktask_update_habit": [{"description": "Rename a habit", "arguments": {"habit_id": "HABIT_ID", "name": "Read more"}}],
+    "ticktask_checkin_habit": [{"description": "Check in a habit", "arguments": {"habit_id": "HABIT_ID", "stamp": 20260101, "value": 1}}],
+    "ticktask_habit_checkins": [{"description": "Query habit history", "arguments": {"habit_ids": ["HABIT_ID"], "from_stamp": 20260101, "to_stamp": 20260131}}],
+    "ticktask_list_focuses": [{"description": "List Pomodoro focus sessions", "arguments": {"from_time": "2026-01-01", "to_time": "2026-01-30", "focus_type": 0}}],
+    "ticktask_get_focus": [{"description": "Get focus session details", "arguments": {"focus_id": "FOCUS_ID", "focus_type": 0}}],
+    "ticktask_delete_focus": [{"description": "Delete focus session after verification", "arguments": {"focus_id": "FOCUS_ID", "focus_type": 0, "yes": True}}],
     "ticktask_export_tasks": [{"description": "Export all tasks as JSONL", "arguments": {"output_format": "jsonl", "status": "all"}}],
     "ticktask_cli_parity": [{"description": "Audit MCP and CLI parity", "arguments": {}}],
 }
@@ -499,6 +622,7 @@ _CONFIRMATION_TOOLS = {
     "ticktask_complete_task",
     "ticktask_delete_task",
     "ticktask_delete_checklist_item",
+    "ticktask_delete_focus",
 }
 
 _DESTRUCTIVE_TOOLS = {
@@ -512,6 +636,9 @@ _DESTRUCTIVE_TOOLS = {
     "ticktask_delete_checklist_item",
     "ticktask_update_checklist_item",
     "ticktask_complete_checklist_item",
+    "ticktask_update_habit",
+    "ticktask_checkin_habit",
+    "ticktask_delete_focus",
 }
 
 

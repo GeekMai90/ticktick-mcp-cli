@@ -144,3 +144,64 @@ def test_project_lifecycle_endpoints() -> None:
         ),
         ("DELETE", "https://api.ticktick.com/open/v1/project/p1", b""),
     ]
+
+
+
+def test_habit_endpoints() -> None:
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url), request.read()))
+        if request.method == "DELETE":
+            return httpx.Response(204)
+        if str(request.url).endswith("/checkins?habitIds=h1,h2&from=20260101&to=20260131"):
+            return httpx.Response(200, json=[{"habitId": "h1", "checkins": []}])
+        return httpx.Response(200, json={"id": "h1", "name": "Read"})
+
+    client = TicktaskClient(
+        "https://api.ticktick.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+
+    client.list_habits()
+    client.get_habit("h1")
+    client.create_habit({"name": "Read"})
+    client.update_habit("h1", {"id": "h1", "name": "Read more"})
+    client.checkin_habit("h1", {"stamp": 20260101, "value": 1})
+    client.habit_checkins(["h1", "h2"], 20260101, 20260131)
+
+    assert calls == [
+        ("GET", "https://api.ticktick.com/open/v1/habit", b""),
+        ("GET", "https://api.ticktick.com/open/v1/habit/h1", b""),
+        ("POST", "https://api.ticktick.com/open/v1/habit", b'{"name":"Read"}'),
+        ("POST", "https://api.ticktick.com/open/v1/habit/h1", b'{"id":"h1","name":"Read more"}'),
+        ("POST", "https://api.ticktick.com/open/v1/habit/h1/checkin", b'{"stamp":20260101,"value":1}'),
+        ("GET", "https://api.ticktick.com/open/v1/habit/checkins?habitIds=h1%2Ch2&from=20260101&to=20260131", b""),
+    ]
+
+
+def test_focus_endpoints() -> None:
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url), request.read()))
+        if request.method == "DELETE":
+            return httpx.Response(204)
+        return httpx.Response(200, json={"id": "f1", "type": 0})
+
+    client = TicktaskClient(
+        "https://api.ticktick.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+
+    client.get_focus("f1", focus_type=0)
+    client.list_focuses(from_time="2026-01-01T00:00:00+0000", to_time="2026-01-02T00:00:00+0000", focus_type=1)
+    client.delete_focus("f1", focus_type=0)
+
+    assert calls == [
+        ("GET", "https://api.ticktick.com/open/v1/focus/f1?type=0", b""),
+        ("GET", "https://api.ticktick.com/open/v1/focus?from=2026-01-01T00%3A00%3A00%2B0000&to=2026-01-02T00%3A00%3A00%2B0000&type=1", b""),
+        ("DELETE", "https://api.ticktick.com/open/v1/focus/f1?type=0", b""),
+    ]

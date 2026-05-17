@@ -119,6 +119,36 @@ class TicktaskClient:
             payload["projectIds"] = normalized_project_ids
         return self.request("POST", "/open/v1/task/completed", json=payload)
 
+
+    def list_habits(self) -> Any:
+        return self.request("GET", "/open/v1/habit")
+
+    def get_habit(self, habit_id: str) -> dict[str, Any]:
+        return self.request("GET", f"/open/v1/habit/{habit_id}")
+
+    def create_habit(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.request("POST", "/open/v1/habit", json=payload)
+
+    def update_habit(self, habit_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.request("POST", f"/open/v1/habit/{habit_id}", json=payload)
+
+    def checkin_habit(self, habit_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self.request("POST", f"/open/v1/habit/{habit_id}/checkin", json=payload)
+
+    def habit_checkins(self, habit_ids: str | Sequence[str], from_stamp: int, to_stamp: int) -> Any:
+        normalized_habit_ids = self._normalize_project_ids(habit_ids)
+        params = {"habitIds": ",".join(normalized_habit_ids), "from": from_stamp, "to": to_stamp}
+        return self.request("GET", "/open/v1/habit/checkins", params=params)
+
+    def get_focus(self, focus_id: str, focus_type: int = 0) -> dict[str, Any]:
+        return self.request("GET", f"/open/v1/focus/{focus_id}", params={"type": focus_type})
+
+    def list_focuses(self, from_time: str, to_time: str, focus_type: int = 0) -> Any:
+        return self.request("GET", "/open/v1/focus", params={"from": from_time, "to": to_time, "type": focus_type})
+
+    def delete_focus(self, focus_id: str, focus_type: int = 0) -> dict[str, Any]:
+        return self.request("DELETE", f"/open/v1/focus/{focus_id}", params={"type": focus_type})
+
     @staticmethod
     def _format_date(value: str | date | datetime) -> str:
         if isinstance(value, datetime):

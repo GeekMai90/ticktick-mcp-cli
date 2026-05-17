@@ -68,6 +68,59 @@ class Task:
         return self.status in {2, "2", "completed", "done"}
 
 
+@dataclass
+class Habit:
+    id: str
+    name: str
+    status: int | str | None
+    total_checkins: int | None
+    raw: dict[str, Any]
+
+    @classmethod
+    def from_api(cls, raw: dict[str, Any]) -> Habit:
+        habit_id = str(_first(raw, "id", "habitId") or "")
+        total = _first(raw, "totalCheckIns", "total_checkins")
+        return cls(
+            id=habit_id,
+            name=str(_first(raw, "name", "title") or habit_id),
+            status=_first(raw, "status"),
+            total_checkins=int(total) if total is not None else None,
+            raw=raw,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class Focus:
+    id: str
+    focus_type: int | None
+    task_id: str | None
+    start_time: str | None
+    end_time: str | None
+    duration: int | None
+    raw: dict[str, Any]
+
+    @classmethod
+    def from_api(cls, raw: dict[str, Any]) -> Focus:
+        focus_id = str(_first(raw, "id", "focusId") or "")
+        duration = _first(raw, "duration")
+        focus_type = _first(raw, "type", "focus_type")
+        return cls(
+            id=focus_id,
+            focus_type=int(focus_type) if focus_type is not None else None,
+            task_id=str(_first(raw, "taskId", "task_id")) if _first(raw, "taskId", "task_id") is not None else None,
+            start_time=_first(raw, "startTime", "start_time"),
+            end_time=_first(raw, "endTime", "end_time"),
+            duration=int(duration) if duration is not None else None,
+            raw=raw,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 PRIORITY_MAP = {
     "none": 0,
     "low": 1,

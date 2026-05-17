@@ -88,6 +88,36 @@ class FakeService:
     def export_tasks(self, output_format, project=None, status="open", start_date=None, end_date=None):
         return "exported"
 
+    def list_habits(self):
+        return [{"id": "h1", "name": "Read"}]
+
+    def get_habit(self, habit_id):
+        return {"id": habit_id, "name": "Read"}
+
+    def create_habit(self, name, **kwargs):
+        return {"id": "h-new", "name": name, "raw": kwargs}
+
+    def update_habit(self, habit_id, **kwargs):
+        return {"id": habit_id, "name": kwargs.get("name")}
+
+    def checkin_habit(self, habit_id, stamp, value=1):
+        return {"habitId": habit_id, "stamp": stamp, "value": value}
+
+    def habit_checkins(self, habit_ids, from_stamp, to_stamp):
+        return [{"habitId": habit_ids[0], "from": from_stamp, "to": to_stamp}]
+
+    def list_focuses(self, from_time, to_time, focus_type=0):
+        return [{"id": "f1", "focus_type": focus_type}]
+
+    def get_focus(self, focus_id, focus_type=0):
+        return {"id": focus_id, "focus_type": focus_type}
+
+    def delete_focus(self, focus_id, focus_type=0, confirmed=False):
+        if not confirmed:
+            from ticktask.core.errors import ConfirmationRequiredError
+            raise ConfirmationRequiredError("confirm")
+        return {"focus_id": focus_id, "focus_type": focus_type, "result": {}}
+
 
 def test_mcp_tool_functions_use_stable_result_shape(monkeypatch) -> None:
     monkeypatch.setattr(tools, "_make_service", lambda: FakeService())
@@ -124,6 +154,16 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_filter_tasks(tag="agent", priority="high")["data"][0]["id"] == "ft1"
     assert tools.ticktask_add_task_tag("t1", "p1", "agent")["data"]["tags"] == ["agent"]
     assert tools.ticktask_remove_task_tag("t1", "p1", "agent")["data"]["tags"] == []
+    assert tools.ticktask_list_habits()["data"][0]["id"] == "h1"
+    assert tools.ticktask_get_habit("h1")["data"]["name"] == "Read"
+    assert tools.ticktask_create_habit("Write")["data"]["id"] == "h-new"
+    assert tools.ticktask_update_habit("h1", name="Read more")["data"]["name"] == "Read more"
+    assert tools.ticktask_checkin_habit("h1", 20260101)["data"]["stamp"] == 20260101
+    assert tools.ticktask_habit_checkins(["h1"], 20260101, 20260131)["data"][0]["habitId"] == "h1"
+    assert tools.ticktask_list_focuses("2026-01-01", "2026-01-02", focus_type=1)["data"][0]["focus_type"] == 1
+    assert tools.ticktask_get_focus("f1", focus_type=0)["data"]["id"] == "f1"
+    assert tools.ticktask_delete_focus("f1", focus_type=0)["error"]["code"] == "CONFIRMATION_REQUIRED"
+    assert tools.ticktask_delete_focus("f1", focus_type=0, yes=True)["data"]["focus_id"] == "f1"
 
 
 def test_public_mcp_tool_signatures_are_json_serializable() -> None:
@@ -145,6 +185,15 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_add_task_tag,
         tools.ticktask_remove_task_tag,
         tools.ticktask_cli_parity,
+        tools.ticktask_list_habits,
+        tools.ticktask_get_habit,
+        tools.ticktask_create_habit,
+        tools.ticktask_update_habit,
+        tools.ticktask_checkin_habit,
+        tools.ticktask_habit_checkins,
+        tools.ticktask_list_focuses,
+        tools.ticktask_get_focus,
+        tools.ticktask_delete_focus,
         tools.ticktask_completed,
         tools.ticktask_export_tasks,
         tools.ticktask_create_project,
