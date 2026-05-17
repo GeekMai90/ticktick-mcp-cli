@@ -33,6 +33,7 @@ Current capabilities:
 - Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), and task tag add/remove.
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
+- Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
 - Export tasks/completed tasks as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
 - MCP tools over the same core behavior.
@@ -224,6 +225,14 @@ ticktask task item update TASK_ID ITEM_ID --project-id PROJECT_ID --title "Renam
 ticktask task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
 ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes --json
 
+# Habits and focus
+ticktask habit list --json
+ticktask habit create "Read" --goal 1 --unit time --json
+ticktask habit checkin HABIT_ID 20260101 --value 1 --json
+ticktask habit history HABIT_ID --from 20260101 --to 20260131 --json
+ticktask focus list --from 2026-01-01 --to 2026-01-30 --type 0 --json
+ticktask focus delete FOCUS_ID --type 0 --yes --json
+
 # Safe real-API smoke: skipped unless explicitly enabled
 ticktask integration smoke --json
 TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
@@ -275,6 +284,15 @@ MCP tools:
 - `ticktask_complete_checklist_item`
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
+- `ticktask_list_habits`
+- `ticktask_get_habit`
+- `ticktask_create_habit`
+- `ticktask_update_habit`
+- `ticktask_checkin_habit`
+- `ticktask_habit_checkins`
+- `ticktask_list_focuses`
+- `ticktask_get_focus`
+- `ticktask_delete_focus`
 - `ticktask_export_tasks`
 
 ## Real API integration smoke

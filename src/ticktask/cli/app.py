@@ -5,6 +5,8 @@ import typer
 from ticktask import __version__
 from ticktask.cli import auth as auth_commands
 from ticktask.cli import export as export_commands
+from ticktask.cli import focus as focus_commands
+from ticktask.cli import habit as habit_commands
 from ticktask.cli import integration as integration_commands
 from ticktask.cli import project as project_commands
 from ticktask.cli import task as task_commands
@@ -18,6 +20,8 @@ app = typer.Typer(help="Agent-friendly CLI for TickTick and Dida365.")
 app.add_typer(auth_commands.app, name="auth")
 app.add_typer(project_commands.app, name="project")
 app.add_typer(task_commands.app, name="task")
+app.add_typer(habit_commands.app, name="habit")
+app.add_typer(focus_commands.app, name="focus")
 app.add_typer(export_commands.app, name="export")
 app.add_typer(integration_commands.app, name="integration")
 

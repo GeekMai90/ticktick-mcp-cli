@@ -53,6 +53,29 @@ Checklist item operations update the parent task through the official task updat
 
 Completed-task listing uses the official `POST /open/v1/task/completed` API. Global completed queries intentionally omit `projectIds`, which avoids missing completed Dida365 tasks.
 
+## Habits
+
+```bash
+uv run ticktick-mcp-cli habit list --json
+uv run ticktick-mcp-cli habit get HABIT_ID --json
+uv run ticktick-mcp-cli habit create "Read" --goal 1 --unit time --json
+uv run ticktick-mcp-cli habit update HABIT_ID --name "Read more" --json
+uv run ticktick-mcp-cli habit checkin HABIT_ID 20260101 --value 1 --json
+uv run ticktick-mcp-cli habit history HABIT_ID --from 20260101 --to 20260131 --json
+```
+
+Habit check-in stamps use integer `YYYYMMDD` format.
+
+## Focus
+
+```bash
+uv run ticktick-mcp-cli focus list --from 2026-01-01 --to 2026-01-30 --type 0 --json
+uv run ticktick-mcp-cli focus get FOCUS_ID --type 0 --json
+uv run ticktick-mcp-cli focus delete FOCUS_ID --type 0 --yes --json
+```
+
+Focus type is `0` for Pomodoro and `1` for Timing. Focus list queries validate the official 30-day maximum range. Deleting a focus session requires `--yes`.
+
 ## Completed
 
 ```bash

@@ -53,15 +53,24 @@ Tools:
 - `ticktask_complete_checklist_item`
 - `ticktask_delete_checklist_item`
 - `ticktask_completed`
+- `ticktask_list_habits`
+- `ticktask_get_habit`
+- `ticktask_create_habit`
+- `ticktask_update_habit`
+- `ticktask_checkin_habit`
+- `ticktask_habit_checkins`
+- `ticktask_list_focuses`
+- `ticktask_get_focus`
+- `ticktask_delete_focus`
 - `ticktask_export_tasks`
 
 `ticktask_describe_tools` returns agent-facing metadata for every MCP tool: descriptions, CLI parity, parameters, enum constraints, examples, destructive-operation flags, and confirmation requirements. `ticktask_cli_parity` returns the same mapping as rows for audits and planning.
 
-`ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. Tag mutation tools update the parent task tags through the official task update API.
+`ticktask_list_tasks` accepts optional `tag` and `filter_preset` arguments. `ticktask_filter_tasks` uses the Open API filter endpoint for deterministic tag/priority/date filtering. Tag mutation tools update the parent task tags through the official task update API. Habit tools cover list/get/create/update, check-in, and history. Focus tools cover list/get/delete and enforce the official 30-day list range limit.
 
 Tool functions are importable from `ticktask.mcp.tools` for unit testing without launching stdio.
 
-Destructive MCP tools require explicit confirmation. For example, `ticktask_delete_task`, `ticktask_delete_project`, and `ticktask_delete_checklist_item` return `CONFIRMATION_REQUIRED` unless `yes=true`.
+Destructive MCP tools require explicit confirmation. For example, `ticktask_delete_task`, `ticktask_delete_project`, `ticktask_delete_checklist_item`, and `ticktask_delete_focus` return `CONFIRMATION_REQUIRED` unless `yes=true`.
 
 
 Example metadata call:

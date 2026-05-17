@@ -96,6 +96,33 @@ class FakeClient:
             }
         ]
 
+    def list_habits(self):
+        return [{"id": "h1", "name": "Read", "status": 0, "totalCheckIns": 2}]
+
+    def get_habit(self, habit_id):
+        return {"id": habit_id, "name": "Read", "status": 0}
+
+    def create_habit(self, payload):
+        return {"id": "h-new", **payload}
+
+    def update_habit(self, habit_id, payload):
+        return {"id": habit_id, **payload}
+
+    def checkin_habit(self, habit_id, payload):
+        return {"habitId": habit_id, **payload}
+
+    def habit_checkins(self, habit_ids, from_stamp, to_stamp):
+        return [{"habitId": habit_ids[0], "from": from_stamp, "to": to_stamp, "checkins": []}]
+
+    def get_focus(self, focus_id, focus_type):
+        return {"id": focus_id, "type": focus_type, "duration": 1500}
+
+    def list_focuses(self, from_time, to_time, focus_type):
+        return [{"id": "f1", "type": focus_type, "startTime": from_time, "endTime": to_time}]
+
+    def delete_focus(self, focus_id, focus_type):
+        return {"deleted": True, "focusId": focus_id, "type": focus_type}
+
     def close(self):
         self.closed = True
 
@@ -328,3 +355,59 @@ def test_task_tag_mutation_validates_changes(tmp_path) -> None:
         assert exc.code == "VALIDATION_ERROR"
     else:
         raise AssertionError("expected ValidationError")
+
+
+
+def test_habit_service_methods(tmp_path) -> None:
+    svc = service(tmp_path)
+    assert svc.list_habits()[0]["id"] == "h1"
+    assert svc.get_habit("h1")["name"] == "Read"
+    assert svc.create_habit("Write", goal=1, unit="time")["id"] == "h-new"
+    updated = svc.update_habit("h1", name="Read more", goal=2)
+    assert updated["name"] == "Read more"
+    checkin = svc.checkin_habit("h1", stamp=20260101, value=1)
+    assert checkin["habitId"] == "h1"
+    history = svc.habit_checkins(["h1"], from_stamp=20260101, to_stamp=20260131)
+    assert history[0]["habitId"] == "h1"
+
+
+def test_habit_service_validates_inputs(tmp_path) -> None:
+    svc = service(tmp_path)
+    try:
+        svc.create_habit("   ")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+    try:
+        svc.update_habit("h1")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+
+def test_focus_service_methods_and_30_day_limit(tmp_path) -> None:
+    svc = service(tmp_path)
+    assert svc.get_focus("f1", focus_type=0)["id"] == "f1"
+    focuses = svc.list_focuses("2026-01-01", "2026-01-30", focus_type=1)
+    assert focuses[0]["focus_type"] == 1
+    deleted = svc.delete_focus("f1", focus_type=0, confirmed=True)
+    assert deleted["result"]["deleted"] is True
+
+    try:
+        svc.list_focuses("2026-01-01", "2026-02-15", focus_type=0)
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+
+def test_focus_delete_requires_confirmation(tmp_path) -> None:
+    try:
+        service(tmp_path).delete_focus("f1", focus_type=0, confirmed=False)
+    except ConfirmationRequiredError as exc:
+        assert exc.code == "CONFIRMATION_REQUIRED"
+    else:
+        raise AssertionError("expected ConfirmationRequiredError")

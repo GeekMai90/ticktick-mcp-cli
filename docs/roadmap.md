@@ -54,11 +54,11 @@ Source projects: `jen6/ticktick-mcp`, `dida365-ai-tools`, `ticktick-sdk`.
 
 Source project: `ticktick-sdk`; official Open API exposes habit/focus endpoints.
 
-- [ ] Habit list/get/create/update
-- [ ] Habit check-in create/update and history query
-- [ ] Focus session list/get/delete
+- [x] Habit list/get/create/update
+- [x] Habit check-in create/update and history query
+- [x] Focus session list/get/delete
 - [ ] Focus reporting exports
-- [ ] MCP tools for habit/focus workflows
+- [x] MCP tools for habit/focus workflows
 
 ### 5. Batch, sync, and analytics
 
@@ -128,7 +128,7 @@ Project differentiator.
 
 ### Phase 3 — Power-user features
 
-- Add habits and focus sessions.
+- Add habits and focus sessions. ✅
 - Add reminders/repeat helpers.
 - Add batch operations with dry-run and exact confirmation.
 - Add analytics and report exports.
@@ -146,7 +146,7 @@ Project differentiator.
 2. `feat(task): add checklist item CRUD for subtasks`
 3. ✅ `feat(task): add tag filters and tag mutation helpers`
 4. ✅ `feat(mcp): expose one tool per CLI capability with schema examples`
-5. `feat(habit): add official habit list/checkin support`
-6. `feat(focus): add official focus session query/export support`
+5. ✅ `feat(habit-focus): add official habit and focus APIs`
+6. `feat(focus): add focus reporting exports`
 7. `feat(batch): add dry-run guarded bulk operations`
 8. `feat(dx): add PyPI publish workflow and install docs`

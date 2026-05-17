@@ -16,7 +16,7 @@ from ticktask.core.errors import (
     ValidationError,
 )
 from ticktask.core.exporters import serialize_tasks
-from ticktask.core.models import PRIORITY_MAP, Project, Task
+from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
 
 
 ClientFactory = Callable[[ProfileConfig], TicktaskClient]
@@ -571,6 +571,146 @@ class TicktaskService:
             }
         finally:
             client.close()
+
+
+    def list_habits(self) -> list[dict[str, Any]]:
+        client = self._with_client()
+        try:
+            return [Habit.from_api(item).to_dict() for item in self._extract_list(client.list_habits())]
+        finally:
+            client.close()
+
+    def get_habit(self, habit_id: str) -> dict[str, Any]:
+        if not habit_id:
+            raise AmbiguousOperationError("Getting a habit requires `habit_id`.")
+        client = self._with_client()
+        try:
+            return Habit.from_api(client.get_habit(habit_id)).to_dict()
+        finally:
+            client.close()
+
+    def create_habit(
+        self,
+        name: str,
+        goal: int | None = None,
+        step: int | None = None,
+        unit: str | None = None,
+        repeat_rule: str | None = None,
+    ) -> dict[str, Any]:
+        if not name.strip():
+            raise ValidationError("Creating a habit requires a non-empty name.")
+        payload: dict[str, Any] = {"name": name}
+        if goal is not None:
+            payload["goal"] = goal
+        if step is not None:
+            payload["step"] = step
+        if unit is not None:
+            payload["unit"] = unit
+        if repeat_rule is not None:
+            payload["repeatRule"] = repeat_rule
+        client = self._with_client()
+        try:
+            return Habit.from_api(client.create_habit(payload)).to_dict()
+        finally:
+            client.close()
+
+    def update_habit(
+        self,
+        habit_id: str,
+        name: str | None = None,
+        goal: int | None = None,
+        step: int | None = None,
+        unit: str | None = None,
+        repeat_rule: str | None = None,
+    ) -> dict[str, Any]:
+        if not habit_id:
+            raise AmbiguousOperationError("Updating a habit requires `habit_id`.")
+        payload: dict[str, Any] = {"id": habit_id}
+        if name is not None:
+            if not name.strip():
+                raise ValidationError("Habit name cannot be empty.")
+            payload["name"] = name
+        if goal is not None:
+            payload["goal"] = goal
+        if step is not None:
+            payload["step"] = step
+        if unit is not None:
+            payload["unit"] = unit
+        if repeat_rule is not None:
+            payload["repeatRule"] = repeat_rule
+        if len(payload) == 1:
+            raise ValidationError("Updating a habit requires at least one changed field.")
+        client = self._with_client()
+        try:
+            return Habit.from_api(client.update_habit(habit_id, payload)).to_dict()
+        finally:
+            client.close()
+
+    def checkin_habit(self, habit_id: str, stamp: int, value: int = 1) -> dict[str, Any]:
+        if not habit_id:
+            raise AmbiguousOperationError("Checking in a habit requires `habit_id`.")
+        payload = {"stamp": int(stamp), "value": value}
+        client = self._with_client()
+        try:
+            return client.checkin_habit(habit_id, payload)
+        finally:
+            client.close()
+
+    def habit_checkins(self, habit_ids: list[str], from_stamp: int, to_stamp: int) -> list[dict[str, Any]]:
+        if not habit_ids:
+            raise ValidationError("Habit check-in history requires at least one habit ID.")
+        client = self._with_client()
+        try:
+            return self._extract_list(client.habit_checkins(habit_ids, int(from_stamp), int(to_stamp)))
+        finally:
+            client.close()
+
+    def get_focus(self, focus_id: str, focus_type: int = 0) -> dict[str, Any]:
+        if not focus_id:
+            raise AmbiguousOperationError("Getting a focus session requires `focus_id`.")
+        client = self._with_client()
+        try:
+            return Focus.from_api(client.get_focus(focus_id, focus_type)).to_dict()
+        finally:
+            client.close()
+
+    def list_focuses(self, from_time: str, to_time: str, focus_type: int = 0) -> list[dict[str, Any]]:
+        self._validate_focus_range(from_time, to_time)
+        client = self._with_client()
+        try:
+            return [Focus.from_api(item).to_dict() for item in self._extract_list(client.list_focuses(from_time, to_time, focus_type))]
+        finally:
+            client.close()
+
+    def delete_focus(self, focus_id: str, focus_type: int = 0, confirmed: bool = False) -> dict[str, Any]:
+        if not confirmed:
+            raise ConfirmationRequiredError("Deleting a focus session requires explicit confirmation.")
+        if not focus_id:
+            raise AmbiguousOperationError("Deleting a focus session requires `focus_id`.")
+        client = self._with_client()
+        try:
+            result = client.delete_focus(focus_id, focus_type)
+            return {"focus_id": focus_id, "focus_type": focus_type, "result": result}
+        finally:
+            client.close()
+
+    @staticmethod
+    def _validate_focus_range(from_time: str, to_time: str) -> None:
+        start = date.fromisoformat(from_time[:10])
+        end = date.fromisoformat(to_time[:10])
+        if (end - start).days > 30:
+            raise ValidationError("Focus queries are limited to a maximum 30-day range.")
+
+    @staticmethod
+    def _extract_list(data: Any) -> list[dict[str, Any]]:
+        if isinstance(data, list):
+            return [item for item in data if isinstance(item, dict)]
+        if isinstance(data, dict):
+            for key in ("habits", "focuses", "checkins", "data", "items"):
+                if isinstance(data.get(key), list):
+                    return [item for item in data[key] if isinstance(item, dict)]
+            return [data]
+        return []
 
     def export_tasks(
         self,
