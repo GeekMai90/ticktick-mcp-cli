@@ -37,6 +37,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 任务分析：统计 open/completed/overdue 数量、项目吞吐、标签分布和优先级分布。
 - 进度报告：把任务、习惯打卡和专注时长汇总成一个 scorecard。
+- 只读 API 调用支持冲突安全重试，包含 rate limit 的 `Retry-After` 与临时 5xx 处理。
 - 增量 sync/export 状态文件，用于带 checkpoint 的任务导出。
 - 按日期/项目写入本地备份文件，支持 Markdown、JSONL、CSV 或 JSON，并生成 manifest。
 - 支持官方 habit list/get/create/update、habit check-in/history、focus list/get/delete。
@@ -391,6 +392,7 @@ uv build
 - `.env`、token 文件、本地 config、`dist/` 和 build 输出都被 git 忽略。
 - OAuth 登录使用 state 和 PKCE。
 - API 调用会在 access token 过期或即将过期时自动 refresh。
+- 只读 API 调用会重试临时限流/服务器错误；写入类操作不会盲目重试，避免重复创建或重复修改。
 - 全局查询已完成任务时会故意省略 `projectIds`，避免漏掉 Dida365 已完成任务。
 
 ## License

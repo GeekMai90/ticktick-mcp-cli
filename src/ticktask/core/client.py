@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import date, datetime
+from email.utils import parsedate_to_datetime
+from time import sleep
 from typing import Any
 
 import httpx
@@ -34,9 +36,13 @@ class TicktaskClient:
         base_url: str,
         access_token: str,
         http_client: httpx.Client | None = None,
+        max_retries: int = 2,
+        retry_sleep: Callable[[float], None] = sleep,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.access_token = access_token
+        self.max_retries = max(0, max_retries)
+        self._retry_sleep = retry_sleep
         self._owns_client = http_client is None
         self.http = http_client or httpx.Client(timeout=20)
 
@@ -50,16 +56,37 @@ class TicktaskClient:
     def __exit__(self, *_exc: object) -> None:
         self.close()
 
-    def request(self, method: str, path: str, **kwargs: Any) -> Any:
+    def request(self, method: str, path: str, retry: bool | None = None, **kwargs: Any) -> Any:
         url = f"{self.base_url}{path}"
         headers = kwargs.pop("headers", {})
         headers["Authorization"] = f"Bearer {self.access_token}"
         headers.setdefault("Accept", "application/json")
-        try:
-            response = self.http.request(method, url, headers=headers, **kwargs)
-        except httpx.HTTPError as exc:
-            raise ApiError(f"HTTP request failed: {exc}") from exc
-        return _decode_response(response, method, path)
+        retryable = _is_retryable_request(method, retry)
+        last_exc: httpx.HTTPError | None = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = self.http.request(method, url, headers=headers, **kwargs)
+            except httpx.HTTPError as exc:
+                last_exc = exc
+                if retryable and attempt < self.max_retries:
+                    self._retry_sleep(_backoff_delay(attempt))
+                    continue
+                raise ApiError(
+                    f"HTTP request failed: {exc}",
+                    details={"path": path, "retryable": retryable},
+                ) from exc
+
+            if _should_retry_response(response, retryable) and attempt < self.max_retries:
+                self._retry_sleep(_retry_delay(response, attempt))
+                continue
+            return _decode_response(response, method, path, retryable=retryable)
+
+        if last_exc is not None:  # defensive; the loop normally raises above.
+            raise ApiError(
+                f"HTTP request failed: {last_exc}",
+                details={"path": path, "retryable": retryable},
+            ) from last_exc
+        raise ApiError("HTTP request failed after retries.", details={"path": path, "retryable": retryable})
 
     def list_projects(self) -> list[dict[str, Any]]:
         return self.request("GET", "/open/v1/project")
@@ -102,7 +129,7 @@ class TicktaskClient:
         return self.request("POST", "/open/v1/task/move", json=payload)
 
     def filter_tasks(self, payload: dict[str, Any]) -> Any:
-        return self.request("POST", "/open/v1/task/filter", json=payload)
+        return self.request("POST", "/open/v1/task/filter", json=payload, retry=True)
 
     def completed_tasks(
         self,
@@ -117,7 +144,7 @@ class TicktaskClient:
         normalized_project_ids = self._normalize_project_ids(project_ids)
         if normalized_project_ids:
             payload["projectIds"] = normalized_project_ids
-        return self.request("POST", "/open/v1/task/completed", json=payload)
+        return self.request("POST", "/open/v1/task/completed", json=payload, retry=True)
 
 
     def list_habits(self) -> Any:
@@ -166,7 +193,43 @@ class TicktaskClient:
         return [project_id for project_id in project_ids if project_id]
 
 
-def _decode_response(response: httpx.Response, method: str, path: str) -> Any:
+def _is_retryable_request(method: str, retry: bool | None) -> bool:
+    if retry is not None:
+        return retry
+    return method.upper() in {"GET", "HEAD", "OPTIONS"}
+
+
+def _should_retry_response(response: httpx.Response, retryable: bool) -> bool:
+    return retryable and (response.status_code == 429 or 500 <= response.status_code <= 599)
+
+
+def _retry_delay(response: httpx.Response, attempt: int) -> float:
+    retry_after = _parse_retry_after(response.headers.get("Retry-After"))
+    if retry_after is not None:
+        return retry_after
+    return _backoff_delay(attempt)
+
+
+def _backoff_delay(attempt: int) -> float:
+    return min(2.0**attempt, 30.0)
+
+
+def _parse_retry_after(value: str | None) -> float | None:
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        try:
+            retry_at = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.astimezone()
+        return max(0.0, (retry_at - datetime.now(retry_at.tzinfo)).total_seconds())
+
+
+def _decode_response(response: httpx.Response, method: str, path: str, retryable: bool = False) -> Any:
     if response.status_code >= 400:
         message = response.text
         try:
@@ -175,9 +238,14 @@ def _decode_response(response: httpx.Response, method: str, path: str) -> Any:
                 message = body.get("error") or body.get("message") or message
         except ValueError:
             pass
+        details: dict[str, Any] = {"status_code": response.status_code, "path": path}
+        retry_after = _parse_retry_after(response.headers.get("Retry-After"))
+        if retry_after is not None:
+            details["retry_after"] = retry_after
+        details["retryable"] = retryable
         raise ApiError(
             f"{method.upper()} {path} failed with HTTP {response.status_code}: {message}",
-            details={"status_code": response.status_code, "path": path},
+            details=details,
         )
     if response.status_code == 204 or not response.content:
         return {}

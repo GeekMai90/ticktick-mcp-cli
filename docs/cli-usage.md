@@ -161,5 +161,11 @@ Error:
 
 Agents should branch on `ok`, then on `error.code`.
 
+## Reliability and retries
+
+The shared API client automatically retries read-only operations when the service returns `429` or transient `5xx` responses. If the service sends `Retry-After`, that delay is honored before the next attempt; otherwise the client uses bounded exponential backoff. Read-only `POST` endpoints such as task filters and completed-task range queries opt into the same retry behavior.
+
+Mutating operations such as create/update/delete/complete/move do not blind-retry by default, because a network or server error may occur after the upstream service already applied the write. Error payloads include `details.status_code`, `details.path`, `details.retryable`, and, for rate limits, `details.retry_after` so agents can choose a safe recovery plan.
+
 
 
