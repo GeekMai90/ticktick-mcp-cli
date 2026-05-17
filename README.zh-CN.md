@@ -28,7 +28,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - OAuth 凭据初始化和登录。
 - 带 OAuth `state` + PKCE 的更安全授权流程。
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
-- 项目列表和项目数据读取。
+- 项目列表、项目数据读取、创建、更新和删除。
 - 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 将任务或已完成任务导出为 `json`、`jsonl`、`csv`、`markdown`。
@@ -145,6 +145,8 @@ ticktask completed today
 危险变更操作需要精确 ID 和显式确认：
 
 ```bash
+ticktask project update PROJECT_ID --name "Renamed" --json
+ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
@@ -192,6 +194,9 @@ Agent 使用 `ticktask` 时应遵守：
 ticktask doctor --json
 ticktask auth status --json
 ticktask project list --json
+ticktask project create "Focus" --json
+ticktask project update PROJECT_ID --name "Renamed" --json
+ticktask project delete PROJECT_ID --yes --json
 
 # 读取任务
 ticktask task list --json
@@ -231,6 +236,9 @@ MCP 工具：
 - `ticktask_doctor`
 - `ticktask_auth_status`
 - `ticktask_list_projects`
+- `ticktask_create_project`
+- `ticktask_update_project`
+- `ticktask_delete_project`
 - `ticktask_list_tasks`
 - `ticktask_search_tasks`
 - `ticktask_create_task`
@@ -259,7 +267,7 @@ ticktask integration smoke --json
 TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
 ```
 
-它只会列出项目并返回 `project_count`，不会创建、更新、完成、移动或删除任务。
+它只会列出项目并返回 `project_count`，不会创建、更新、完成、移动或删除项目或任务。
 
 ## 开发
 

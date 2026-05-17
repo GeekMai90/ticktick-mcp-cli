@@ -20,7 +20,7 @@ Example MCP client command config:
     "ticktask": {
       "command": "uv",
       "args": ["run", "ticktick-mcp"],
-      "cwd": "/path/to/ticktask"
+      "cwd": "/path/to/ticktick-mcp-cli"
     }
   }
 }
@@ -31,6 +31,9 @@ Tools:
 - `ticktask_doctor`
 - `ticktask_auth_status`
 - `ticktask_list_projects`
+- `ticktask_create_project`
+- `ticktask_update_project`
+- `ticktask_delete_project`
 - `ticktask_list_tasks`
 - `ticktask_search_tasks`
 - `ticktask_create_task`
@@ -45,4 +48,4 @@ Tools:
 
 Tool functions are importable from `ticktask.mcp.tools` for unit testing without launching stdio.
 
-Destructive MCP tools require explicit confirmation. For example, `ticktask_delete_task` returns `CONFIRMATION_REQUIRED` unless `yes=true`.
+Destructive MCP tools require explicit confirmation. For example, `ticktask_delete_task` and `ticktask_delete_project` return `CONFIRMATION_REQUIRED` unless `yes=true`.

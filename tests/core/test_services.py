@@ -39,6 +39,15 @@ class FakeClient:
     def move_task(self, task_id, from_project_id, to_project_id):
         return {"moved": True, "taskId": task_id, "from": from_project_id, "to": to_project_id}
 
+    def create_project(self, payload):
+        return {"id": "new-project", **payload}
+
+    def update_project(self, project_id, payload):
+        return {"id": project_id, **payload}
+
+    def delete_project(self, project_id):
+        return {"deleted": True, "projectId": project_id}
+
     def completed_tasks(self, start_date=None, end_date=None, project_ids=None):
         self.completed_calls.append(
             {"start_date": start_date, "end_date": end_date, "project_ids": project_ids}
@@ -133,6 +142,41 @@ def test_task_crud_move_and_export(tmp_path) -> None:
 def test_update_requires_changed_field(tmp_path) -> None:
     try:
         service(tmp_path).update_task("t1", "p1")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+
+def test_project_lifecycle_service_methods(tmp_path) -> None:
+    svc = service(tmp_path)
+
+    created = svc.create_project("Focus", color="#00aa00", view_mode="list", kind="TASK")
+    assert created["id"] == "new-project"
+    assert created["name"] == "Focus"
+    assert created["raw"]["color"] == "#00aa00"
+
+    updated = svc.update_project("p1", name="Renamed", color="#111111", closed=True)
+    assert updated["id"] == "p1"
+    assert updated["name"] == "Renamed"
+    assert updated["raw"]["closed"] is True
+
+    deleted = svc.delete_project("p1", confirmed=True)
+    assert deleted == {"project_id": "p1", "result": {"deleted": True, "projectId": "p1"}}
+
+
+def test_project_delete_requires_confirmation(tmp_path) -> None:
+    try:
+        service(tmp_path).delete_project("p1", confirmed=False)
+    except ConfirmationRequiredError as exc:
+        assert exc.code == "CONFIRMATION_REQUIRED"
+    else:
+        raise AssertionError("expected ConfirmationRequiredError")
+
+
+def test_update_project_requires_changed_field(tmp_path) -> None:
+    try:
+        service(tmp_path).update_project("p1")
     except ValidationError as exc:
         assert exc.code == "VALIDATION_ERROR"
     else:

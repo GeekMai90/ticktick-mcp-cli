@@ -110,3 +110,37 @@ def test_task_crud_and_move_endpoints() -> None:
         "https://api.ticktick.com/open/v1/task/move",
         b'[{"fromProjectId":"p1","toProjectId":"p2","taskId":"t1"}]',
     )
+
+
+def test_project_lifecycle_endpoints() -> None:
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url), request.read()))
+        if request.method == "DELETE":
+            return httpx.Response(204)
+        return httpx.Response(200, json={"id": "p1", "name": "Renamed", "color": "#ff0000"})
+
+    client = TicktaskClient(
+        "https://api.ticktick.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+
+    assert client.create_project({"name": "Inbox", "color": "#ff0000"})["id"] == "p1"
+    assert client.update_project("p1", {"id": "p1", "name": "Renamed"})["name"] == "Renamed"
+    assert client.delete_project("p1") == {}
+
+    assert calls == [
+        (
+            "POST",
+            "https://api.ticktick.com/open/v1/project",
+            b'{"name":"Inbox","color":"#ff0000"}',
+        ),
+        (
+            "POST",
+            "https://api.ticktick.com/open/v1/project/p1",
+            b'{"id":"p1","name":"Renamed"}',
+        ),
+        ("DELETE", "https://api.ticktick.com/open/v1/project/p1", b""),
+    ]

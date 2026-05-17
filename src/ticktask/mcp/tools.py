@@ -44,6 +44,58 @@ def ticktask_list_projects() -> dict[str, Any]:
         return err(exc)
 
 
+def ticktask_create_project(
+    name: str,
+    color: str | None = None,
+    sort_order: int | None = None,
+    view_mode: str | None = None,
+    kind: str | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().create_project(
+                name=name,
+                color=color,
+                sort_order=sort_order,
+                view_mode=view_mode,
+                kind=kind,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_update_project(
+    project_id: str,
+    name: str | None = None,
+    color: str | None = None,
+    sort_order: int | None = None,
+    view_mode: str | None = None,
+    kind: str | None = None,
+    closed: bool | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().update_project(
+                project_id=project_id,
+                name=name,
+                color=color,
+                sort_order=sort_order,
+                view_mode=view_mode,
+                kind=kind,
+                closed=closed,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_delete_project(project_id: str, yes: bool = False) -> dict[str, Any]:
+    try:
+        return ok(_make_service().delete_project(project_id=project_id, confirmed=yes))
+    except Exception as exc:
+        return err(exc)
+
 def ticktask_list_tasks(
     project: str | None = None,
     status: str = "open",

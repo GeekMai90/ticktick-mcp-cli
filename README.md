@@ -28,7 +28,7 @@ Current capabilities:
 - OAuth credential setup and login.
 - OAuth state + PKCE hardened authorization flow.
 - Automatic access-token refresh when `expires_at` is near or past expiry.
-- Project list and project data retrieval.
+- Project list, project data retrieval, create, update, and delete.
 - Task list/search/create/get/update/complete/delete/move.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Export tasks/completed tasks as `json`, `jsonl`, `csv`, or `markdown`.
@@ -145,6 +145,8 @@ ticktask completed today
 Mutating dangerous operations require exact IDs and explicit confirmation:
 
 ```bash
+ticktask project update PROJECT_ID --name "Renamed" --json
+ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
@@ -192,6 +194,9 @@ Error:
 ticktask doctor --json
 ticktask auth status --json
 ticktask project list --json
+ticktask project create "Focus" --json
+ticktask project update PROJECT_ID --name "Renamed" --json
+ticktask project delete PROJECT_ID --yes --json
 
 # Read tasks
 ticktask task list --json
@@ -231,6 +236,9 @@ MCP tools:
 - `ticktask_doctor`
 - `ticktask_auth_status`
 - `ticktask_list_projects`
+- `ticktask_create_project`
+- `ticktask_update_project`
+- `ticktask_delete_project`
 - `ticktask_list_tasks`
 - `ticktask_search_tasks`
 - `ticktask_create_task`
@@ -259,7 +267,7 @@ To run a read-only real API check:
 TICKTASK_INTEGRATION=1 ticktask integration smoke --service dida365 --json
 ```
 
-This only lists projects and returns `project_count`. It does not create, update, complete, move, or delete tasks.
+This only lists projects and returns `project_count`. It does not create, update, complete, move, or delete projects or tasks.
 
 ## Development
 

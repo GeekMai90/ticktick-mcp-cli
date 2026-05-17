@@ -19,6 +19,9 @@ uv run ticktick-mcp-cli integration smoke --json
 uv run ticktick-mcp-cli project list --json
 uv run ticktick-mcp-cli project get PROJECT_ID --json
 uv run ticktick-mcp-cli project data PROJECT_ID --json
+uv run ticktick-mcp-cli project create "Focus" --color "#00aa00" --view-mode list --json
+uv run ticktick-mcp-cli project update PROJECT_ID --name "Renamed" --closed --json
+uv run ticktick-mcp-cli project delete PROJECT_ID --yes --json
 ```
 
 ## Tasks
