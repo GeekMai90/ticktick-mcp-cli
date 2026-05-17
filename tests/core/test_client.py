@@ -108,5 +108,5 @@ def test_task_crud_and_move_endpoints() -> None:
     assert calls[3] == (
         "POST",
         "https://api.ticktick.com/open/v1/task/move",
-        b'{"taskIds":["t1"],"fromProjectId":"p1","toProjectId":"p2"}',
+        b'[{"fromProjectId":"p1","toProjectId":"p2","taskId":"t1"}]',
     )

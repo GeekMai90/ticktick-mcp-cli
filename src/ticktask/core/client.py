@@ -83,11 +83,13 @@ class TicktaskClient:
         return self.request("DELETE", f"/open/v1/project/{project_id}/task/{task_id}")
 
     def move_task(self, task_id: str, from_project_id: str, to_project_id: str) -> dict[str, Any]:
-        payload = {
-            "taskIds": [task_id],
-            "fromProjectId": from_project_id,
-            "toProjectId": to_project_id,
-        }
+        payload = [
+            {
+                "fromProjectId": from_project_id,
+                "toProjectId": to_project_id,
+                "taskId": task_id,
+            }
+        ]
         return self.request("POST", "/open/v1/task/move", json=payload)
 
     def completed_tasks(
