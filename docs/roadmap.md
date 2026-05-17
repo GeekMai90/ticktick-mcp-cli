@@ -27,7 +27,7 @@ Source projects: `jacepark12/ticktick-mcp`, `alexarevalo9/ticktick-mcp-server`, 
 - [x] Repeat/RRULE helpers
 - [ ] Due/start date convenience parser and validator
 - [ ] Priority/status/kind validation helpers
-- [ ] Bulk complete/delete/move guarded by dry-run + confirmation
+- [x] Bulk complete/delete/move guarded by dry-run + confirmation
 
 ### 2. Project, folder, and kanban management
 
@@ -64,7 +64,7 @@ Source project: `ticktick-sdk`; official Open API exposes habit/focus endpoints.
 
 Source projects: `dida365-ai-tools`, `GalaxyXieyu/didatodolist-mcp`, `ticktick-sdk`.
 
-- [ ] Batch task operations with dry-run preview
+- [x] Batch task operations with dry-run preview
 - [ ] Incremental sync/export state file
 - [ ] Markdown/CSV/JSONL backups by project/date
 - [ ] Task analytics: completed count, overdue count, project throughput, tag distribution
@@ -148,7 +148,8 @@ Project differentiator.
 4. ✅ `feat(mcp): expose one tool per CLI capability with schema examples`
 5. ✅ `feat(habit-focus): add official habit and focus APIs`
 6. `feat(focus): add focus reporting exports`
-7. `feat(batch): add dry-run guarded bulk operations`
+7. ✅ `feat(batch): add dry-run guarded bulk operations`
 8. `feat(dx): add PyPI publish workflow and install docs`
+
 
 

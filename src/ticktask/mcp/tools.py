@@ -142,6 +142,53 @@ def ticktask_filter_tasks(
 
 
 
+
+
+def ticktask_batch_complete_tasks(
+    task_ids: list[str],
+    project_id: str,
+    dry_run: bool = True,
+    yes: bool = False,
+) -> dict[str, Any]:
+    try:
+        return ok(_make_service().batch_complete_tasks(task_ids=task_ids, project_id=project_id, dry_run=dry_run, confirmed=yes))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_batch_delete_tasks(
+    task_ids: list[str],
+    project_id: str,
+    dry_run: bool = True,
+    yes: bool = False,
+) -> dict[str, Any]:
+    try:
+        return ok(_make_service().batch_delete_tasks(task_ids=task_ids, project_id=project_id, dry_run=dry_run, confirmed=yes))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_batch_move_tasks(
+    task_ids: list[str],
+    from_project_id: str,
+    to_project_id: str,
+    dry_run: bool = True,
+    yes: bool = False,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().batch_move_tasks(
+                task_ids=task_ids,
+                from_project_id=from_project_id,
+                to_project_id=to_project_id,
+                dry_run=dry_run,
+                confirmed=yes,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_set_task_reminders(task_id: str, project_id: str, reminders: list[str]) -> dict[str, Any]:
     try:
         return ok(_make_service().set_task_reminders(task_id=task_id, project_id=project_id, reminders=reminders))
@@ -521,6 +568,9 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_update_task": "ticktask task update",
     "ticktask_delete_task": "ticktask task delete",
     "ticktask_move_task": "ticktask task move",
+    "ticktask_batch_complete_tasks": "ticktask task batch complete",
+    "ticktask_batch_delete_tasks": "ticktask task batch delete",
+    "ticktask_batch_move_tasks": "ticktask task batch move",
     "ticktask_set_task_reminders": "ticktask task reminder set",
     "ticktask_clear_task_reminders": "ticktask task reminder clear",
     "ticktask_set_task_repeat": "ticktask task repeat set",
@@ -563,6 +613,9 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_update_task": "Update task fields by exact task/project IDs.",
     "ticktask_delete_task": "Delete a task by exact task/project IDs; requires yes=true confirmation.",
     "ticktask_move_task": "Move a task between projects by exact source/destination project IDs.",
+    "ticktask_batch_complete_tasks": "Preview or execute batch task completion. Defaults to dry-run; execution requires yes=true.",
+    "ticktask_batch_delete_tasks": "Preview or execute batch task deletion. Defaults to dry-run; execution requires yes=true.",
+    "ticktask_batch_move_tasks": "Preview or execute batch task moves. Defaults to dry-run; execution requires yes=true.",
     "ticktask_set_task_reminders": "Set one or more reminders on a task by exact task/project IDs.",
     "ticktask_clear_task_reminders": "Clear all reminders from a task by exact task/project IDs.",
     "ticktask_set_task_repeat": "Set a task repeat rule using a preset or raw RRULE by exact task/project IDs.",
@@ -599,6 +652,7 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "project": "Project name or ID. Mutations still require exact project_id.",
     "project_id": "Exact project ID. Required for task/project-scoped mutations.",
     "task_id": "Exact task ID.",
+    "task_ids": "One or more exact task IDs for a batch operation.",
     "item_id": "Exact checklist item/subtask ID.",
     "from_project_id": "Exact source project ID.",
     "to_project_id": "Exact destination project ID.",
@@ -631,7 +685,8 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "focus_type": "Focus type: 0=Pomodoro, 1=Timing.",
     "from_time": "Focus query start time/date. Max 30-day range.",
     "to_time": "Focus query end time/date. Max 30-day range.",
-    "yes": "Explicit confirmation for destructive or irreversible operations.",
+    "dry_run": "When true, only preview the batch operation without mutating remote tasks. Defaults to true. Set false with yes=true to execute.",
+    "yes": "Explicit confirmation for destructive or irreversible operations. Required when dry_run=false for batch operations.",
 }
 
 _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
@@ -668,6 +723,9 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_update_task": [{"description": "Rename and reprioritize", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "title": "New title", "priority": "high"}}],
     "ticktask_delete_task": [{"description": "Delete after exact target verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "yes": True}}],
     "ticktask_move_task": [{"description": "Move to another project", "arguments": {"task_id": "TASK_ID", "from_project_id": "PROJECT_ID", "to_project_id": "OTHER_PROJECT_ID"}}],
+    "ticktask_batch_complete_tasks": [{"description": "Preview completing tasks", "arguments": {"task_ids": ["TASK_ID_1", "TASK_ID_2"], "project_id": "PROJECT_ID"}}],
+    "ticktask_batch_delete_tasks": [{"description": "Execute deletion after preview", "arguments": {"task_ids": ["TASK_ID_1"], "project_id": "PROJECT_ID", "dry_run": False, "yes": True}}],
+    "ticktask_batch_move_tasks": [{"description": "Preview moving tasks", "arguments": {"task_ids": ["TASK_ID_1"], "from_project_id": "PROJECT_ID", "to_project_id": "OTHER_PROJECT_ID"}}],
     "ticktask_set_task_reminders": [{"description": "Set a 10-minute reminder", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "reminders": ["TRIGGER:PT10M"]}}],
     "ticktask_clear_task_reminders": [{"description": "Clear reminders", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID"}}],
     "ticktask_set_task_repeat": [{"description": "Repeat weekly", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "preset": "weekly"}}],
@@ -698,6 +756,9 @@ _CONFIRMATION_TOOLS = {
     "ticktask_complete_task",
     "ticktask_delete_task",
     "ticktask_delete_checklist_item",
+    "ticktask_batch_complete_tasks",
+    "ticktask_batch_delete_tasks",
+    "ticktask_batch_move_tasks",
     "ticktask_delete_focus",
 }
 
@@ -706,6 +767,9 @@ _DESTRUCTIVE_TOOLS = {
     "ticktask_complete_task",
     "ticktask_delete_task",
     "ticktask_move_task",
+    "ticktask_batch_complete_tasks",
+    "ticktask_batch_delete_tasks",
+    "ticktask_batch_move_tasks",
     "ticktask_set_task_reminders",
     "ticktask_clear_task_reminders",
     "ticktask_set_task_repeat",
@@ -783,5 +847,6 @@ def ticktask_cli_parity() -> dict[str, Any]:
         for name, definition in TOOL_DEFINITIONS.items()
     ]
     return ok(rows, {"count": len(rows)})
+
 
 

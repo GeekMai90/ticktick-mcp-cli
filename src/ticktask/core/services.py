@@ -497,6 +497,117 @@ class TicktaskService:
             return 0
         raise ValidationError("Checklist item status must be open or completed.")
 
+    def batch_complete_tasks(
+        self,
+        task_ids: list[str],
+        project_id: str,
+        dry_run: bool = True,
+        confirmed: bool = False,
+    ) -> dict[str, Any]:
+        items = self._batch_project_items(task_ids, project_id)
+        self._validate_batch_execution("Completing tasks in batch", dry_run, confirmed)
+        if dry_run:
+            return self._batch_result("complete", True, items, [])
+        client = self._with_client()
+        try:
+            results = [
+                {**item, "result": client.complete_task(project_id, item["task_id"])}
+                for item in items
+            ]
+            return self._batch_result("complete", False, items, results)
+        finally:
+            client.close()
+
+    def batch_delete_tasks(
+        self,
+        task_ids: list[str],
+        project_id: str,
+        dry_run: bool = True,
+        confirmed: bool = False,
+    ) -> dict[str, Any]:
+        items = self._batch_project_items(task_ids, project_id)
+        self._validate_batch_execution("Deleting tasks in batch", dry_run, confirmed)
+        if dry_run:
+            return self._batch_result("delete", True, items, [])
+        client = self._with_client()
+        try:
+            results = [
+                {**item, "result": client.delete_task(project_id, item["task_id"])}
+                for item in items
+            ]
+            return self._batch_result("delete", False, items, results)
+        finally:
+            client.close()
+
+    def batch_move_tasks(
+        self,
+        task_ids: list[str],
+        from_project_id: str,
+        to_project_id: str,
+        dry_run: bool = True,
+        confirmed: bool = False,
+    ) -> dict[str, Any]:
+        task_ids = self._normalize_batch_task_ids(task_ids)
+        if not from_project_id or not to_project_id:
+            raise ValidationError("Batch move requires source and destination project IDs.")
+        if from_project_id == to_project_id:
+            raise ValidationError("Batch move source and destination projects must differ.")
+        items = [
+            {"task_id": task_id, "from_project_id": from_project_id, "to_project_id": to_project_id}
+            for task_id in task_ids
+        ]
+        self._validate_batch_execution("Moving tasks in batch", dry_run, confirmed)
+        if dry_run:
+            return self._batch_result("move", True, items, [])
+        client = self._with_client()
+        try:
+            results = [
+                {
+                    **item,
+                    "result": client.move_task(item["task_id"], from_project_id, to_project_id),
+                }
+                for item in items
+            ]
+            return self._batch_result("move", False, items, results)
+        finally:
+            client.close()
+
+    @staticmethod
+    def _normalize_batch_task_ids(task_ids: list[str]) -> list[str]:
+        normalized = [task_id.strip() for task_id in task_ids if task_id and task_id.strip()]
+        if not normalized:
+            raise ValidationError("Batch task operations require at least one task ID.")
+        if len(set(normalized)) != len(normalized):
+            raise ValidationError("Batch task operations require unique task IDs.")
+        return normalized
+
+    @staticmethod
+    def _batch_project_items(task_ids: list[str], project_id: str) -> list[dict[str, str]]:
+        normalized = TicktaskService._normalize_batch_task_ids(task_ids)
+        if not project_id:
+            raise ValidationError("Batch task operations require `project_id`.")
+        return [{"task_id": task_id, "project_id": project_id} for task_id in normalized]
+
+    @staticmethod
+    def _validate_batch_execution(action: str, dry_run: bool, confirmed: bool) -> None:
+        if not dry_run and not confirmed:
+            raise ConfirmationRequiredError(f"{action} requires explicit confirmation.")
+
+    @staticmethod
+    def _batch_result(
+        action: str,
+        dry_run: bool,
+        items: list[dict[str, Any]],
+        results: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return {
+            "action": action,
+            "dry_run": dry_run,
+            "count": len(items),
+            "items": items,
+            "results": results,
+        }
+
     def complete_task(self, task_id: str, project_id: str, confirmed: bool) -> dict[str, Any]:
         if not confirmed:
             raise ConfirmationRequiredError("Completing a task requires explicit confirmation.")
@@ -851,4 +962,5 @@ class TicktaskService:
                 hint=f"Use a project ID. Matches: {names}.",
             )
         raise NotFoundError(f"Project `{value}` was not found.")
+
 

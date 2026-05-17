@@ -403,8 +403,88 @@ def clear_task_repeat(
     except Exception as exc:
         emit_error(exc, json_output)
 
+
+batch_app = typer.Typer(help="Dry-run guarded batch task commands.")
+
+
+def _batch_dry_run(execute: bool) -> bool:
+    return not execute
+
+
+@batch_app.command("complete")
+def batch_complete_tasks(
+    task_ids: list[str] = typer.Option(..., "--task-id", help="Exact task ID; repeat for multiple tasks."),
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    execute: bool = typer.Option(False, "--execute", help="Execute mutations instead of dry-run preview."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm execution when --execute is used."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().batch_complete_tasks(
+            task_ids=task_ids,
+            project_id=project_id,
+            dry_run=_batch_dry_run(execute),
+            confirmed=yes,
+        )
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(result)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@batch_app.command("delete")
+def batch_delete_tasks(
+    task_ids: list[str] = typer.Option(..., "--task-id", help="Exact task ID; repeat for multiple tasks."),
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    execute: bool = typer.Option(False, "--execute", help="Execute mutations instead of dry-run preview."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm execution when --execute is used."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().batch_delete_tasks(
+            task_ids=task_ids,
+            project_id=project_id,
+            dry_run=_batch_dry_run(execute),
+            confirmed=yes,
+        )
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(result)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@batch_app.command("move")
+def batch_move_tasks(
+    task_ids: list[str] = typer.Option(..., "--task-id", help="Exact task ID; repeat for multiple tasks."),
+    from_project_id: str = typer.Option(..., "--from-project-id", help="Exact source project ID."),
+    to_project_id: str = typer.Option(..., "--to-project-id", help="Exact destination project ID."),
+    execute: bool = typer.Option(False, "--execute", help="Execute mutations instead of dry-run preview."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm execution when --execute is used."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().batch_move_tasks(
+            task_ids=task_ids,
+            from_project_id=from_project_id,
+            to_project_id=to_project_id,
+            dry_run=_batch_dry_run(execute),
+            confirmed=yes,
+        )
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(result)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
 app.add_typer(tag_app, name="tag")
 app.add_typer(item_app, name="item")
 app.add_typer(reminder_app, name="reminder")
 app.add_typer(repeat_app, name="repeat")
+app.add_typer(batch_app, name="batch")
+
 
