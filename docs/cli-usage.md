@@ -44,6 +44,9 @@ uv run ticktick-mcp-cli task reminder clear TASK_ID --project-id PROJECT_ID --js
 uv run ticktick-mcp-cli task repeat set TASK_ID --project-id PROJECT_ID --preset weekly --json
 uv run ticktick-mcp-cli task repeat set TASK_ID --project-id PROJECT_ID --rrule 'RRULE:FREQ=WEEKLY;BYDAY=MO' --json
 uv run ticktick-mcp-cli task repeat clear TASK_ID --project-id PROJECT_ID --json
+uv run ticktick-mcp-cli task batch complete --task-id TASK_ID_1 --task-id TASK_ID_2 --project-id PROJECT_ID --json
+uv run ticktick-mcp-cli task batch delete --task-id TASK_ID --project-id PROJECT_ID --execute --yes --json
+uv run ticktick-mcp-cli task batch move --task-id TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID --json
 uv run ticktick-mcp-cli task tag add TASK_ID agent --project-id PROJECT_ID --json
 uv run ticktick-mcp-cli task tag remove TASK_ID agent --project-id PROJECT_ID --json
 uv run ticktick-mcp-cli task item add TASK_ID "Checklist item" --project-id PROJECT_ID --json
@@ -52,7 +55,7 @@ uv run ticktick-mcp-cli task item complete TASK_ID ITEM_ID --project-id PROJECT_
 uv run ticktick-mcp-cli task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes --json
 ```
 
-Reminder, repeat, and tag operations update the parent task through the official task update API and require exact task/project IDs. Repeat presets are `daily`, `weekly`, `monthly`, and `yearly`; `--rrule` also accepts raw RRULE strings. `task filter` uses the official `POST /open/v1/task/filter` endpoint; `task list --tag/--filter` applies deterministic local filtering over listed tasks. Smart filters: `today`, `overdue`, `upcoming`, `high-priority`, `no-date`.
+Batch commands default to dry-run previews; pass `--execute --yes` to mutate remote tasks. Reminder, repeat, and tag operations update the parent task through the official task update API and require exact task/project IDs. Repeat presets are `daily`, `weekly`, `monthly`, and `yearly`; `--rrule` also accepts raw RRULE strings. `task filter` uses the official `POST /open/v1/task/filter` endpoint; `task list --tag/--filter` applies deterministic local filtering over listed tasks. Smart filters: `today`, `overdue`, `upcoming`, `high-priority`, `no-date`.
 
 Checklist item operations update the parent task through the official task update API, preserve `kind=CHECKLIST`, and require exact task/project/item IDs. Deleting a checklist item requires `--yes`.
 
@@ -125,5 +128,6 @@ Error:
 ```
 
 Agents should branch on `ok`, then on `error.code`.
+
 
 

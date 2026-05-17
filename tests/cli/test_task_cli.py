@@ -295,3 +295,30 @@ def test_task_reminder_and_repeat_cli_json(monkeypatch) -> None:
     cleared_repeat = runner.invoke(app, ["task", "repeat", "clear", "t1", "--project-id", "p1", "--json"])
     assert cleared_repeat.exit_code == 0
     assert json.loads(cleared_repeat.stdout)["data"]["raw"]["repeatFlag"] == ""
+
+
+
+def test_task_batch_cli_json(monkeypatch) -> None:
+    class FakeService:
+        def batch_complete_tasks(self, task_ids, project_id, dry_run=True, confirmed=False):
+            return {"action": "complete", "task_ids": task_ids, "project_id": project_id, "dry_run": dry_run, "confirmed": confirmed}
+
+        def batch_delete_tasks(self, task_ids, project_id, dry_run=True, confirmed=False):
+            return {"action": "delete", "task_ids": task_ids, "project_id": project_id, "dry_run": dry_run, "confirmed": confirmed}
+
+        def batch_move_tasks(self, task_ids, from_project_id, to_project_id, dry_run=True, confirmed=False):
+            return {"action": "move", "task_ids": task_ids, "from_project_id": from_project_id, "to_project_id": to_project_id, "dry_run": dry_run, "confirmed": confirmed}
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+
+    preview = runner.invoke(app, ["task", "batch", "complete", "--task-id", "t1", "--task-id", "t2", "--project-id", "p1", "--json"])
+    assert preview.exit_code == 0
+    assert json.loads(preview.stdout)["data"]["dry_run"] is True
+
+    deleted = runner.invoke(app, ["task", "batch", "delete", "--task-id", "t1", "--project-id", "p1", "--execute", "--yes", "--json"])
+    assert deleted.exit_code == 0
+    assert json.loads(deleted.stdout)["data"]["confirmed"] is True
+
+    moved = runner.invoke(app, ["task", "batch", "move", "--task-id", "t1", "--from-project-id", "p1", "--to-project-id", "p2", "--json"])
+    assert moved.exit_code == 0
+    assert json.loads(moved.stdout)["data"]["action"] == "move"

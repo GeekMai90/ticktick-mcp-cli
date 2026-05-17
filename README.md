@@ -31,6 +31,7 @@ Current capabilities:
 - Project list, project data retrieval, create, update, and delete.
 - Task list/search/create/get/update/complete/delete/move.
 - Task reminder set/clear and repeat/RRULE set/clear helpers.
+- Dry-run guarded batch complete/delete/move operations.
 - Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), and task tag add/remove.
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
@@ -160,6 +161,9 @@ ticktask task reminder set TASK_ID --project-id PROJECT_ID --reminder TRIGGER:PT
 ticktask task reminder clear TASK_ID --project-id PROJECT_ID
 ticktask task repeat set TASK_ID --project-id PROJECT_ID --preset weekly
 ticktask task repeat clear TASK_ID --project-id PROJECT_ID
+ticktask task batch complete --task-id TASK_ID_1 --task-id TASK_ID_2 --project-id PROJECT_ID
+ticktask task batch delete --task-id TASK_ID --project-id PROJECT_ID --execute --yes
+ticktask task batch move --task-id TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
 ticktask task tag add TASK_ID agent --project-id PROJECT_ID
 ticktask task tag remove TASK_ID agent --project-id PROJECT_ID
 ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
@@ -283,6 +287,9 @@ MCP tools:
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_batch_complete_tasks`
+- `ticktask_batch_delete_tasks`
+- `ticktask_batch_move_tasks`
 - `ticktask_set_task_reminders`
 - `ticktask_clear_task_reminders`
 - `ticktask_set_task_repeat`
@@ -365,5 +372,6 @@ Project notes:
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
 
 

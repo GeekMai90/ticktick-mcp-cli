@@ -63,6 +63,15 @@ class FakeService:
     def move_task(self, task_id, from_project_id, to_project_id):
         return {"task_id": task_id, "to_project_id": to_project_id}
 
+    def batch_complete_tasks(self, task_ids, project_id, dry_run=True, confirmed=False):
+        return {"action": "complete", "task_ids": task_ids, "project_id": project_id, "dry_run": dry_run, "confirmed": confirmed}
+
+    def batch_delete_tasks(self, task_ids, project_id, dry_run=True, confirmed=False):
+        return {"action": "delete", "task_ids": task_ids, "project_id": project_id, "dry_run": dry_run, "confirmed": confirmed}
+
+    def batch_move_tasks(self, task_ids, from_project_id, to_project_id, dry_run=True, confirmed=False):
+        return {"action": "move", "task_ids": task_ids, "from_project_id": from_project_id, "to_project_id": to_project_id, "dry_run": dry_run, "confirmed": confirmed}
+
     def create_project(self, name, color=None, sort_order=None, view_mode=None, kind=None):
         return {"id": "p-new", "name": name, "raw": {"color": color}}
 
@@ -154,6 +163,9 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_update_task("t1", "p1", title="Renamed")["data"]["title"] == "Renamed"
     assert tools.ticktask_delete_task("t1", "p1")["error"]["code"] == "CONFIRMATION_REQUIRED"
     assert tools.ticktask_move_task("t1", "p1", "p2")["data"]["to_project_id"] == "p2"
+    assert tools.ticktask_batch_complete_tasks(["t1", "t2"], "p1")["data"]["dry_run"] is True
+    assert tools.ticktask_batch_delete_tasks(["t1"], "p1", dry_run=False, yes=True)["data"]["confirmed"] is True
+    assert tools.ticktask_batch_move_tasks(["t1"], "p1", "p2")["data"]["action"] == "move"
     assert tools.ticktask_completed(period="today")["meta"]["count"] == 1
     assert tools.ticktask_export_tasks("json")["data"]["content"] == "exported"
     assert tools.ticktask_export_focuses("jsonl", "2026-01-01", "2026-01-30")["data"]["content"] == "focus-exported"
@@ -201,6 +213,9 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_update_task,
         tools.ticktask_delete_task,
         tools.ticktask_move_task,
+        tools.ticktask_batch_complete_tasks,
+        tools.ticktask_batch_delete_tasks,
+        tools.ticktask_batch_move_tasks,
         tools.ticktask_set_task_reminders,
         tools.ticktask_clear_task_reminders,
         tools.ticktask_set_task_repeat,
@@ -308,6 +323,8 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
         "monthly",
         "yearly",
     ]
+    assert definitions["ticktask_batch_delete_tasks"]["confirmation_required"] is True
+    assert definitions["ticktask_batch_delete_tasks"]["destructive"] is True
     assert definitions["ticktask_delete_task"]["confirmation_required"] is True
     assert definitions["ticktask_delete_checklist_item"]["confirmation_required"] is True
 
@@ -318,6 +335,9 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     assert "ticktask project list" in commands
     assert "ticktask task list" in commands
     assert "ticktask task tag add" in commands
+    assert "ticktask task batch complete" in commands
+    assert "ticktask task batch delete" in commands
+    assert "ticktask task batch move" in commands
     assert "ticktask task item delete" in commands
     assert "ticktask task reminder set" in commands
     assert "ticktask task repeat set" in commands
@@ -325,4 +345,5 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     assert "ticktask export focus" in commands
     assert all(row["mcp_tool"].startswith("ticktask_") for row in matrix)
     assert all(row["examples"] for row in matrix)
+
 

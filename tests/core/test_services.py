@@ -11,6 +11,9 @@ class FakeClient:
         self.completed_calls = []
         self.updated_payloads = []
         self.filtered_payloads = []
+        self.completed_task_calls = []
+        self.deleted_task_calls = []
+        self.moved_task_calls = []
 
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
@@ -43,6 +46,7 @@ class FakeClient:
         return {"id": "new", **payload}
 
     def complete_task(self, project_id, task_id):
+        self.completed_task_calls.append({"project_id": project_id, "task_id": task_id})
         return {"completed": True, "projectId": project_id, "taskId": task_id}
 
     def get_task(self, project_id, task_id):
@@ -63,9 +67,11 @@ class FakeClient:
         return {"id": task_id, **payload}
 
     def delete_task(self, project_id, task_id):
+        self.deleted_task_calls.append({"project_id": project_id, "task_id": task_id})
         return {"deleted": True, "projectId": project_id, "taskId": task_id}
 
     def move_task(self, task_id, from_project_id, to_project_id):
+        self.moved_task_calls.append({"task_id": task_id, "from_project_id": from_project_id, "to_project_id": to_project_id})
         return {"moved": True, "taskId": task_id, "from": from_project_id, "to": to_project_id}
 
     def create_project(self, payload):
@@ -446,6 +452,81 @@ def test_task_reminder_and_repeat_helpers_validate_inputs(tmp_path) -> None:
         lambda: svc.set_task_reminders("t1", "p1", []),
         lambda: svc.set_task_repeat("t1", "p1"),
         lambda: svc.set_task_repeat("t1", "p1", preset="fortnightly"),
+    ):
+        try:
+            call()
+        except ValidationError as exc:
+            assert exc.code == "VALIDATION_ERROR"
+        else:
+            raise AssertionError("expected ValidationError")
+
+
+
+def test_batch_task_operations_dry_run_does_not_mutate(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    preview = svc.batch_complete_tasks(["t1", "t2"], project_id="p1", dry_run=True, confirmed=False)
+    assert preview == {
+        "action": "complete",
+        "dry_run": True,
+        "count": 2,
+        "items": [
+            {"task_id": "t1", "project_id": "p1"},
+            {"task_id": "t2", "project_id": "p1"},
+        ],
+        "results": [],
+    }
+    assert fake.completed_task_calls == []
+
+    move_preview = svc.batch_move_tasks(["t1"], from_project_id="p1", to_project_id="p2", dry_run=True, confirmed=False)
+    assert move_preview["items"] == [{"task_id": "t1", "from_project_id": "p1", "to_project_id": "p2"}]
+    assert fake.moved_task_calls == []
+
+
+def test_batch_task_operations_require_confirmation_when_not_dry_run(tmp_path) -> None:
+    svc = service(tmp_path)
+    for call in (
+        lambda: svc.batch_complete_tasks(["t1"], project_id="p1", dry_run=False, confirmed=False),
+        lambda: svc.batch_delete_tasks(["t1"], project_id="p1", dry_run=False, confirmed=False),
+        lambda: svc.batch_move_tasks(["t1"], from_project_id="p1", to_project_id="p2", dry_run=False, confirmed=False),
+    ):
+        try:
+            call()
+        except ConfirmationRequiredError as exc:
+            assert exc.code == "CONFIRMATION_REQUIRED"
+        else:
+            raise AssertionError("expected ConfirmationRequiredError")
+
+
+def test_batch_task_operations_execute_when_confirmed(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    completed = svc.batch_complete_tasks(["t1", "t2"], project_id="p1", dry_run=False, confirmed=True)
+    assert completed["dry_run"] is False
+    assert completed["count"] == 2
+    assert [item["task_id"] for item in fake.completed_task_calls] == ["t1", "t2"]
+
+    deleted = svc.batch_delete_tasks(["t3"], project_id="p1", dry_run=False, confirmed=True)
+    assert deleted["results"][0]["result"]["deleted"] is True
+    assert fake.deleted_task_calls == [{"project_id": "p1", "task_id": "t3"}]
+
+    moved = svc.batch_move_tasks(["t4"], from_project_id="p1", to_project_id="p2", dry_run=False, confirmed=True)
+    assert moved["results"][0]["result"]["moved"] is True
+    assert fake.moved_task_calls == [{"task_id": "t4", "from_project_id": "p1", "to_project_id": "p2"}]
+
+
+def test_batch_task_operations_validate_inputs(tmp_path) -> None:
+    svc = service(tmp_path)
+    for call in (
+        lambda: svc.batch_complete_tasks([], project_id="p1"),
+        lambda: svc.batch_delete_tasks(["t1"], project_id=""),
+        lambda: svc.batch_move_tasks(["t1"], from_project_id="p1", to_project_id="p1"),
     ):
         try:
             call()
