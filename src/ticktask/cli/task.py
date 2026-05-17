@@ -15,12 +15,47 @@ def list_tasks(
     status: str = typer.Option("open", "--status", help="open, completed, or all."),
     from_date: str | None = typer.Option(None, "--from", help="Completed start date, YYYY-MM-DD."),
     to_date: str | None = typer.Option(None, "--to", help="Completed end date, YYYY-MM-DD."),
+    tag: str | None = typer.Option(None, "--tag", help="Only include tasks with this tag."),
+    filter_preset: str | None = typer.Option(
+        None,
+        "--filter",
+        help="Smart filter: today, overdue, upcoming, high-priority, or no-date.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
     try:
         tasks = TicktaskService().list_tasks(
             project=project,
             status=status,
+            start_date=from_date,
+            end_date=to_date,
+            tag=tag,
+            filter_preset=filter_preset,
+        )
+        if json_output:
+            emit_json(ok(tasks, {"count": len(tasks)}))
+        else:
+            print_tasks(tasks)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@app.command("filter")
+def filter_tasks(
+    tag: str | None = typer.Option(None, "--tag", help="Filter by exact tag."),
+    project: str | None = typer.Option(None, "--project", help="Project name or ID."),
+    status: str = typer.Option("open", "--status", help="open, completed, or all."),
+    priority: str | None = typer.Option(None, "--priority", help="none, low, medium, or high."),
+    from_date: str | None = typer.Option(None, "--from", help="Start date, YYYY-MM-DD."),
+    to_date: str | None = typer.Option(None, "--to", help="End date, YYYY-MM-DD."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        tasks = TicktaskService().filter_tasks(
+            tag=tag,
+            project=project,
+            status=status,
+            priority=priority,
             start_date=from_date,
             end_date=to_date,
         )
@@ -256,5 +291,45 @@ def delete_checklist_item(
     except Exception as exc:
         emit_error(exc, json_output)
 
+
+
+tag_app = typer.Typer(help="Task tag mutation commands.")
+
+
+@tag_app.command("add")
+def add_task_tag(
+    task_id: str,
+    tag: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().add_task_tag(task_id=task_id, project_id=project_id, tag=tag)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@tag_app.command("remove")
+def remove_task_tag(
+    task_id: str,
+    tag: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().remove_task_tag(task_id=task_id, project_id=project_id, tag=tag)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+app.add_typer(tag_app, name="tag")
 
 app.add_typer(item_app, name="item")

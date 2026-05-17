@@ -30,6 +30,7 @@ Current capabilities:
 - Automatic access-token refresh when `expires_at` is near or past expiry.
 - Project list, project data retrieval, create, update, and delete.
 - Task list/search/create/get/update/complete/delete/move.
+- Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), and task tag add/remove.
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Export tasks/completed tasks as `json`, `jsonl`, `csv`, or `markdown`.
@@ -140,6 +141,8 @@ ticktask task list
 ticktask today
 ticktask add "Plan release" --project Inbox
 ticktask task search "release"
+ticktask task list --tag agent --filter high-priority
+ticktask task filter --tag agent --priority high
 ticktask completed today
 ```
 
@@ -151,6 +154,8 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+ticktask task tag add TASK_ID agent --project-id PROJECT_ID
+ticktask task tag remove TASK_ID agent --project-id PROJECT_ID
 ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
 ```
 
@@ -204,12 +209,16 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task list --json
 ticktask task list --status completed --from 2026-05-01 --to 2026-05-17 --json
 ticktask task search "release" --json
+ticktask task list --tag agent --filter high-priority --json
+ticktask task filter --tag agent --priority high --json
 
 # Mutate only after exact IDs are known
 ticktask task add "Plan release" --project Inbox --json
 ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+ticktask task tag add TASK_ID agent --project-id PROJECT_ID --json
+ticktask task tag remove TASK_ID agent --project-id PROJECT_ID --json
 ticktask task item add TASK_ID "Checklist item" --project-id PROJECT_ID --json
 ticktask task item update TASK_ID ITEM_ID --project-id PROJECT_ID --title "Renamed" --status completed --json
 ticktask task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
@@ -246,6 +255,7 @@ MCP tools:
 - `ticktask_update_project`
 - `ticktask_delete_project`
 - `ticktask_list_tasks`
+- `ticktask_filter_tasks`
 - `ticktask_search_tasks`
 - `ticktask_create_task`
 - `ticktask_complete_task`
@@ -254,6 +264,8 @@ MCP tools:
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_add_task_tag`
+- `ticktask_remove_task_tag`
 - `ticktask_add_checklist_item`
 - `ticktask_update_checklist_item`
 - `ticktask_complete_checklist_item`

@@ -101,6 +101,8 @@ def ticktask_list_tasks(
     status: str = "open",
     start_date: str | None = None,
     end_date: str | None = None,
+    tag: str | None = None,
+    filter_preset: str | None = None,
 ) -> dict[str, Any]:
     try:
         tasks = _make_service().list_tasks(
@@ -108,8 +110,46 @@ def ticktask_list_tasks(
             status=status,
             start_date=start_date,
             end_date=end_date,
+            tag=tag,
+            filter_preset=filter_preset,
         )
         return ok(tasks, {"count": len(tasks)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_filter_tasks(
+    tag: str | None = None,
+    project: str | None = None,
+    status: str = "open",
+    priority: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
+    try:
+        tasks = _make_service().filter_tasks(
+            tag=tag,
+            project=project,
+            status=status,
+            priority=priority,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return ok(tasks, {"count": len(tasks)})
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_add_task_tag(task_id: str, project_id: str, tag: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().add_task_tag(task_id=task_id, project_id=project_id, tag=tag))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_remove_task_tag(task_id: str, project_id: str, tag: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().remove_task_tag(task_id=task_id, project_id=project_id, tag=tag))
     except Exception as exc:
         return err(exc)
 

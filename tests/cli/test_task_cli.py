@@ -181,3 +181,80 @@ def test_checklist_item_cli_json(monkeypatch) -> None:
     )
     assert deleted.exit_code == 0
     assert json.loads(deleted.stdout)["data"]["items"] == []
+
+
+
+def test_task_list_tag_filter_and_smart_filter_cli_json(monkeypatch) -> None:
+    seen = {}
+
+    class FakeService:
+        def list_tasks(
+            self,
+            project=None,
+            status="open",
+            today_only=False,
+            start_date=None,
+            end_date=None,
+            tag=None,
+            filter_preset=None,
+        ):
+            seen.update({"tag": tag, "filter_preset": filter_preset})
+            return [{"id": "t1", "title": "Tagged", "tags": [tag], "project_id": project}]
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+    result = runner.invoke(
+        app,
+        ["task", "list", "--tag", "agent", "--filter", "high-priority", "--json"],
+    )
+    assert result.exit_code == 0
+    assert seen == {"tag": "agent", "filter_preset": "high-priority"}
+    assert json.loads(result.stdout)["data"][0]["tags"] == ["agent"]
+
+
+def test_task_filter_cli_json(monkeypatch) -> None:
+    seen = {}
+
+    class FakeService:
+        def filter_tasks(
+            self,
+            tag=None,
+            project=None,
+            status="open",
+            priority=None,
+            start_date=None,
+            end_date=None,
+        ):
+            seen.update({"tag": tag, "project": project, "status": status, "priority": priority})
+            return [{"id": "t1", "title": "Filtered", "tags": [tag]}]
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+    result = runner.invoke(
+        app,
+        ["task", "filter", "--tag", "agent", "--project", "Inbox", "--priority", "high", "--json"],
+    )
+    assert result.exit_code == 0
+    assert seen == {"tag": "agent", "project": "Inbox", "status": "open", "priority": "high"}
+    assert json.loads(result.stdout)["data"][0]["title"] == "Filtered"
+
+
+def test_task_tag_cli_json(monkeypatch) -> None:
+    class FakeService:
+        def add_task_tag(self, task_id, project_id, tag):
+            return {"id": task_id, "project_id": project_id, "tags": [tag]}
+
+        def remove_task_tag(self, task_id, project_id, tag):
+            return {"id": task_id, "project_id": project_id, "tags": []}
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+
+    added = runner.invoke(
+        app, ["task", "tag", "add", "t1", "agent", "--project-id", "p1", "--json"]
+    )
+    assert added.exit_code == 0
+    assert json.loads(added.stdout)["data"]["tags"] == ["agent"]
+
+    removed = runner.invoke(
+        app, ["task", "tag", "remove", "t1", "agent", "--project-id", "p1", "--json"]
+    )
+    assert removed.exit_code == 0
+    assert json.loads(removed.stdout)["data"]["tags"] == []

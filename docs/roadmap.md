@@ -22,6 +22,7 @@ Source projects: `jacepark12/ticktick-mcp`, `alexarevalo9/ticktick-mcp-server`, 
 - [x] List/search/create/get/update/complete/delete/move tasks
 - [x] Completed-task listing
 - [x] Subtasks/checklist item CRUD
+- [x] Tag-aware filters and tag operations
 - [ ] Reminder create/update/delete
 - [ ] Repeat/RRULE helpers
 - [ ] Due/start date convenience parser and validator
@@ -122,7 +123,7 @@ Project differentiator.
 
 - Add project create/update/delete.
 - Add subtasks/checklist CRUD.
-- Add tag-aware filters and tag operations.
+- Add tag-aware filters and tag operations. ✅
 - Ensure MCP parity for all new CLI commands.
 
 ### Phase 3 — Power-user features
@@ -143,7 +144,7 @@ Project differentiator.
 
 1. `feat(project): add create/update/delete project commands and MCP tools`
 2. `feat(task): add checklist item CRUD for subtasks`
-3. `feat(task): add tag filters and tag mutation helpers`
+3. ✅ `feat(task): add tag filters and tag mutation helpers`
 4. `feat(mcp): expose one tool per CLI capability with schema examples`
 5. `feat(habit): add official habit list/checkin support`
 6. `feat(focus): add official focus session query/export support`

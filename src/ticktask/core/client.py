@@ -101,6 +101,9 @@ class TicktaskClient:
         ]
         return self.request("POST", "/open/v1/task/move", json=payload)
 
+    def filter_tasks(self, payload: dict[str, Any]) -> Any:
+        return self.request("POST", "/open/v1/task/filter", json=payload)
+
     def completed_tasks(
         self,
         start_date: str | date | datetime | None = None,

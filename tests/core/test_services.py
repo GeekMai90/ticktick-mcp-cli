@@ -10,6 +10,7 @@ class FakeClient:
         self.closed = False
         self.completed_calls = []
         self.updated_payloads = []
+        self.filtered_payloads = []
 
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
@@ -19,6 +20,22 @@ class FakeClient:
             "tasks": [
                 {"id": "t1", "title": "Buy milk", "status": 0, "projectId": project_id},
                 {"id": "t2", "title": "Done item", "status": 2, "projectId": project_id},
+                {
+                    "id": "t3",
+                    "title": "Agent task",
+                    "status": 0,
+                    "projectId": project_id,
+                    "tags": ["agent", "deep-work"],
+                    "priority": 5,
+                    "dueDate": "2026-01-01",
+                },
+                {
+                    "id": "t4",
+                    "title": "No date",
+                    "status": 0,
+                    "projectId": project_id,
+                    "tags": ["agent"],
+                },
             ]
         }
 
@@ -33,6 +50,7 @@ class FakeClient:
             "id": task_id,
             "title": "Loaded",
             "projectId": project_id,
+            "tags": ["agent"],
             "kind": "CHECKLIST",
             "items": [
                 {"id": "i1", "title": "Existing", "status": 0, "sortOrder": 1},
@@ -66,6 +84,18 @@ class FakeClient:
         project_id = project_ids[0] if project_ids else "p1"
         return [{"id": "t2", "title": "Done item", "status": 2, "projectId": project_id}]
 
+    def filter_tasks(self, payload):
+        self.filtered_payloads.append(payload)
+        return [
+            {
+                "id": "ft1",
+                "title": "Filtered",
+                "status": payload.get("status", 0),
+                "projectId": (payload.get("projectIds") or ["p1"])[0],
+                "tags": [payload.get("tag")],
+            }
+        ]
+
     def close(self):
         self.closed = True
 
@@ -78,7 +108,7 @@ def service(tmp_path) -> TicktaskService:
 
 def test_list_tasks_filters_open(tmp_path) -> None:
     tasks = service(tmp_path).list_tasks(status="open")
-    assert [task["id"] for task in tasks] == ["t1"]
+    assert [task["id"] for task in tasks] == ["t1", "t3", "t4"]
 
 
 def test_search_tasks(tmp_path) -> None:
@@ -236,6 +266,64 @@ def test_checklist_item_update_requires_existing_item_and_change(tmp_path) -> No
 
     try:
         svc.update_checklist_item("t1", "p1", "i1")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+
+
+def test_list_tasks_filters_by_tag_and_smart_filter(tmp_path) -> None:
+    tagged = service(tmp_path).list_tasks(status="open", tag="deep-work")
+    assert [task["id"] for task in tagged] == ["t3"]
+
+    high_priority = service(tmp_path).list_tasks(status="open", filter_preset="high-priority")
+    assert [task["id"] for task in high_priority] == ["t3"]
+
+    no_date = service(tmp_path).list_tasks(status="open", filter_preset="no-date")
+    assert [task["id"] for task in no_date] == ["t1", "t4"]
+
+
+def test_filter_tasks_uses_open_api_filter_endpoint(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    tasks = svc.filter_tasks(tag="agent", project="Inbox", status="open", priority="high")
+
+    assert tasks[0]["id"] == "ft1"
+    assert fake.filtered_payloads == [
+        {"tag": "agent", "status": 0, "projectIds": ["p1"], "priority": [5]}
+    ]
+
+
+def test_task_tag_mutation_helpers_preserve_existing_task_fields(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    added = svc.add_task_tag("t1", "p1", "deep-work")
+    assert added["tags"] == ["agent", "deep-work"]
+    assert fake.updated_payloads[-1]["tags"] == ["agent", "deep-work"]
+
+    removed = svc.remove_task_tag("t1", "p1", "agent")
+    assert removed["tags"] == []
+    assert fake.updated_payloads[-1]["tags"] == []
+
+
+def test_task_tag_mutation_validates_changes(tmp_path) -> None:
+    svc = service(tmp_path)
+    try:
+        svc.add_task_tag("t1", "p1", "   ")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+    try:
+        svc.remove_task_tag("t1", "p1", "missing")
     except ValidationError as exc:
         assert exc.code == "VALIDATION_ERROR"
     else:
