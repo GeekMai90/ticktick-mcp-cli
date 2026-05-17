@@ -253,6 +253,15 @@ def ticktask_search_tasks(
         return err(exc)
 
 
+def ticktask_query_tasks(query: str) -> dict[str, Any]:
+    try:
+        result = _make_service().query_tasks(query)
+        tasks = result["tasks"]
+        return ok(tasks, {"count": len(tasks), "query": result["query"], "compiled": result["compiled"]})
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_create_task(
     title: str,
     project: str | None = None,
@@ -668,6 +677,7 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_list_tasks": "ticktask task list",
     "ticktask_filter_tasks": "ticktask task filter",
     "ticktask_search_tasks": "ticktask task search",
+    "ticktask_query_tasks": "ticktask task query",
     "ticktask_create_task": "ticktask task add",
     "ticktask_complete_task": "ticktask task complete",
     "ticktask_today": "ticktask today",
@@ -720,6 +730,7 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_list_tasks": "List tasks from one or all projects, with local status/tag/smart-filter constraints.",
     "ticktask_filter_tasks": "Filter tasks using the official Open API filter endpoint.",
     "ticktask_search_tasks": "Search listed tasks by title, content, or ID.",
+    "ticktask_query_tasks": "Compile a small natural-language query into deterministic task filters and optional local search.",
     "ticktask_create_task": "Create a task, optionally resolving a project name/ID and priority.",
     "ticktask_complete_task": "Complete a task by exact task/project IDs; requires yes=true confirmation.",
     "ticktask_today": "List open tasks due today.",
@@ -790,7 +801,7 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "preset": "Repeat preset converted to an RRULE.",
     "rrule": "Raw repeat rule, with or without RRULE: prefix.",
     "filter_preset": "Local smart filter for listed tasks.",
-    "query": "Search query matched against task title, content, and ID.",
+    "query": "Search query or deterministic natural-language task query. Supported natural hints include #tag, tag:name, project:Inbox, project:\"Deep Work\", today, overdue, upcoming, high priority, no date, open, completed, all, from YYYY-MM-DD, and to YYYY-MM-DD.",
     "period": "Completed-task, analytics, or report date preset.",
     "output_format": "Export format.",
     "output_formats": "One or more backup export formats.",
@@ -850,6 +861,7 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_list_tasks": [{"description": "Open high-priority agent-tagged tasks", "arguments": {"status": "open", "tag": "agent", "filter_preset": "high-priority"}}],
     "ticktask_filter_tasks": [{"description": "Use official filter endpoint", "arguments": {"tag": "agent", "project": "Inbox", "priority": "high", "status": "open"}}],
     "ticktask_search_tasks": [{"description": "Find tasks mentioning release", "arguments": {"query": "release"}}],
+    "ticktask_query_tasks": [{"description": "Find open high-priority agent tasks mentioning release", "arguments": {"query": "high priority #agent release"}}],
     "ticktask_create_task": [{"description": "Create a task in Inbox with an agent retry key", "arguments": {"title": "Plan release", "project": "Inbox", "priority": "medium", "idempotency_key": "agent-run-123:create-plan-release"}}],
     "ticktask_complete_task": [{"description": "Complete after exact target verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "yes": True}}],
     "ticktask_today": [{"description": "List open tasks due today", "arguments": {}}],

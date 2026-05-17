@@ -82,6 +82,23 @@ def search_tasks(
         emit_error(exc, json_output)
 
 
+@app.command("query")
+def query_tasks(
+    query: str,
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = TicktaskService().query_tasks(query)
+        tasks = result["tasks"]
+        meta = {"count": len(tasks), "query": result["query"], "compiled": result["compiled"]}
+        if json_output:
+            emit_json(ok(tasks, meta))
+        else:
+            print_tasks(tasks)
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
 @app.command("add")
 def add_task(
     title: str,

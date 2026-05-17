@@ -48,7 +48,7 @@ Source projects: `jen6/ticktick-mcp`, `dida365-ai-tools`, `ticktick-sdk`.
 - [x] Tag add/remove operations
 - [x] Smart filters: today, overdue, upcoming, high-priority, no-date, completed range
 - [x] Saved query presets for common agent workflows exposed as `ticktask://saved-views`
-- [ ] Natural-language query adapter that compiles to deterministic filters
+- [x] Natural-language query adapter that compiles to deterministic filters
 
 ### 4. Habits and focus sessions
 
@@ -164,6 +164,7 @@ Project differentiator.
 18. ✅ `feat(diagnostics): add redacted diagnostic bundle command`
 19. ✅ `feat(errors): add remediation hints and stable error taxonomy`
 20. ✅ `feat(reliability): add task creation idempotency keys for agent retries`
+21. ✅ `feat(task): add deterministic natural-language task query adapter`
 
 
 

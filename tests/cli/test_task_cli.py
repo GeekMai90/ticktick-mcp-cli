@@ -20,6 +20,24 @@ def test_task_add_json(monkeypatch) -> None:
     assert payload["data"]["idempotency_key"] == "agent-key-1"
 
 
+def test_task_query_json(monkeypatch) -> None:
+    class FakeService:
+        def query_tasks(self, query):
+            return {
+                "query": query,
+                "compiled": {"status": "open", "tag": "agent", "search": "release"},
+                "tasks": [{"id": "t1", "title": "Release plan"}],
+            }
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+    result = runner.invoke(app, ["task", "query", "#agent release", "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["data"][0]["id"] == "t1"
+    assert payload["meta"]["compiled"]["tag"] == "agent"
+    assert payload["meta"]["query"] == "#agent release"
+
+
 def test_task_complete_requires_yes_json(monkeypatch) -> None:
     class FakeService:
         def complete_task(self, task_id, project_id, confirmed):

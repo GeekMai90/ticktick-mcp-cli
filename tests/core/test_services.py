@@ -167,6 +167,19 @@ def test_search_tasks(tmp_path) -> None:
     assert tasks[0]["id"] == "t1"
 
 
+def test_query_tasks_compiles_natural_query_and_filters_results(tmp_path) -> None:
+    result = service(tmp_path).query_tasks('high priority #agent project:"Inbox" agent')
+
+    assert result["compiled"] == {
+        "status": "open",
+        "filter_preset": "high-priority",
+        "tag": "agent",
+        "project": "Inbox",
+        "search": "agent",
+    }
+    assert [task["id"] for task in result["tasks"]] == ["t3"]
+
+
 def test_list_completed_uses_global_completed_query_without_project_ids(tmp_path) -> None:
     fake = FakeClient()
     manager = AuthManager(ConfigStore(tmp_path / "config.json"))

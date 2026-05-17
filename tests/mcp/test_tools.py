@@ -22,6 +22,13 @@ class FakeService:
     def search_tasks(self, query):
         return [{"id": "t1", "title": query}]
 
+    def query_tasks(self, query):
+        return {
+            "query": query,
+            "compiled": {"status": "open", "tag": "agent", "search": "release"},
+            "tasks": [{"id": "qt1", "title": "Release plan"}],
+        }
+
     def create_task(self, title, project=None, content=None, due=None, priority="none", idempotency_key=None):
         return {"id": "new", "title": title, "idempotency_key": idempotency_key}
 
@@ -243,6 +250,9 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_delete_project("p1")["error"]["code"] == "CONFIRMATION_REQUIRED"
     assert tools.ticktask_delete_project("p1", yes=True)["data"]["project_id"] == "p1"
     assert tools.ticktask_create_task("New", idempotency_key="agent-key-1")["data"]["idempotency_key"] == "agent-key-1"
+    query_result = tools.ticktask_query_tasks("#agent release")
+    assert query_result["data"][0]["id"] == "qt1"
+    assert query_result["meta"]["compiled"]["tag"] == "agent"
     assert tools.ticktask_add_checklist_item("t1", "p1", "New")["data"]["items"][0]["title"] == "New"
     assert tools.ticktask_update_checklist_item("t1", "p1", "i1", title="Renamed")["data"]["items"][0]["title"] == "Renamed"
     assert tools.ticktask_complete_checklist_item("t1", "p1", "i1")["data"]["items"][0]["status"] == 1
@@ -277,6 +287,7 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_list_projects,
         tools.ticktask_list_tasks,
         tools.ticktask_search_tasks,
+        tools.ticktask_query_tasks,
         tools.ticktask_create_task,
         tools.ticktask_complete_task,
         tools.ticktask_today,
@@ -386,6 +397,8 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
         "high",
     ]
     assert definitions["ticktask_create_task"]["parameters"]["idempotency_key"]["description"]
+    assert definitions["ticktask_query_tasks"]["cli_command"] == "ticktask task query"
+    assert definitions["ticktask_query_tasks"]["parameters"]["query"]["description"]
     assert definitions["ticktask_export_tasks"]["parameters"]["output_format"]["enum"] == [
         "json",
         "jsonl",
@@ -429,6 +442,7 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     assert "ticktask project list" in commands
     assert "ticktask doctor bundle" in commands
     assert "ticktask task list" in commands
+    assert "ticktask task query" in commands
     assert "ticktask task tag add" in commands
     assert "ticktask task batch complete" in commands
     assert "ticktask task batch delete" in commands
