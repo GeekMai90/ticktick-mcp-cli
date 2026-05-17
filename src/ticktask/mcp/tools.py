@@ -353,6 +353,26 @@ def ticktask_export_tasks(
 
 
 
+
+
+def ticktask_export_focuses(
+    output_format: str,
+    from_time: str,
+    to_time: str,
+    focus_type: int = 0,
+) -> dict[str, Any]:
+    try:
+        content = _make_service().export_focuses(
+            output_format=output_format,
+            from_time=from_time,
+            to_time=to_time,
+            focus_type=focus_type,
+        )
+        return ok({"format": output_format, "content": content})
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_list_habits() -> dict[str, Any]:
     try:
         habits = _make_service().list_habits()
@@ -482,6 +502,7 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_get_focus": "ticktask focus get",
     "ticktask_delete_focus": "ticktask focus delete",
     "ticktask_export_tasks": "ticktask export tasks",
+    "ticktask_export_focuses": "ticktask export focus",
     "ticktask_cli_parity": "ticktask --help",
 }
 
@@ -519,6 +540,7 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_get_focus": "Get one focus session by exact focus ID and type.",
     "ticktask_delete_focus": "Delete a focus session; requires yes=true confirmation.",
     "ticktask_export_tasks": "Export tasks as JSON, JSONL, CSV, or Markdown content.",
+    "ticktask_export_focuses": "Export focus sessions as report-friendly JSON, JSONL, CSV, or Markdown content.",
     "ticktask_cli_parity": "Return the MCP-to-CLI parity matrix for agent planning and auditing.",
 }
 
@@ -577,6 +599,7 @@ _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
     ("ticktask_list_tasks", "status"): _STATUS_ENUM,
     ("ticktask_filter_tasks", "status"): _STATUS_ENUM,
     ("ticktask_export_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_export_focuses", "output_format"): _EXPORT_FORMAT_ENUM,
     ("ticktask_update_checklist_item", "status"): _CHECKLIST_STATUS_ENUM,
 }
 
@@ -614,6 +637,7 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_get_focus": [{"description": "Get focus session details", "arguments": {"focus_id": "FOCUS_ID", "focus_type": 0}}],
     "ticktask_delete_focus": [{"description": "Delete focus session after verification", "arguments": {"focus_id": "FOCUS_ID", "focus_type": 0, "yes": True}}],
     "ticktask_export_tasks": [{"description": "Export all tasks as JSONL", "arguments": {"output_format": "jsonl", "status": "all"}}],
+    "ticktask_export_focuses": [{"description": "Export Pomodoro sessions as CSV", "arguments": {"output_format": "csv", "from_time": "2026-01-01", "to_time": "2026-01-30", "focus_type": 0}}],
     "ticktask_cli_parity": [{"description": "Audit MCP and CLI parity", "arguments": {}}],
 }
 
@@ -703,3 +727,4 @@ def ticktask_cli_parity() -> dict[str, Any]:
         for name, definition in TOOL_DEFINITIONS.items()
     ]
     return ok(rows, {"count": len(rows)})
+

@@ -34,7 +34,7 @@ Current capabilities:
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
-- Export tasks/completed tasks as `json`, `jsonl`, `csv`, or `markdown`.
+- Export tasks, completed tasks, or focus-session reports as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
 - MCP tools over the same core behavior.
 
@@ -118,7 +118,7 @@ Open the returned `authorization_url`. After the provider redirects to your call
 ```bash
 ticktask auth login \
   --service ticktick \
-  --callback-url 'http://localhost:8080/callback?code=CALLBACK_CODE&state=STATE' \
+  --callback-url 'http://localhost:8080/callback?code=***&state=STATE' \
   --json
 ```
 
@@ -166,6 +166,7 @@ Export examples:
 ticktask export tasks --format jsonl --status all
 ticktask export tasks --format csv --project Inbox
 ticktask export completed --format markdown --from 2026-05-01 --to 2026-05-17
+ticktask export focus --format csv --from 2026-01-01 --to 2026-01-30 --type 0
 ```
 
 ## Quick start for AI agents
@@ -294,6 +295,7 @@ MCP tools:
 - `ticktask_get_focus`
 - `ticktask_delete_focus`
 - `ticktask_export_tasks`
+- `ticktask_export_focuses`
 
 ## Real API integration smoke
 
@@ -354,3 +356,4 @@ Project notes:
 ## License
 
 MIT. See [LICENSE](LICENSE).
+

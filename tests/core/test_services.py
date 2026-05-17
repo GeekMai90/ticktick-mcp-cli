@@ -118,7 +118,7 @@ class FakeClient:
         return {"id": focus_id, "type": focus_type, "duration": 1500}
 
     def list_focuses(self, from_time, to_time, focus_type):
-        return [{"id": "f1", "type": focus_type, "startTime": from_time, "endTime": to_time}]
+        return [{"id": "f1", "type": focus_type, "startTime": from_time, "endTime": to_time, "duration": 1500}]
 
     def delete_focus(self, focus_id, focus_type):
         return {"deleted": True, "focusId": focus_id, "type": focus_type}
@@ -205,6 +205,13 @@ def test_task_crud_move_and_export(tmp_path) -> None:
     moved = svc.move_task("t1", "p1", "p2")
     assert moved["to_project_id"] == "p2"
     assert "Buy milk" in svc.export_tasks("markdown")
+
+
+def test_export_focuses_serializes_focus_report(tmp_path) -> None:
+    svc = service(tmp_path)
+    content = svc.export_focuses("jsonl", from_time="2026-01-01", to_time="2026-01-30", focus_type=0)
+    assert '"id": "f1"' in content
+    assert '"duration_minutes": 25' in content
 
 
 def test_update_requires_changed_field(tmp_path) -> None:
