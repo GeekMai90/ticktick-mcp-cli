@@ -13,6 +13,7 @@ from ticktask.core.auth import AuthManager
 from ticktask.core.client import TicktaskClient
 from ticktask.core.config import ProfileConfig
 from ticktask.core.dates import parse_date_range
+from ticktask.core.diagnostics import create_diagnostic_bundle
 from ticktask.core.errors import (
     AmbiguousOperationError,
     ConfirmationRequiredError,
@@ -59,6 +60,9 @@ class TicktaskService:
     def _with_client(self) -> TicktaskClient:
         profile = self.auth.require_token(self.service)
         return self.client_factory(profile)
+
+    def diagnostic_bundle(self, output_path: str | Path) -> dict[str, Any]:
+        return create_diagnostic_bundle(output_path=output_path, store=self.auth.store)
 
     def list_projects(self) -> list[dict[str, Any]]:
         client = self._with_client()

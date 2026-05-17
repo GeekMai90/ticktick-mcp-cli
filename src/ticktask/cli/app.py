@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import typer
 
 from ticktask import __version__
@@ -16,6 +18,7 @@ from ticktask.cli import task as task_commands
 from ticktask.cli.formatters import emit_error, emit_json, print_tasks
 from ticktask.core.auth import AuthManager
 from ticktask.core.config import ConfigStore
+from ticktask.core.diagnostics import create_diagnostic_bundle
 from ticktask.core.results import ok
 from ticktask.core.services import TicktaskService
 
@@ -30,6 +33,8 @@ app.add_typer(backup_commands.app, name="backup")
 app.add_typer(report_commands.app, name="report")
 app.add_typer(sync_commands.app, name="sync")
 app.add_typer(integration_commands.app, name="integration")
+doctor_app = typer.Typer(help="Doctor and diagnostic commands.", invoke_without_command=True)
+app.add_typer(doctor_app, name="doctor")
 
 
 def version_callback(value: bool) -> None:
@@ -50,10 +55,13 @@ def main(
     return None
 
 
-@app.command("doctor")
+@doctor_app.callback()
 def doctor(
+    ctx: typer.Context,
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
+    if ctx.invoked_subcommand is not None:
+        return None
     try:
         store = ConfigStore()
         status = AuthManager(store).status()
@@ -73,6 +81,26 @@ def doctor(
             typer.echo(f"service: {status.service} ({status.base_url})")
             typer.echo(f"configured: {status.configured}")
             typer.echo(f"authenticated: {status.authenticated}")
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@doctor_app.command("bundle")
+def doctor_bundle(
+    output_path: Path = typer.Option(
+        Path("ticktask-diagnostics.zip"),
+        "--output",
+        help="Path for the redacted diagnostic ZIP bundle.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        result = create_diagnostic_bundle(output_path=output_path)
+        if json_output:
+            emit_json(ok(result))
+        else:
+            typer.echo(f"redacted diagnostic bundle: {result['bundle_path']}")
+            typer.echo("files: " + ", ".join(item["path"] for item in result["files"]))
     except Exception as exc:
         emit_error(exc, json_output)
 

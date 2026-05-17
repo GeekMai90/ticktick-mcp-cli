@@ -29,6 +29,13 @@ def ticktask_doctor() -> dict[str, Any]:
         return err(exc)
 
 
+def ticktask_diagnostic_bundle(output_path: str = "ticktask-diagnostics.zip") -> dict[str, Any]:
+    try:
+        return ok(_make_service().diagnostic_bundle(output_path=output_path))
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_auth_status(service: str | None = None) -> dict[str, Any]:
     try:
         return ok(AuthManager().status(service).to_dict())
@@ -651,6 +658,7 @@ _REPEAT_PRESET_ENUM = ["daily", "weekly", "monthly", "yearly"]
 
 _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_doctor": "ticktask doctor",
+    "ticktask_diagnostic_bundle": "ticktask doctor bundle",
     "ticktask_auth_status": "ticktask auth status",
     "ticktask_list_projects": "ticktask project list",
     "ticktask_create_project": "ticktask project create",
@@ -702,6 +710,7 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
 
 _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_doctor": "Return local configuration and authentication health for the active TickTick/Dida365 profile.",
+    "ticktask_diagnostic_bundle": "Write a redacted diagnostic ZIP bundle for support, bug reports, and agent handoff.",
     "ticktask_auth_status": "Return OAuth configuration and token status for a service profile without exposing secrets.",
     "ticktask_list_projects": "List projects available to the authenticated account.",
     "ticktask_create_project": "Create a project/list. Use exact returned IDs for later mutations.",
@@ -753,6 +762,7 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
 
 _PARAM_DESCRIPTIONS: dict[str, str] = {
     "service": "Service profile: ticktick for international TickTick, dida365 for China Dida365.",
+    "output_path": "Local path for the redacted diagnostic ZIP bundle.",
     "name": "Project name.",
     "color": "Project color as a hex string, for example #00aa00.",
     "sort_order": "Project sort order integer.",
@@ -829,6 +839,7 @@ _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
 
 _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_doctor": [{"description": "Check local setup", "arguments": {}}],
+    "ticktask_diagnostic_bundle": [{"description": "Create a redacted support bundle", "arguments": {"output_path": "./ticktask-diagnostics.zip"}}],
     "ticktask_auth_status": [{"description": "Check Dida365 auth status", "arguments": {"service": "dida365"}}],
     "ticktask_list_projects": [{"description": "List all projects", "arguments": {}}],
     "ticktask_create_project": [{"description": "Create a list-style project", "arguments": {"name": "Focus", "view_mode": "list", "kind": "TASK"}}],

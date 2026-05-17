@@ -106,7 +106,7 @@ Project differentiator.
 - [x] Read-only smoke gate with `TICKTASK_INTEGRATION=1`
 - [x] Conflict-safe retries for read-only/rate-limited API calls
 - [ ] Token storage keyring option
-- [ ] Redacted diagnostic bundle command
+- [x] Redacted diagnostic bundle command
 - [ ] End-to-end OAuth callback local server mode
 - [ ] Idempotency/deduplication helpers for agent retries
 - [ ] Structured error taxonomy with remediation hints
@@ -160,6 +160,7 @@ Project differentiator.
 15. ✅ `feat(mcp): add resource endpoints for projects, config, and saved views`
 16. ✅ `feat(mcp): add prompt templates for common workflows`
 17. ✅ `feat(validation): add date and enum validation helpers`
+18. ✅ `feat(diagnostics): add redacted diagnostic bundle command`
 
 
 
