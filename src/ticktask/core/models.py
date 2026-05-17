@@ -37,6 +37,8 @@ class Task:
     status: int | str | None
     due_date: str | None
     priority: int | str | None
+    kind: str | None
+    items: list[dict[str, Any]]
     raw: dict[str, Any]
 
     @classmethod
@@ -52,6 +54,8 @@ class Task:
             status=_first(raw, "status"),
             due_date=_first(raw, "dueDate", "due_date", "startDate"),
             priority=_first(raw, "priority"),
+            kind=_first(raw, "kind"),
+            items=list(raw.get("items") or []),
             raw=raw,
         )
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date, datetime
 from typing import Any
+from uuid import uuid4
 
 from ticktask.core.auth import AuthManager
 from ticktask.core.client import TicktaskClient
@@ -236,6 +237,123 @@ class TicktaskService:
             return Task.from_api(client.create_task(payload), payload.get("projectId")).to_dict()
         finally:
             client.close()
+
+
+    def add_checklist_item(
+        self,
+        task_id: str,
+        project_id: str,
+        title: str,
+        item_id: str | None = None,
+    ) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Adding a checklist item requires `project_id`.")
+        if not title.strip():
+            raise ValidationError("Checklist item title cannot be empty.")
+        client = self._with_client()
+        try:
+            task = client.get_task(project_id, task_id)
+            items = self._task_items(task)
+            next_sort_order = max([int(item.get("sortOrder") or 0) for item in items] or [0]) + 1
+            items.append(
+                {
+                    "id": item_id or uuid4().hex,
+                    "title": title,
+                    "status": 0,
+                    "sortOrder": next_sort_order,
+                }
+            )
+            payload = self._checklist_update_payload(task, task_id, project_id, items)
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
+    def update_checklist_item(
+        self,
+        task_id: str,
+        project_id: str,
+        item_id: str,
+        title: str | None = None,
+        status: int | str | None = None,
+    ) -> dict[str, Any]:
+        if not project_id:
+            raise AmbiguousOperationError("Updating a checklist item requires `project_id`.")
+        if title is None and status is None:
+            raise ValidationError("Updating a checklist item requires at least one changed field.")
+        parsed_status = self._parse_checklist_status(status) if status is not None else None
+        client = self._with_client()
+        try:
+            task = client.get_task(project_id, task_id)
+            items = self._task_items(task)
+            found = False
+            for item in items:
+                if str(item.get("id")) == item_id:
+                    found = True
+                    if title is not None:
+                        if not title.strip():
+                            raise ValidationError("Checklist item title cannot be empty.")
+                        item["title"] = title
+                    if parsed_status is not None:
+                        item["status"] = parsed_status
+                    break
+            if not found:
+                raise ValidationError(f"Checklist item `{item_id}` was not found.")
+            payload = self._checklist_update_payload(task, task_id, project_id, items)
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
+    def complete_checklist_item(self, task_id: str, project_id: str, item_id: str) -> dict[str, Any]:
+        return self.update_checklist_item(task_id, project_id, item_id, status=1)
+
+    def delete_checklist_item(
+        self,
+        task_id: str,
+        project_id: str,
+        item_id: str,
+        confirmed: bool,
+    ) -> dict[str, Any]:
+        if not confirmed:
+            raise ConfirmationRequiredError("Deleting a checklist item requires explicit confirmation.")
+        if not project_id:
+            raise AmbiguousOperationError("Deleting a checklist item requires `project_id`.")
+        client = self._with_client()
+        try:
+            task = client.get_task(project_id, task_id)
+            items = self._task_items(task)
+            filtered = [item for item in items if str(item.get("id")) != item_id]
+            if len(filtered) == len(items):
+                raise ValidationError(f"Checklist item `{item_id}` was not found.")
+            payload = self._checklist_update_payload(task, task_id, project_id, filtered)
+            return Task.from_api(client.update_task(task_id, payload), project_id=project_id).to_dict()
+        finally:
+            client.close()
+
+    @staticmethod
+    def _task_items(task: dict[str, Any]) -> list[dict[str, Any]]:
+        return [dict(item) for item in task.get("items") or []]
+
+    @staticmethod
+    def _checklist_update_payload(
+        task: dict[str, Any],
+        task_id: str,
+        project_id: str,
+        items: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        payload = dict(task)
+        payload["id"] = task_id
+        payload["projectId"] = project_id
+        payload["kind"] = "CHECKLIST"
+        payload["items"] = items
+        return payload
+
+    @staticmethod
+    def _parse_checklist_status(status: int | str | None) -> int:
+        if status in {1, "1", "completed", "complete", "done"}:
+            return 1
+        if status in {0, "0", "open", "normal", "todo"}:
+            return 0
+        raise ValidationError("Checklist item status must be open or completed.")
 
     def complete_task(self, task_id: str, project_id: str, confirmed: bool) -> dict[str, Any]:
         if not confirmed:

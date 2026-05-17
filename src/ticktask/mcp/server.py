@@ -33,6 +33,10 @@ def build_server():
     server.tool()(tools.ticktask_update_task)
     server.tool()(tools.ticktask_delete_task)
     server.tool()(tools.ticktask_move_task)
+    server.tool()(tools.ticktask_add_checklist_item)
+    server.tool()(tools.ticktask_update_checklist_item)
+    server.tool()(tools.ticktask_complete_checklist_item)
+    server.tool()(tools.ticktask_delete_checklist_item)
     server.tool()(tools.ticktask_completed)
     server.tool()(tools.ticktask_export_tasks)
     return server

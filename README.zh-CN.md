@@ -30,6 +30,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
 - 项目列表、项目数据读取、创建、更新和删除。
 - 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动。
+- 支持 `CHECKLIST` 任务的 checklist item / subtask 添加、更新、完成和删除。
 - 通过官方 `POST /open/v1/task/completed` API 查询已完成任务。
 - 将任务或已完成任务导出为 `json`、`jsonl`、`csv`、`markdown`。
 - 由 `TICKTASK_INTEGRATION=1` 显式开启的只读真实 API smoke 检查。
@@ -150,6 +151,7 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
 ```
 
 导出示例：
@@ -208,6 +210,10 @@ ticktask task add "Plan release" --project Inbox --json
 ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+ticktask task item add TASK_ID "Checklist item" --project-id PROJECT_ID --json
+ticktask task item update TASK_ID ITEM_ID --project-id PROJECT_ID --title "Renamed" --status completed --json
+ticktask task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
+ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes --json
 
 # 安全真实 API smoke：默认跳过，显式开启才运行
 ticktask integration smoke --json
@@ -248,6 +254,10 @@ MCP 工具：
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_add_checklist_item`
+- `ticktask_update_checklist_item`
+- `ticktask_complete_checklist_item`
+- `ticktask_delete_checklist_item`
 - `ticktask_completed`
 - `ticktask_export_tasks`
 

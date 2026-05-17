@@ -9,6 +9,7 @@ class FakeClient:
     def __init__(self):
         self.closed = False
         self.completed_calls = []
+        self.updated_payloads = []
 
     def list_projects(self):
         return [{"id": "p1", "name": "Inbox"}]
@@ -28,9 +29,19 @@ class FakeClient:
         return {"completed": True, "projectId": project_id, "taskId": task_id}
 
     def get_task(self, project_id, task_id):
-        return {"id": task_id, "title": "Loaded", "projectId": project_id}
+        return {
+            "id": task_id,
+            "title": "Loaded",
+            "projectId": project_id,
+            "kind": "CHECKLIST",
+            "items": [
+                {"id": "i1", "title": "Existing", "status": 0, "sortOrder": 1},
+                {"id": "i2", "title": "Done", "status": 1, "sortOrder": 2},
+            ],
+        }
 
     def update_task(self, task_id, payload):
+        self.updated_payloads.append(payload)
         return {"id": task_id, **payload}
 
     def delete_task(self, project_id, task_id):
@@ -177,6 +188,54 @@ def test_project_delete_requires_confirmation(tmp_path) -> None:
 def test_update_project_requires_changed_field(tmp_path) -> None:
     try:
         service(tmp_path).update_project("p1")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+
+def test_checklist_item_crud_updates_task_items(tmp_path) -> None:
+    fake = FakeClient()
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init("ticktick", "client", "secret", "http://localhost", access_token="token")
+    svc = TicktaskService(auth=manager, client_factory=lambda _profile: fake)
+
+    added = svc.add_checklist_item("t1", "p1", "New item", item_id="i-new")
+    assert added["kind"] == "CHECKLIST"
+    assert added["items"][-1]["id"] == "i-new"
+    assert fake.updated_payloads[-1]["items"][-1]["status"] == 0
+
+    updated = svc.update_checklist_item("t1", "p1", "i1", title="Renamed", status=1)
+    assert updated["items"][0]["title"] == "Renamed"
+    assert updated["items"][0]["status"] == 1
+
+    completed = svc.complete_checklist_item("t1", "p1", "i1")
+    assert completed["items"][0]["status"] == 1
+
+    deleted = svc.delete_checklist_item("t1", "p1", "i2", confirmed=True)
+    assert [item["id"] for item in deleted["items"]] == ["i1"]
+
+
+def test_checklist_item_delete_requires_confirmation(tmp_path) -> None:
+    try:
+        service(tmp_path).delete_checklist_item("t1", "p1", "i1", confirmed=False)
+    except ConfirmationRequiredError as exc:
+        assert exc.code == "CONFIRMATION_REQUIRED"
+    else:
+        raise AssertionError("expected ConfirmationRequiredError")
+
+
+def test_checklist_item_update_requires_existing_item_and_change(tmp_path) -> None:
+    svc = service(tmp_path)
+    try:
+        svc.update_checklist_item("t1", "p1", "missing", title="Nope")
+    except ValidationError as exc:
+        assert exc.code == "VALIDATION_ERROR"
+    else:
+        raise AssertionError("expected ValidationError")
+
+    try:
+        svc.update_checklist_item("t1", "p1", "i1")
     except ValidationError as exc:
         assert exc.code == "VALIDATION_ERROR"
     else:

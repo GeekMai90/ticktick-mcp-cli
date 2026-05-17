@@ -21,7 +21,7 @@ Source projects: `jacepark12/ticktick-mcp`, `alexarevalo9/ticktick-mcp-server`, 
 - [x] Get project data
 - [x] List/search/create/get/update/complete/delete/move tasks
 - [x] Completed-task listing
-- [ ] Subtasks/checklist item CRUD
+- [x] Subtasks/checklist item CRUD
 - [ ] Reminder create/update/delete
 - [ ] Repeat/RRULE helpers
 - [ ] Due/start date convenience parser and validator

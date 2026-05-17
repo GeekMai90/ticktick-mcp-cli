@@ -57,6 +57,22 @@ class FakeService:
             raise ConfirmationRequiredError("confirm")
         return {"project_id": project_id, "result": {}}
 
+    def add_checklist_item(self, task_id, project_id, title):
+        return {"id": task_id, "items": [{"id": "i-new", "title": title}]}
+
+    def update_checklist_item(self, task_id, project_id, item_id, title=None, status=None):
+        return {"id": task_id, "items": [{"id": item_id, "title": title, "status": status}]}
+
+    def complete_checklist_item(self, task_id, project_id, item_id):
+        return {"id": task_id, "items": [{"id": item_id, "status": 1}]}
+
+    def delete_checklist_item(self, task_id, project_id, item_id, confirmed):
+        if not confirmed:
+            from ticktask.core.errors import ConfirmationRequiredError
+
+            raise ConfirmationRequiredError("confirm")
+        return {"id": task_id, "items": []}
+
     def completed_tasks(self, preset=None, start_date=None, end_date=None, project=None):
         return [{"id": "t2", "status": 2}]
 
@@ -90,6 +106,11 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_update_project("p1", name="Renamed")["data"]["name"] == "Renamed"
     assert tools.ticktask_delete_project("p1")["error"]["code"] == "CONFIRMATION_REQUIRED"
     assert tools.ticktask_delete_project("p1", yes=True)["data"]["project_id"] == "p1"
+    assert tools.ticktask_add_checklist_item("t1", "p1", "New")["data"]["items"][0]["title"] == "New"
+    assert tools.ticktask_update_checklist_item("t1", "p1", "i1", title="Renamed")["data"]["items"][0]["title"] == "Renamed"
+    assert tools.ticktask_complete_checklist_item("t1", "p1", "i1")["data"]["items"][0]["status"] == 1
+    assert tools.ticktask_delete_checklist_item("t1", "p1", "i1")["error"]["code"] == "CONFIRMATION_REQUIRED"
+    assert tools.ticktask_delete_checklist_item("t1", "p1", "i1", yes=True)["data"]["items"] == []
 
 
 def test_public_mcp_tool_signatures_are_json_serializable() -> None:
@@ -111,6 +132,10 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_create_project,
         tools.ticktask_update_project,
         tools.ticktask_delete_project,
+        tools.ticktask_add_checklist_item,
+        tools.ticktask_update_checklist_item,
+        tools.ticktask_complete_checklist_item,
+        tools.ticktask_delete_checklist_item,
     ]
     for tool in public_tools:
         assert "service_obj" not in inspect.signature(tool).parameters
