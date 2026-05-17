@@ -36,6 +36,7 @@ Current capabilities:
 - Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.
+- Incremental sync/export state file for checkpointed task exports.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
 - Export tasks, completed tasks, or focus-session reports as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
@@ -188,6 +189,14 @@ ticktask task analytics week --project Inbox --json
 ticktask task analytics --from 2026-05-01 --to 2026-05-17 --json
 ```
 
+Incremental sync/export examples:
+
+```bash
+ticktask sync state --json
+ticktask sync mark tasks:all --timestamp 2026-05-01T00:00:00Z --json
+ticktask sync export tasks --format jsonl --state-key tasks:all --status all --save-state --json
+```
+
 ## Quick start for AI agents
 
 ### Agent operating contract
@@ -233,6 +242,7 @@ ticktask task search "release" --json
 ticktask task list --tag agent --filter high-priority --json
 ticktask task filter --tag agent --priority high --json
 ticktask task analytics week --json
+ticktask sync export tasks --format jsonl --state-key tasks:all --status all --json
 
 # Mutate only after exact IDs are known
 ticktask task add "Plan release" --project Inbox --json
@@ -323,6 +333,9 @@ MCP tools:
 - `ticktask_get_focus`
 - `ticktask_delete_focus`
 - `ticktask_export_tasks`
+- `ticktask_sync_state`
+- `ticktask_mark_sync_state`
+- `ticktask_sync_export_tasks`
 - `ticktask_export_focuses`
 
 ## Real API integration smoke

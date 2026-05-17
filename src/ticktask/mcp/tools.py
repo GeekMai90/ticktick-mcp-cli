@@ -452,8 +452,41 @@ def ticktask_export_tasks(
         return err(exc)
 
 
+def ticktask_sync_state() -> dict[str, Any]:
+    try:
+        return ok(_make_service().sync_state())
+    except Exception as exc:
+        return err(exc)
 
 
+def ticktask_mark_sync_state(state_key: str, timestamp: str | None = None) -> dict[str, Any]:
+    try:
+        return ok(_make_service().mark_sync_state(state_key=state_key, timestamp=timestamp))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_sync_export_tasks(
+    output_format: str,
+    state_key: str,
+    project: str | None = None,
+    status: str = "all",
+    since: str | None = None,
+    save_state: bool = False,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().sync_export_tasks(
+                output_format=output_format,
+                state_key=state_key,
+                project=project,
+                status=status,
+                since=since,
+                save_state=save_state,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
 
 
 def ticktask_export_focuses(
@@ -612,6 +645,9 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_get_focus": "ticktask focus get",
     "ticktask_delete_focus": "ticktask focus delete",
     "ticktask_export_tasks": "ticktask export tasks",
+    "ticktask_sync_state": "ticktask sync state",
+    "ticktask_mark_sync_state": "ticktask sync mark",
+    "ticktask_sync_export_tasks": "ticktask sync export tasks",
     "ticktask_export_focuses": "ticktask export focus",
     "ticktask_cli_parity": "ticktask --help",
 }
@@ -658,6 +694,9 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_get_focus": "Get one focus session by exact focus ID and type.",
     "ticktask_delete_focus": "Delete a focus session; requires yes=true confirmation.",
     "ticktask_export_tasks": "Export tasks as JSON, JSONL, CSV, or Markdown content.",
+    "ticktask_sync_state": "Return the local incremental sync/export state file contents.",
+    "ticktask_mark_sync_state": "Set a sync state key to an ISO timestamp, defaulting to current UTC time.",
+    "ticktask_sync_export_tasks": "Export tasks incrementally from a stored sync timestamp and optionally save a new timestamp.",
     "ticktask_export_focuses": "Export focus sessions as report-friendly JSON, JSONL, CSV, or Markdown content.",
     "ticktask_cli_parity": "Return the MCP-to-CLI parity matrix for agent planning and auditing.",
 }
@@ -692,6 +731,10 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "query": "Search query matched against task title, content, and ID.",
     "period": "Completed-task or analytics date preset.",
     "output_format": "Export format.",
+    "state_key": "Incremental sync/export state key, for example tasks:all or weekly-review.",
+    "timestamp": "ISO-8601 timestamp to persist in the sync state file.",
+    "since": "Override stored sync timestamp for one export run.",
+    "save_state": "When true, save current UTC time to the state key after a successful export.",
     "habit_id": "Exact habit ID.",
     "habit_ids": "One or more exact habit IDs.",
     "stamp": "Habit check-in stamp as YYYYMMDD integer.",
@@ -724,6 +767,8 @@ _PARAM_ENUMS: dict[tuple[str, str] | str, list[str]] = {
     ("ticktask_filter_tasks", "status"): _STATUS_ENUM,
     ("ticktask_task_analytics", "period"): _PERIOD_ENUM,
     ("ticktask_export_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_sync_export_tasks", "status"): _STATUS_ENUM,
+    ("ticktask_sync_export_tasks", "output_format"): _EXPORT_FORMAT_ENUM,
     ("ticktask_export_focuses", "output_format"): _EXPORT_FORMAT_ENUM,
     ("ticktask_update_checklist_item", "status"): _CHECKLIST_STATUS_ENUM,
 }
@@ -770,6 +815,9 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_get_focus": [{"description": "Get focus session details", "arguments": {"focus_id": "FOCUS_ID", "focus_type": 0}}],
     "ticktask_delete_focus": [{"description": "Delete focus session after verification", "arguments": {"focus_id": "FOCUS_ID", "focus_type": 0, "yes": True}}],
     "ticktask_export_tasks": [{"description": "Export all tasks as JSONL", "arguments": {"output_format": "jsonl", "status": "all"}}],
+    "ticktask_sync_state": [{"description": "Read incremental sync state", "arguments": {}}],
+    "ticktask_mark_sync_state": [{"description": "Mark a task export checkpoint", "arguments": {"state_key": "tasks:all", "timestamp": "2026-05-17T00:00:00Z"}}],
+    "ticktask_sync_export_tasks": [{"description": "Export tasks since stored checkpoint and save a new checkpoint", "arguments": {"output_format": "jsonl", "state_key": "tasks:all", "status": "all", "save_state": True}}],
     "ticktask_export_focuses": [{"description": "Export Pomodoro sessions as CSV", "arguments": {"output_format": "csv", "from_time": "2026-01-01", "to_time": "2026-01-30", "focus_type": 0}}],
     "ticktask_cli_parity": [{"description": "Audit MCP and CLI parity", "arguments": {}}],
 }
