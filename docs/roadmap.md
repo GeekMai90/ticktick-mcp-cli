@@ -105,10 +105,11 @@ Project differentiator.
 - [x] Destructive operations require exact IDs and `--yes`
 - [x] Read-only smoke gate with `TICKTASK_INTEGRATION=1`
 - [x] Conflict-safe retries for read-only/rate-limited API calls
+- [x] Agent retry idempotency keys for task creation
 - [ ] Token storage keyring option
 - [x] Redacted diagnostic bundle command
 - [ ] End-to-end OAuth callback local server mode
-- [ ] Idempotency/deduplication helpers for agent retries
+- [x] Idempotency/deduplication helpers for agent retries
 - [x] Structured error taxonomy with remediation hints
 
 ## Suggested development phases
@@ -162,6 +163,7 @@ Project differentiator.
 17. ✅ `feat(validation): add date and enum validation helpers`
 18. ✅ `feat(diagnostics): add redacted diagnostic bundle command`
 19. ✅ `feat(errors): add remediation hints and stable error taxonomy`
+20. ✅ `feat(reliability): add task creation idempotency keys for agent retries`
 
 
 

@@ -21,6 +21,7 @@ from ticktask.core.errors import (
     ValidationError,
 )
 from ticktask.core.exporters import serialize_focuses, serialize_tasks
+from ticktask.core.idempotency import IdempotencyStore
 from ticktask.core.models import PRIORITY_MAP, Focus, Habit, Project, Task
 from ticktask.core.sync_state import SyncStateStore, utc_now
 from ticktask.core.validation import (
@@ -52,10 +53,12 @@ class TicktaskService:
         auth: AuthManager | None = None,
         service: str | None = None,
         client_factory: ClientFactory | None = None,
+        idempotency_store: IdempotencyStore | None = None,
     ) -> None:
         self.auth = auth or AuthManager()
         self.service = service
         self.client_factory = client_factory or default_client_factory
+        self.idempotency_store = idempotency_store or IdempotencyStore(self.auth.store.path.parent / "idempotency.json")
 
     def _with_client(self) -> TicktaskClient:
         profile = self.auth.require_token(self.service)
@@ -472,6 +475,7 @@ class TicktaskService:
         content: str | None = None,
         due: str | None = None,
         priority: str = "none",
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         normalized_due = normalize_task_date(due) if due else None
         normalized_priority = normalize_priority(priority) or "none"
@@ -489,7 +493,16 @@ class TicktaskService:
                 projects = [Project.from_api(item) for item in client.list_projects()]
                 selected = self._select_one_project(projects, project)
                 payload["projectId"] = selected.id
-            return Task.from_api(client.create_task(payload), payload.get("projectId")).to_dict()
+            replayed = self.idempotency_store.get("task.create", idempotency_key, payload)
+            if replayed is not None:
+                task = dict(replayed)
+                task["_idempotency"] = {"key": idempotency_key, "replayed": True}
+                return task
+            task = Task.from_api(client.create_task(payload), payload.get("projectId")).to_dict()
+            self.idempotency_store.record("task.create", idempotency_key, payload, task)
+            if idempotency_key:
+                task["_idempotency"] = {"key": idempotency_key, "replayed": False}
+            return task
         finally:
             client.close()
 

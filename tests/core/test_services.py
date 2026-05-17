@@ -228,6 +228,29 @@ def test_create_task_resolves_project(tmp_path) -> None:
     assert task["priority"] == 5
 
 
+def test_create_task_idempotency_replays_without_duplicate_api_call(tmp_path) -> None:
+    svc = service(tmp_path)
+
+    first = svc.create_task("New task", project="Inbox", priority="high", idempotency_key="agent-key-1")
+    second = svc.create_task("New task", project="Inbox", priority="high", idempotency_key="agent-key-1")
+
+    assert first["id"] == "new"
+    assert first["_idempotency"] == {"key": "agent-key-1", "replayed": False}
+    assert second["id"] == "new"
+    assert second["_idempotency"] == {"key": "agent-key-1", "replayed": True}
+    assert len(svc.client.created_tasks) == 1  # type: ignore[attr-defined]
+
+
+def test_create_task_idempotency_rejects_key_reuse_for_different_payload(tmp_path) -> None:
+    svc = service(tmp_path)
+    svc.create_task("New task", project="Inbox", priority="high", idempotency_key="agent-key-1")
+
+    with pytest.raises(ValidationError) as exc:
+        svc.create_task("Different task", project="Inbox", priority="high", idempotency_key="agent-key-1")
+
+    assert "different payload" in exc.value.message
+
+
 def test_complete_requires_confirmation(tmp_path) -> None:
     try:
         service(tmp_path).complete_task("t1", "p1", confirmed=False)

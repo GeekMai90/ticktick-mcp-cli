@@ -89,10 +89,15 @@ def add_task(
     content: str | None = typer.Option(None, "--content", help="Task body/content."),
     due: str | None = typer.Option(None, "--due", help="Due date string accepted by the API."),
     priority: str = typer.Option("none", "--priority", help="none, low, medium, or high."),
+    idempotency_key: str | None = typer.Option(
+        None,
+        "--idempotency-key",
+        help="Agent-supplied key to safely replay task creation without duplicate API writes.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
     try:
-        task = TicktaskService().create_task(title, project, content, due, priority)
+        task = TicktaskService().create_task(title, project, content, due, priority, idempotency_key)
         if json_output:
             emit_json(ok(task))
         else:

@@ -30,6 +30,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
 - 项目列表、项目数据读取、创建、更新和删除，并校验项目 kind / view mode。
 - 任务列表 / 搜索 / 创建 / 获取 / 更新 / 完成 / 删除 / 移动，并支持 due 日期便捷解析（`today`、`tomorrow`、`next monday`、`YYYY-MM-DD`）。
+- 面向 Agent 重试的任务创建幂等 key，避免中断/重试时重复创建远端任务。
 - 任务提醒设置/清除，以及 repeat/RRULE 重复规则设置/清除。
 - 默认 dry-run 的批量完成、删除、移动任务操作。
 - 支持标签筛选、智能筛选（today / overdue / upcoming / high-priority / no-date）、priority/status 校验和任务标签增删。
@@ -166,6 +167,7 @@ ticktask project list
 ticktask task list
 ticktask today
 ticktask add "Plan release" --project Inbox
+ticktask task add "Plan release" --project Inbox --idempotency-key agent-run-123:create-plan-release --json
 ticktask task search "release"
 ticktask task list --tag agent --filter high-priority
 ticktask task filter --tag agent --priority high
@@ -303,6 +305,7 @@ ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl --
 
 # 只有在获得精确 ID 后才做变更
 ticktask task add "Plan release" --project Inbox --json
+ticktask task add "Plan release" --project Inbox --idempotency-key agent-run-123:create-plan-release --json
 ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
@@ -336,6 +339,8 @@ ticktask-mcp
 MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。它也提供只读 MCP resources 和可复用 MCP prompt templates，方便 Agent 获取规划上下文并执行常见工作流。
 
 对于 AI Agent，建议先调用 `ticktask_describe_tools` 查看描述、参数枚举、确认要求和 examples；再用 `ticktask_cli_parity` 映射 MCP tool 与 CLI 命令。需要项目上下文、脱敏本地配置或智能筛选预设时，可读取 `ticktask://projects`、`ticktask://config` 和 `ticktask://saved-views`。日计划、周复盘、安全清理、导出备份等常见场景可直接使用内置 prompt templates。
+
+Agent 创建任务时可给 `ticktask_create_task` 传入 `idempotency_key`。同一个 key 配合同一组创建参数重复调用会返回本地缓存的任务，避免中断重试造成远端重复任务；如果同一个 key 配了不同参数，则会返回校验错误。CLI 对应参数是 `ticktask task add --idempotency-key ...`，幂等记录保存在配置目录旁的 `idempotency.json`。
 
 MCP 工具：
 
@@ -453,6 +458,7 @@ uv build
 - OAuth 登录使用 state 和 PKCE。
 - API 调用会在 access token 过期或即将过期时自动 refresh。
 - 只读 API 调用会重试临时限流/服务器错误；写入类操作不会盲目重试，避免重复创建或重复修改。
+- 创建任务可使用本地幂等 key；同一 key + 同一 payload 会复用结果，同一 key + 不同 payload 会拒绝。
 - 全局查询已完成任务时会故意省略 `projectIds`，避免漏掉 Dida365 已完成任务。
 
 ## License
