@@ -37,7 +37,13 @@ uv run ticktick-mcp-cli task update TASK_ID --project-id PROJECT_ID --title "Sen
 uv run ticktick-mcp-cli task complete TASK_ID --project-id PROJECT_ID --yes --json
 uv run ticktick-mcp-cli task delete TASK_ID --project-id PROJECT_ID --yes --json
 uv run ticktick-mcp-cli task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID --json
+uv run ticktick-mcp-cli task item add TASK_ID "Checklist item" --project-id PROJECT_ID --json
+uv run ticktick-mcp-cli task item update TASK_ID ITEM_ID --project-id PROJECT_ID --title "Renamed" --status completed --json
+uv run ticktick-mcp-cli task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
+uv run ticktick-mcp-cli task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes --json
 ```
+
+Checklist item operations update the parent task through the official task update API, preserve `kind=CHECKLIST`, and require exact task/project/item IDs. Deleting a checklist item requires `--yes`.
 
 Completed-task listing uses the official `POST /open/v1/task/completed` API. Global completed queries intentionally omit `projectIds`, which avoids missing completed Dida365 tasks.
 

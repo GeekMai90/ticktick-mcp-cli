@@ -30,6 +30,7 @@ Current capabilities:
 - Automatic access-token refresh when `expires_at` is near or past expiry.
 - Project list, project data retrieval, create, update, and delete.
 - Task list/search/create/get/update/complete/delete/move.
+- Checklist item/subtask add/update/complete/delete for `CHECKLIST` tasks.
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Export tasks/completed tasks as `json`, `jsonl`, `csv`, or `markdown`.
 - Read-only real API smoke check gated by `TICKTASK_INTEGRATION=1`.
@@ -150,6 +151,7 @@ ticktask project delete PROJECT_ID --yes --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes
 ticktask task move TASK_ID --from-project-id PROJECT_ID --to-project-id OTHER_PROJECT_ID
+ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes
 ```
 
 Export examples:
@@ -208,6 +210,10 @@ ticktask task add "Plan release" --project Inbox --json
 ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
+ticktask task item add TASK_ID "Checklist item" --project-id PROJECT_ID --json
+ticktask task item update TASK_ID ITEM_ID --project-id PROJECT_ID --title "Renamed" --status completed --json
+ticktask task item complete TASK_ID ITEM_ID --project-id PROJECT_ID --json
+ticktask task item delete TASK_ID ITEM_ID --project-id PROJECT_ID --yes --json
 
 # Safe real-API smoke: skipped unless explicitly enabled
 ticktask integration smoke --json
@@ -248,6 +254,10 @@ MCP tools:
 - `ticktask_update_task`
 - `ticktask_delete_task`
 - `ticktask_move_task`
+- `ticktask_add_checklist_item`
+- `ticktask_update_checklist_item`
+- `ticktask_complete_checklist_item`
+- `ticktask_delete_checklist_item`
 - `ticktask_completed`
 - `ticktask_export_tasks`
 

@@ -116,3 +116,68 @@ def test_completed_command_json(monkeypatch) -> None:
     payload = json.loads(result.stdout)
     assert payload["meta"]["count"] == 1
     assert payload["data"][0]["title"] == "today"
+
+
+def test_checklist_item_cli_json(monkeypatch) -> None:
+    class FakeService:
+        def add_checklist_item(self, task_id, project_id, title):
+            return {"id": task_id, "project_id": project_id, "items": [{"id": "i-new", "title": title}]}
+
+        def update_checklist_item(self, task_id, project_id, item_id, title=None, status=None):
+            return {"id": task_id, "project_id": project_id, "items": [{"id": item_id, "title": title, "status": status}]}
+
+        def complete_checklist_item(self, task_id, project_id, item_id):
+            return {"id": task_id, "project_id": project_id, "items": [{"id": item_id, "status": 1}]}
+
+        def delete_checklist_item(self, task_id, project_id, item_id, confirmed):
+            if not confirmed:
+                from ticktask.core.errors import ConfirmationRequiredError
+
+                raise ConfirmationRequiredError("confirm")
+            return {"id": task_id, "project_id": project_id, "items": []}
+
+    monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
+
+    added = runner.invoke(
+        app, ["task", "item", "add", "t1", "New", "--project-id", "p1", "--json"]
+    )
+    assert added.exit_code == 0
+    assert json.loads(added.stdout)["data"]["items"][0]["title"] == "New"
+
+    updated = runner.invoke(
+        app,
+        [
+            "task",
+            "item",
+            "update",
+            "t1",
+            "i1",
+            "--project-id",
+            "p1",
+            "--title",
+            "Renamed",
+            "--status",
+            "completed",
+            "--json",
+        ],
+    )
+    assert updated.exit_code == 0
+    assert json.loads(updated.stdout)["data"]["items"][0]["status"] == "completed"
+
+    completed = runner.invoke(
+        app, ["task", "item", "complete", "t1", "i1", "--project-id", "p1", "--json"]
+    )
+    assert completed.exit_code == 0
+    assert json.loads(completed.stdout)["data"]["items"][0]["status"] == 1
+
+    denied = runner.invoke(
+        app, ["task", "item", "delete", "t1", "i1", "--project-id", "p1", "--json"]
+    )
+    assert denied.exit_code == 1
+    assert json.loads(denied.stdout)["error"]["code"] == "CONFIRMATION_REQUIRED"
+
+    deleted = runner.invoke(
+        app, ["task", "item", "delete", "t1", "i1", "--project-id", "p1", "--yes", "--json"]
+    )
+    assert deleted.exit_code == 0
+    assert json.loads(deleted.stdout)["data"]["items"] == []

@@ -212,6 +212,67 @@ def ticktask_move_task(task_id: str, from_project_id: str, to_project_id: str) -
         return err(exc)
 
 
+
+
+def ticktask_add_checklist_item(task_id: str, project_id: str, title: str) -> dict[str, Any]:
+    try:
+        return ok(_make_service().add_checklist_item(task_id=task_id, project_id=project_id, title=title))
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_update_checklist_item(
+    task_id: str,
+    project_id: str,
+    item_id: str,
+    title: str | None = None,
+    status: str | int | None = None,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().update_checklist_item(
+                task_id=task_id,
+                project_id=project_id,
+                item_id=item_id,
+                title=title,
+                status=status,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_complete_checklist_item(task_id: str, project_id: str, item_id: str) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().complete_checklist_item(
+                task_id=task_id,
+                project_id=project_id,
+                item_id=item_id,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
+def ticktask_delete_checklist_item(
+    task_id: str,
+    project_id: str,
+    item_id: str,
+    yes: bool = False,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().delete_checklist_item(
+                task_id=task_id,
+                project_id=project_id,
+                item_id=item_id,
+                confirmed=yes,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
 def ticktask_completed(
     period: str | None = None,
     start_date: str | None = None,

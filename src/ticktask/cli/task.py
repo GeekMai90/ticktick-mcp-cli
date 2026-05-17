@@ -166,3 +166,95 @@ def move_task(
             typer.echo(f"Moved {task_id} from {from_project_id} to {to_project_id}.")
     except Exception as exc:
         emit_error(exc, json_output)
+
+
+item_app = typer.Typer(help="Checklist item/subtask commands.")
+
+
+@item_app.command("add")
+def add_checklist_item(
+    task_id: str,
+    title: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().add_checklist_item(task_id=task_id, project_id=project_id, title=title)
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@item_app.command("update")
+def update_checklist_item(
+    task_id: str,
+    item_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    title: str | None = typer.Option(None, "--title", help="New checklist item title."),
+    status: str | None = typer.Option(None, "--status", help="open or completed."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().update_checklist_item(
+            task_id=task_id,
+            project_id=project_id,
+            item_id=item_id,
+            title=title,
+            status=status,
+        )
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@item_app.command("complete")
+def complete_checklist_item(
+    task_id: str,
+    item_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().complete_checklist_item(
+            task_id=task_id,
+            project_id=project_id,
+            item_id=item_id,
+        )
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+@item_app.command("delete")
+def delete_checklist_item(
+    task_id: str,
+    item_id: str,
+    project_id: str = typer.Option(..., "--project-id", help="Exact project ID."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm deletion."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
+) -> None:
+    try:
+        task = TicktaskService().delete_checklist_item(
+            task_id=task_id,
+            project_id=project_id,
+            item_id=item_id,
+            confirmed=yes,
+        )
+        if json_output:
+            emit_json(ok(task))
+        else:
+            print_tasks([task])
+    except Exception as exc:
+        emit_error(exc, json_output)
+
+
+app.add_typer(item_app, name="item")
