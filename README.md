@@ -37,6 +37,7 @@ Current capabilities:
 - Completed-task listing through the official `POST /open/v1/task/completed` API.
 - Task analytics for open/completed/overdue counts, project throughput, tag distribution, and priority distribution.
 - Progress reporting that combines tasks, habits, and focus sessions into one scorecard.
+- Conflict-safe retries for read-only API calls, including `Retry-After` handling for rate limits and transient 5xx responses.
 - Incremental sync/export state file for checkpointed task exports.
 - Date/project backup files with Markdown, JSONL, CSV, or JSON outputs plus a manifest.
 - Official habit list/get/create/update, habit check-in/history, and focus list/get/delete.
@@ -407,6 +408,7 @@ Project notes:
 - `.env`, token files, local config files, `dist/`, and build outputs are ignored by git.
 - OAuth login uses state and PKCE.
 - API calls auto-refresh expired or near-expired tokens when a refresh token is available.
+- Read-only API calls retry transient rate-limit/server failures; mutating writes do not blind-retry to avoid duplicate changes.
 - Completed-task listing intentionally omits `projectIds` for global queries to avoid missing Dida365 completed tasks.
 
 ## License

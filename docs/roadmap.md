@@ -69,7 +69,7 @@ Source projects: `dida365-ai-tools`, `GalaxyXieyu/didatodolist-mcp`, `ticktick-s
 - [x] Markdown/CSV/JSONL backups by project/date
 - [x] Task analytics: completed count, overdue count, project throughput, tag distribution
 - [x] Goal/progress reporting derived from tasks, habits, and focus sessions
-- [ ] Conflict-safe retries and rate-limit handling
+- [x] Conflict-safe retries and rate-limit handling
 
 ### 6. MCP excellence
 
@@ -104,6 +104,7 @@ Project differentiator.
 - [x] Automatic token refresh
 - [x] Destructive operations require exact IDs and `--yes`
 - [x] Read-only smoke gate with `TICKTASK_INTEGRATION=1`
+- [x] Conflict-safe retries for read-only/rate-limited API calls
 - [ ] Token storage keyring option
 - [ ] Redacted diagnostic bundle command
 - [ ] End-to-end OAuth callback local server mode
@@ -153,7 +154,8 @@ Project differentiator.
 9. ✅ `feat(sync): add incremental sync/export state file`
 10. ✅ `feat(backup): add Markdown/CSV/JSONL backups by project/date`
 11. ✅ `feat(report): add goal/progress reporting from tasks, habits, and focus`
-12. `feat(dx): add PyPI publish workflow and install docs`
+12. ✅ `feat(reliability): add conflict-safe retries and rate-limit handling`
+13. `feat(dx): add PyPI publish workflow and install docs`
 
 
 

@@ -1,6 +1,8 @@
+import pytest
 import httpx
 
 from ticktask.core.client import TicktaskClient
+from ticktask.core.errors import ApiError
 
 
 def test_client_adds_bearer_token_and_base_url() -> None:
@@ -205,3 +207,99 @@ def test_focus_endpoints() -> None:
         ("GET", "https://api.ticktick.com/open/v1/focus?from=2026-01-01T00%3A00%3A00%2B0000&to=2026-01-02T00%3A00%3A00%2B0000&type=1", b""),
         ("DELETE", "https://api.ticktick.com/open/v1/focus/f1?type=0", b""),
     ]
+
+
+def test_client_retries_safe_rate_limited_request_after_retry_after() -> None:
+    calls = []
+    sleeps = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url)))
+        if len(calls) == 1:
+            return httpx.Response(429, headers={"Retry-After": "2"}, json={"error": "slow down"})
+        return httpx.Response(200, json=[{"id": "p1", "name": "Inbox"}])
+
+    client = TicktaskClient(
+        "https://api.ticktick.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+        retry_sleep=sleeps.append,
+    )
+
+    assert client.list_projects() == [{"id": "p1", "name": "Inbox"}]
+    assert calls == [
+        ("GET", "https://api.ticktick.com/open/v1/project"),
+        ("GET", "https://api.ticktick.com/open/v1/project"),
+    ]
+    assert sleeps == [2.0]
+
+
+def test_client_retries_transient_server_errors_for_read_only_post() -> None:
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url), request.read()))
+        if len(calls) == 1:
+            return httpx.Response(503, json={"message": "temporarily unavailable"})
+        return httpx.Response(200, json=[{"id": "t1", "title": "Done"}])
+
+    client = TicktaskClient(
+        "https://api.dida365.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+        retry_sleep=lambda _delay: None,
+    )
+
+    assert client.completed_tasks(start_date="2026-01-01", end_date="2026-01-31") == [
+        {"id": "t1", "title": "Done"}
+    ]
+    assert [call[0] for call in calls] == ["POST", "POST"]
+    assert calls[0][2] == b'{"startDate":"2026-01-01","endDate":"2026-01-31"}'
+
+
+def test_client_does_not_retry_mutating_post_to_avoid_duplicate_writes() -> None:
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, str(request.url), request.read()))
+        return httpx.Response(503, json={"message": "temporarily unavailable"})
+
+    client = TicktaskClient(
+        "https://api.ticktick.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+        retry_sleep=lambda _delay: None,
+    )
+
+    with pytest.raises(ApiError) as excinfo:
+        client.create_task({"title": "Do not duplicate"})
+
+    assert len(calls) == 1
+    assert excinfo.value.details == {
+        "status_code": 503,
+        "path": "/open/v1/task",
+        "retryable": False,
+    }
+
+
+def test_client_rate_limit_error_exposes_retry_after_details() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, headers={"Retry-After": "7"}, json={"error": "too many requests"})
+
+    client = TicktaskClient(
+        "https://api.ticktick.com",
+        "token",
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+        max_retries=0,
+        retry_sleep=lambda _delay: None,
+    )
+
+    with pytest.raises(ApiError) as excinfo:
+        client.list_projects()
+
+    assert excinfo.value.details == {
+        "status_code": 429,
+        "path": "/open/v1/project",
+        "retry_after": 7.0,
+        "retryable": True,
+    }

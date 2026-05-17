@@ -86,6 +86,8 @@ Tool functions are importable from `ticktask.mcp.tools` for unit testing without
 
 Destructive MCP tools require explicit confirmation. For example, `ticktask_delete_task`, `ticktask_delete_project`, `ticktask_delete_checklist_item`, and `ticktask_delete_focus` return `CONFIRMATION_REQUIRED` unless `yes=true`.
 
+MCP tools use the same reliability behavior as the CLI because both frontends call the shared core client. Read-only operations retry `429` and transient `5xx` responses with `Retry-After`/bounded backoff. Mutating writes do not blind-retry, and API errors include retry details (`status_code`, `path`, `retryable`, and optional `retry_after`) for agent recovery logic.
+
 
 Example metadata call:
 
