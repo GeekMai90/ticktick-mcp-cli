@@ -115,6 +115,16 @@ class FakeService:
             "tag_distribution": {"agent": 2},
         }
 
+    def progress_report(self, period=None, start_date=None, end_date=None, project=None, focus_type=0):
+        return {
+            "period": {"preset": period, "start": start_date, "end": end_date},
+            "scope": {"project": project, "focus_type": focus_type},
+            "tasks": {"completed_count": 2, "open_count": 3, "completion_rate": 0.4},
+            "habits": {"habit_count": 1, "checkin_count": 4},
+            "focus": {"session_count": 2, "duration_minutes": 50},
+            "scorecard": {"completed_tasks": 2, "habit_checkins": 4, "focus_minutes": 50, "overdue_tasks": 1},
+        }
+
     def export_tasks(self, output_format, project=None, status="open", start_date=None, end_date=None):
         return "exported"
 
@@ -206,6 +216,7 @@ def test_mcp_new_tools(monkeypatch) -> None:
     assert tools.ticktask_batch_move_tasks(["t1"], "p1", "p2")["data"]["action"] == "move"
     assert tools.ticktask_completed(period="today")["meta"]["count"] == 1
     assert tools.ticktask_task_analytics(period="week", project="Inbox")["data"]["summary"]["completed_count"] == 2
+    assert tools.ticktask_progress_report(period="week", project="Inbox", focus_type=1)["data"]["scorecard"]["focus_minutes"] == 50
     assert tools.ticktask_export_tasks("json")["data"]["content"] == "exported"
     assert tools.ticktask_sync_state()["data"]["states"]["tasks:all"]["last_synced_at"] == "2026-05-01T00:00:00Z"
     assert tools.ticktask_mark_sync_state("tasks:all", timestamp="2026-05-17T00:00:00Z")["data"]["state_key"] == "tasks:all"
@@ -279,6 +290,7 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_delete_focus,
         tools.ticktask_completed,
         tools.ticktask_task_analytics,
+        tools.ticktask_progress_report,
         tools.ticktask_export_tasks,
         tools.ticktask_sync_state,
         tools.ticktask_mark_sync_state,
@@ -377,6 +389,9 @@ def test_mcp_tool_definitions_are_rich_and_complete() -> None:
     assert definitions["ticktask_task_analytics"]["cli_command"] == "ticktask task analytics"
     assert definitions["ticktask_task_analytics"]["destructive"] is False
     assert definitions["ticktask_task_analytics"]["parameters"]["period"]["enum"] == ["today", "yesterday", "week"]
+    assert definitions["ticktask_progress_report"]["cli_command"] == "ticktask report progress"
+    assert definitions["ticktask_progress_report"]["destructive"] is False
+    assert definitions["ticktask_progress_report"]["parameters"]["period"]["enum"] == ["today", "yesterday", "week"]
     assert definitions["ticktask_sync_export_tasks"]["cli_command"] == "ticktask sync export tasks"
     assert definitions["ticktask_sync_export_tasks"]["parameters"]["output_format"]["enum"] == ["json", "jsonl", "csv", "markdown"]
     assert definitions["ticktask_sync_export_tasks"]["destructive"] is False
@@ -401,6 +416,7 @@ def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
     assert "ticktask task reminder set" in commands
     assert "ticktask task repeat set" in commands
     assert "ticktask export tasks" in commands
+    assert "ticktask report progress" in commands
     assert "ticktask sync export tasks" in commands
     assert "ticktask backup tasks" in commands
     assert "ticktask sync state" in commands

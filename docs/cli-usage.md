@@ -64,6 +64,15 @@ Completed-task listing uses the official `POST /open/v1/task/completed` API. Glo
 
 `task analytics` combines open project data with completed-task range data and returns `summary`, `project_throughput`, `tag_distribution`, and `priority_distribution`. It accepts the same date presets as completed-task listing (`today`, `yesterday`, `week`) or explicit `--from/--to` dates. Global analytics also omits `projectIds` for the completed-task query for Dida365 completeness.
 
+## Reports
+
+```bash
+uv run ticktick-mcp-cli report progress week --project Inbox --json
+uv run ticktick-mcp-cli report progress --from 2026-05-01 --to 2026-05-17 --focus-type 1 --json
+```
+
+`report progress` derives a cross-domain scorecard from task analytics, habit check-ins, and focus sessions. It returns task completion/overdue rates, habit check-in counts, focus session duration, and a compact `scorecard` with `completed_tasks`, `habit_checkins`, `focus_minutes`, and `overdue_tasks`.
+
 ## Incremental sync/export state
 
 ```bash

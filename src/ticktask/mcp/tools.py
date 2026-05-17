@@ -432,6 +432,27 @@ def ticktask_task_analytics(
         return err(exc)
 
 
+def ticktask_progress_report(
+    period: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    project: str | None = None,
+    focus_type: int = 0,
+) -> dict[str, Any]:
+    try:
+        return ok(
+            _make_service().progress_report(
+                period=period,
+                start_date=start_date,
+                end_date=end_date,
+                project=project,
+                focus_type=focus_type,
+            )
+        )
+    except Exception as exc:
+        return err(exc)
+
+
 def ticktask_export_tasks(
     output_format: str,
     project: str | None = None,
@@ -660,6 +681,7 @@ _TOOL_CLI_COMMANDS: dict[str, str] = {
     "ticktask_delete_checklist_item": "ticktask task item delete",
     "ticktask_completed": "ticktask completed",
     "ticktask_task_analytics": "ticktask task analytics",
+    "ticktask_progress_report": "ticktask report progress",
     "ticktask_list_habits": "ticktask habit list",
     "ticktask_get_habit": "ticktask habit get",
     "ticktask_create_habit": "ticktask habit create",
@@ -710,6 +732,7 @@ _TOOL_DESCRIPTIONS: dict[str, str] = {
     "ticktask_delete_checklist_item": "Delete a checklist item/subtask; requires yes=true confirmation.",
     "ticktask_completed": "List completed tasks for a preset or date range.",
     "ticktask_task_analytics": "Summarize open, completed, overdue, project throughput, tag distribution, and priority distribution for a date range.",
+    "ticktask_progress_report": "Combine task analytics, habit check-ins, and focus duration into one progress scorecard.",
     "ticktask_list_habits": "List habits for the authenticated account.",
     "ticktask_get_habit": "Get one habit by exact habit ID.",
     "ticktask_create_habit": "Create a habit using the official Open API.",
@@ -756,7 +779,7 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "rrule": "Raw repeat rule, with or without RRULE: prefix.",
     "filter_preset": "Local smart filter for listed tasks.",
     "query": "Search query matched against task title, content, and ID.",
-    "period": "Completed-task or analytics date preset.",
+    "period": "Completed-task, analytics, or report date preset.",
     "output_format": "Export format.",
     "output_formats": "One or more backup export formats.",
     "output_dir": "Local directory that will receive date/project backup folders.",
@@ -836,6 +859,7 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_delete_checklist_item": [{"description": "Delete checklist item after verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "item_id": "ITEM_ID", "yes": True}}],
     "ticktask_completed": [{"description": "Completed tasks for today", "arguments": {"period": "today"}}],
     "ticktask_task_analytics": [{"description": "Weekly task analytics for one project", "arguments": {"period": "week", "project": "Inbox"}}],
+    "ticktask_progress_report": [{"description": "Weekly cross-domain progress scorecard", "arguments": {"period": "week", "project": "Inbox", "focus_type": 0}}],
     "ticktask_list_habits": [{"description": "List habits", "arguments": {}}],
     "ticktask_get_habit": [{"description": "Get habit details", "arguments": {"habit_id": "HABIT_ID"}}],
     "ticktask_create_habit": [{"description": "Create a reading habit", "arguments": {"name": "Read", "goal": 1, "unit": "time"}}],
