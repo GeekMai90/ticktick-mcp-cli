@@ -259,9 +259,10 @@ def ticktask_create_task(
     content: str | None = None,
     due: str | None = None,
     priority: str = "none",
+    idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     try:
-        task = _make_service().create_task(title, project, content, due, priority)
+        task = _make_service().create_task(title, project, content, due, priority, idempotency_key)
         return ok(task)
     except Exception as exc:
         return err(exc)
@@ -778,6 +779,7 @@ _PARAM_DESCRIPTIONS: dict[str, str] = {
     "to_project_id": "Exact destination project ID.",
     "title": "Task, project, or checklist item title.",
     "content": "Task body/content.",
+    "idempotency_key": "Optional agent-supplied key for safe task creation retries; reusing a key with the same payload returns the cached task instead of creating a duplicate.",
     "due": "Due date string accepted by the API.",
     "priority": "Task priority.",
     "status": "Task or checklist status filter/value.",
@@ -848,7 +850,7 @@ _EXAMPLES: dict[str, list[dict[str, Any]]] = {
     "ticktask_list_tasks": [{"description": "Open high-priority agent-tagged tasks", "arguments": {"status": "open", "tag": "agent", "filter_preset": "high-priority"}}],
     "ticktask_filter_tasks": [{"description": "Use official filter endpoint", "arguments": {"tag": "agent", "project": "Inbox", "priority": "high", "status": "open"}}],
     "ticktask_search_tasks": [{"description": "Find tasks mentioning release", "arguments": {"query": "release"}}],
-    "ticktask_create_task": [{"description": "Create a task in Inbox", "arguments": {"title": "Plan release", "project": "Inbox", "priority": "medium"}}],
+    "ticktask_create_task": [{"description": "Create a task in Inbox with an agent retry key", "arguments": {"title": "Plan release", "project": "Inbox", "priority": "medium", "idempotency_key": "agent-run-123:create-plan-release"}}],
     "ticktask_complete_task": [{"description": "Complete after exact target verification", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID", "yes": True}}],
     "ticktask_today": [{"description": "List open tasks due today", "arguments": {}}],
     "ticktask_get_task": [{"description": "Load a task by exact IDs", "arguments": {"task_id": "TASK_ID", "project_id": "PROJECT_ID"}}],

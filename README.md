@@ -30,6 +30,7 @@ Current capabilities:
 - Automatic access-token refresh when `expires_at` is near or past expiry.
 - Project list, project data retrieval, create, update, and delete, with project kind/view-mode validation.
 - Task list/search/create/get/update/complete/delete/move, with due-date convenience parsing (`today`, `tomorrow`, `next monday`, `YYYY-MM-DD`).
+- Agent-safe task creation idempotency keys to avoid duplicate remote tasks when retrying after interruptions.
 - Task reminder set/clear and repeat/RRULE set/clear helpers.
 - Dry-run guarded batch complete/delete/move operations.
 - Tag filtering, smart filters (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`), priority/status validation, and task tag add/remove.
@@ -166,6 +167,7 @@ ticktask project list
 ticktask task list
 ticktask today
 ticktask add "Plan release" --project Inbox
+ticktask task add "Plan release" --project Inbox --idempotency-key agent-run-123:create-plan-release --json
 ticktask task search "release"
 ticktask task list --tag agent --filter high-priority
 ticktask task filter --tag agent --priority high
@@ -304,7 +306,8 @@ ticktask sync export tasks --format jsonl --state-key tasks:all --status all --j
 ticktask backup tasks --output-dir ~/ticktask-backups --format markdown,jsonl --status all --json
 
 # Mutate only after exact IDs are known
-ticktask task add "Plan release" --project Inbox --json
+# For task creation retries, reuse the same --idempotency-key only with the same payload.
+ticktask task add "Plan release" --project Inbox --idempotency-key agent-run-123:create-plan-release --json
 ticktask task update TASK_ID --project-id PROJECT_ID --title "New title" --json
 ticktask task complete TASK_ID --project-id PROJECT_ID --yes --json
 ticktask task delete TASK_ID --project-id PROJECT_ID --yes --json
@@ -346,6 +349,8 @@ ticktick-mcp
 The MCP server uses stdio and exposes the same shared core behavior as the CLI. It also exposes read-only MCP resources for common agent planning context and reusable MCP prompt templates for common workflows.
 
 For AI agents, start with `ticktask_describe_tools` to inspect descriptions, parameter enum hints, confirmation requirements, and examples. Use `ticktask_cli_parity` to map MCP tools back to CLI commands. Read `ticktask://projects`, `ticktask://config`, and `ticktask://saved-views` when you need project context, sanitized local configuration, or smart-filter presets without invoking a tool. Use the built-in prompt templates for daily planning, weekly reviews, safe cleanup, and exports.
+
+When agents create tasks, pass `idempotency_key` to `ticktask_create_task` or `--idempotency-key` to `ticktask task add`. Reusing the same key with the same create arguments returns the cached task instead of creating a duplicate remote task; reusing the key with different arguments fails validation. Idempotency records are stored locally in `idempotency.json` next to the active config directory.
 
 MCP tools:
 
@@ -469,6 +474,7 @@ Project notes:
 - OAuth login uses state and PKCE.
 - API calls auto-refresh expired or near-expired tokens when a refresh token is available.
 - Read-only API calls retry transient rate-limit/server failures; mutating writes do not blind-retry to avoid duplicate changes.
+- Task creation supports local idempotency keys; same key + same payload reuses the result, while same key + different payload is rejected.
 - Completed-task listing intentionally omits `projectIds` for global queries to avoid missing Dida365 completed tasks.
 
 ## License

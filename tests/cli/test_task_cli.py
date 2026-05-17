@@ -9,13 +9,15 @@ runner = CliRunner()
 
 def test_task_add_json(monkeypatch) -> None:
     class FakeService:
-        def create_task(self, title, project=None, content=None, due=None, priority="none"):
-            return {"id": "t1", "title": title, "project_id": project, "raw": {}}
+        def create_task(self, title, project=None, content=None, due=None, priority="none", idempotency_key=None):
+            return {"id": "t1", "title": title, "project_id": project, "idempotency_key": idempotency_key, "raw": {}}
 
     monkeypatch.setattr("ticktask.cli.task.TicktaskService", lambda: FakeService())
-    result = runner.invoke(app, ["task", "add", "Write tests", "--json"])
+    result = runner.invoke(app, ["task", "add", "Write tests", "--idempotency-key", "agent-key-1", "--json"])
     assert result.exit_code == 0
-    assert json.loads(result.stdout)["data"]["title"] == "Write tests"
+    payload = json.loads(result.stdout)
+    assert payload["data"]["title"] == "Write tests"
+    assert payload["data"]["idempotency_key"] == "agent-key-1"
 
 
 def test_task_complete_requires_yes_json(monkeypatch) -> None:
