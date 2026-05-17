@@ -316,9 +316,9 @@ If installed as a tool, run:
 ticktick-mcp
 ```
 
-The MCP server uses stdio and exposes the same shared core behavior as the CLI. It also exposes read-only MCP resources for common agent planning context.
+The MCP server uses stdio and exposes the same shared core behavior as the CLI. It also exposes read-only MCP resources for common agent planning context and reusable MCP prompt templates for common workflows.
 
-For AI agents, start with `ticktask_describe_tools` to inspect descriptions, parameter enum hints, confirmation requirements, and examples. Use `ticktask_cli_parity` to map MCP tools back to CLI commands. Read `ticktask://projects`, `ticktask://config`, and `ticktask://saved-views` when you need project context, sanitized local configuration, or smart-filter presets without invoking a tool.
+For AI agents, start with `ticktask_describe_tools` to inspect descriptions, parameter enum hints, confirmation requirements, and examples. Use `ticktask_cli_parity` to map MCP tools back to CLI commands. Read `ticktask://projects`, `ticktask://config`, and `ticktask://saved-views` when you need project context, sanitized local configuration, or smart-filter presets without invoking a tool. Use the built-in prompt templates for daily planning, weekly reviews, safe cleanup, and exports.
 
 MCP tools:
 
@@ -377,6 +377,13 @@ MCP resources:
 - `ticktask://projects` — read-only project list for planning and exact-ID lookup.
 - `ticktask://config` — sanitized active service/profile configuration with secrets redacted.
 - `ticktask://saved-views` — built-in smart-filter presets and equivalent MCP/CLI arguments.
+
+MCP prompts:
+
+- `ticktask_daily_planning` — plan today using project context and saved views.
+- `ticktask_weekly_review` — review progress with task analytics, completed tasks, habits, and focus.
+- `ticktask_cleanup` — identify stale tasks with dry-run batch operations first.
+- `ticktask_export` — export, backup, or incrementally sync task data.
 
 ## Real API integration smoke
 

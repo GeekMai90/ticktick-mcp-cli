@@ -80,7 +80,7 @@ Source projects: all MCP-first competitors.
 - [x] One MCP tool for every CLI capability
 - [x] Rich JSON schemas with examples and enum constraints
 - [x] MCP resource endpoints for projects, config, and saved views
-- [ ] Prompt templates for common workflows: daily planning, weekly review, cleanup, export
+- [x] Prompt templates for common workflows: daily planning, weekly review, cleanup, export
 - [x] Golden tests for MCP tool outputs
 
 ### 7. Distribution and developer experience
@@ -158,6 +158,7 @@ Project differentiator.
 13. ✅ `feat(dx): add PyPI publish workflow and install docs`
 14. ✅ `feat(config): add MCP integration examples for agent runtimes`
 15. ✅ `feat(mcp): add resource endpoints for projects, config, and saved views`
+16. ✅ `feat(mcp): add prompt templates for common workflows`
 
 
 

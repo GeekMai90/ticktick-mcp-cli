@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from ticktask.mcp import resources, tools
+from ticktask.mcp import prompts, resources, tools
 
 
 INSTALL_HINT = (
@@ -28,6 +28,12 @@ def build_server():
             title=definition["title"],
             description=definition["description"],
             mime_type=definition["mime_type"],
+        )(definition["function"])
+    for name, definition in prompts.PROMPT_DEFINITIONS.items():
+        server.prompt(
+            name=name,
+            title=definition["title"],
+            description=definition["description"],
         )(definition["function"])
     return server
 
