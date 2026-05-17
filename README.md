@@ -246,8 +246,12 @@ ticktick-mcp
 
 The MCP server uses stdio and exposes the same shared core behavior as the CLI.
 
+For AI agents, start with `ticktask_describe_tools` to inspect descriptions, parameter enum hints, confirmation requirements, and examples. Use `ticktask_cli_parity` to map MCP tools back to CLI commands.
+
 MCP tools:
 
+- `ticktask_describe_tools`
+- `ticktask_cli_parity`
 - `ticktask_doctor`
 - `ticktask_auth_status`
 - `ticktask_list_projects`

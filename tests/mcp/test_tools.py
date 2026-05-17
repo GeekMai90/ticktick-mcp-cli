@@ -128,6 +128,7 @@ def test_mcp_new_tools(monkeypatch) -> None:
 
 def test_public_mcp_tool_signatures_are_json_serializable() -> None:
     public_tools = [
+        tools.ticktask_describe_tools,
         tools.ticktask_doctor,
         tools.ticktask_auth_status,
         tools.ticktask_list_projects,
@@ -143,6 +144,7 @@ def test_public_mcp_tool_signatures_are_json_serializable() -> None:
         tools.ticktask_filter_tasks,
         tools.ticktask_add_task_tag,
         tools.ticktask_remove_task_tag,
+        tools.ticktask_cli_parity,
         tools.ticktask_completed,
         tools.ticktask_export_tasks,
         tools.ticktask_create_project,
@@ -179,3 +181,58 @@ def test_mcp_missing_package_hint(monkeypatch) -> None:
         assert INSTALL_HINT in str(exc)
     else:
         raise AssertionError("expected RuntimeError")
+
+
+
+def test_mcp_tool_definitions_are_rich_and_complete() -> None:
+    definitions = tools.ticktask_describe_tools()["data"]
+    public_tool_names = {
+        name
+        for name, value in vars(tools).items()
+        if name.startswith("ticktask_") and callable(value) and name != "ticktask_describe_tools"
+    }
+    assert set(definitions) == public_tool_names
+
+    for name, definition in definitions.items():
+        assert definition["name"] == name
+        assert definition["description"]
+        assert definition["cli_command"]
+        assert definition["examples"]
+        for example in definition["examples"]:
+            assert "arguments" in example
+            assert "description" in example
+
+    assert definitions["ticktask_list_tasks"]["parameters"]["status"]["enum"] == ["open", "completed", "all"]
+    assert definitions["ticktask_list_tasks"]["parameters"]["filter_preset"]["enum"] == [
+        "today",
+        "overdue",
+        "upcoming",
+        "high-priority",
+        "no-date",
+    ]
+    assert definitions["ticktask_create_task"]["parameters"]["priority"]["enum"] == [
+        "none",
+        "low",
+        "medium",
+        "high",
+    ]
+    assert definitions["ticktask_export_tasks"]["parameters"]["output_format"]["enum"] == [
+        "json",
+        "jsonl",
+        "csv",
+        "markdown",
+    ]
+    assert definitions["ticktask_delete_task"]["confirmation_required"] is True
+    assert definitions["ticktask_delete_checklist_item"]["confirmation_required"] is True
+
+
+def test_mcp_cli_parity_matrix_groups_tools_by_cli_command() -> None:
+    matrix = tools.ticktask_cli_parity()["data"]
+    commands = {row["cli_command"] for row in matrix}
+    assert "ticktask project list" in commands
+    assert "ticktask task list" in commands
+    assert "ticktask task tag add" in commands
+    assert "ticktask task item delete" in commands
+    assert "ticktask export tasks" in commands
+    assert all(row["mcp_tool"].startswith("ticktask_") for row in matrix)
+    assert all(row["examples"] for row in matrix)

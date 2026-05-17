@@ -244,8 +244,12 @@ ticktask-mcp
 
 MCP Server 使用 stdio，并暴露与 CLI 相同 Core 的能力。
 
+对于 AI Agent，建议先调用 `ticktask_describe_tools` 查看描述、参数枚举、确认要求和 examples；再用 `ticktask_cli_parity` 映射 MCP tool 与 CLI 命令。
+
 MCP 工具：
 
+- `ticktask_describe_tools`
+- `ticktask_cli_parity`
 - `ticktask_doctor`
 - `ticktask_auth_status`
 - `ticktask_list_projects`

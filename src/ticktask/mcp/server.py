@@ -18,30 +18,9 @@ def build_server():
         raise RuntimeError(INSTALL_HINT) from exc
 
     server = FastMCP("ticktask")
-    server.tool()(tools.ticktask_doctor)
-    server.tool()(tools.ticktask_auth_status)
-    server.tool()(tools.ticktask_list_projects)
-    server.tool()(tools.ticktask_create_project)
-    server.tool()(tools.ticktask_update_project)
-    server.tool()(tools.ticktask_delete_project)
-    server.tool()(tools.ticktask_list_tasks)
-    server.tool()(tools.ticktask_filter_tasks)
-    server.tool()(tools.ticktask_search_tasks)
-    server.tool()(tools.ticktask_create_task)
-    server.tool()(tools.ticktask_complete_task)
-    server.tool()(tools.ticktask_today)
-    server.tool()(tools.ticktask_get_task)
-    server.tool()(tools.ticktask_update_task)
-    server.tool()(tools.ticktask_delete_task)
-    server.tool()(tools.ticktask_move_task)
-    server.tool()(tools.ticktask_add_task_tag)
-    server.tool()(tools.ticktask_remove_task_tag)
-    server.tool()(tools.ticktask_add_checklist_item)
-    server.tool()(tools.ticktask_update_checklist_item)
-    server.tool()(tools.ticktask_complete_checklist_item)
-    server.tool()(tools.ticktask_delete_checklist_item)
-    server.tool()(tools.ticktask_completed)
-    server.tool()(tools.ticktask_export_tasks)
+    server.tool()(tools.ticktask_describe_tools)
+    for tool_name in tools.TOOL_DEFINITIONS:
+        server.tool()(getattr(tools, tool_name))
     return server
 
 
