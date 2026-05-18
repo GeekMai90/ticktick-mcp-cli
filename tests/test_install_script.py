@@ -39,7 +39,7 @@ def test_install_script_prefers_uv_tool_with_mcp_extra(tmp_path: Path) -> None:
     result = _run_install_dry_run(tmp_path, fake_bins=("uv", "pipx", "python3"))
 
     assert result.returncode == 0
-    assert "uv tool install 'ticktick-mcp-cli[mcp,keyring]'" in result.stdout
+    assert "uv tool install 'ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'" in result.stdout
     assert "ticktick-mcp-cli doctor --json" in result.stdout
     assert "ticktick-mcp-cli auth status --json" in result.stdout
 
@@ -48,7 +48,7 @@ def test_install_script_falls_back_to_pipx_when_uv_is_unavailable(tmp_path: Path
     result = _run_install_dry_run(tmp_path, fake_bins=("pipx", "python3"))
 
     assert result.returncode == 0
-    assert "pipx install 'ticktick-mcp-cli[mcp,keyring]'" in result.stdout
+    assert "pipx install 'ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'" in result.stdout
 
 
 def test_install_script_exits_with_hint_when_no_supported_installer_exists(tmp_path: Path) -> None:
@@ -67,6 +67,7 @@ def test_install_docs_reference_script_and_verification_commands() -> None:
         assert "curl -fsSL https://raw.githubusercontent.com/GeekMai90/ticktick-mcp-cli/main/scripts/install.sh | sh" in text
         assert "ticktick-mcp-cli doctor --json" in text
         assert "ticktick-mcp-cli auth status --json" in text
+        assert "git+https://github.com/GeekMai90/ticktick-mcp-cli.git" in text
 
 
 def test_roadmap_marks_install_script_complete_and_omits_homebrew_channel() -> None:

@@ -61,14 +61,14 @@ def test_npx_wrapper_prefers_uvx_and_preserves_args(tmp_path: Path) -> None:
     result = _run_wrapper_dry_run(tmp_path, fake_bins=("uvx", "python3"), args=["doctor", "--json"])
 
     assert result.returncode == 0
-    assert "uvx --from ticktick-mcp-cli[mcp,keyring] ticktick-mcp-cli doctor --json" in result.stdout
+    assert "uvx --from ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git ticktick-mcp-cli doctor --json" in result.stdout
 
 
 def test_npx_wrapper_falls_back_to_pipx_run_when_uvx_is_unavailable(tmp_path: Path) -> None:
     result = _run_wrapper_dry_run(tmp_path, fake_bins=("python3",), args=["auth", "status", "--json"])
 
     assert result.returncode == 0
-    assert "python3 -m pipx run --spec ticktick-mcp-cli[mcp,keyring] ticktick-mcp-cli auth status --json" in result.stdout
+    assert "python3 -m pipx run --spec ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git ticktick-mcp-cli auth status --json" in result.stdout
 
 
 def test_npx_wrapper_dispatches_mcp_bin_name(tmp_path: Path) -> None:
@@ -78,7 +78,7 @@ def test_npx_wrapper_dispatches_mcp_bin_name(tmp_path: Path) -> None:
     result = _run_wrapper_dry_run(tmp_path, fake_bins=("uvx",), script=mcp_link)
 
     assert result.returncode == 0
-    assert "uvx --from ticktick-mcp-cli[mcp,keyring] ticktick-mcp" in result.stdout
+    assert "uvx --from ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git ticktick-mcp" in result.stdout
 
 
 def test_npx_wrapper_exits_with_hint_when_no_runner_exists(tmp_path: Path) -> None:
@@ -96,6 +96,7 @@ def test_docs_explain_github_npx_agent_install_without_claiming_registry_publish
     for text in (readme, readme_zh, installation):
         assert "npx github:GeekMai90/ticktick-mcp-cli" in text
         assert "npm install -g ticktick-mcp-cli" not in text
+        assert "git+https://github.com/GeekMai90/ticktick-mcp-cli.git" in text
 
 
 def test_roadmap_marks_npx_wrapper_complete() -> None:

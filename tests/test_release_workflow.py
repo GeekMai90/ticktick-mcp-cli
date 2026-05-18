@@ -36,19 +36,22 @@ def test_release_docs_explain_tagged_release_and_trusted_publishing() -> None:
     assert "twine check dist/*" in release
 
 
-def test_install_docs_include_pypi_install_commands_and_mcp_extra() -> None:
+def test_install_docs_explain_github_source_now_and_pypi_after_publication() -> None:
     installation = INSTALL_DOC.read_text()
     readme = README.read_text()
     readme_zh = README_ZH.read_text()
 
-    for text in (installation, readme):
+    for text in (installation, readme, readme_zh):
+        assert "git+https://github.com/GeekMai90/ticktick-mcp-cli.git" in text
+        assert (
+            "not available on PyPI" in text
+            or "not installable from PyPI" in text
+            or "还没有发布 `ticktick-mcp-cli`" in text
+            or "正式发布后" in text
+        )
         assert "uv tool install ticktick-mcp-cli" in text
         assert "pipx install ticktick-mcp-cli" in text
         assert "ticktick-mcp-cli[mcp]" in text
-
-    assert "uv tool install ticktick-mcp-cli" in readme_zh
-    assert "pipx install ticktick-mcp-cli" in readme_zh
-    assert "ticktick-mcp-cli[mcp]" in readme_zh
 
 
 def test_roadmap_marks_pypi_publish_workflow_complete() -> None:

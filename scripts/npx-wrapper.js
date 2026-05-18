@@ -4,7 +4,7 @@
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 
-const SPEC = process.env.TICKTASK_NPX_SPEC || "ticktick-mcp-cli[mcp,keyring]";
+const SPEC = process.env.TICKTASK_NPX_SPEC || "ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git";
 const DRY_RUN = process.env.TICKTASK_NPX_DRY_RUN === "1";
 
 function commandExists(command) {

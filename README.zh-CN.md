@@ -61,7 +61,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 curl -fsSL https://raw.githubusercontent.com/GeekMai90/ticktick-mcp-cli/main/scripts/install.sh | sh
 ```
 
-脚本会优先使用 `uv tool install 'ticktick-mcp-cli[mcp,keyring]'`，没有 uv 时回退到 `pipx install 'ticktick-mcp-cli[mcp,keyring]'`，并输出这些验证命令：
+脚本默认从这个 GitHub 仓库安装（`ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git`），因为当前 PyPI 上还没有发布 `ticktick-mcp-cli` 包。脚本会优先使用 `uv tool install`，没有 uv 时回退到 `pipx install`，并输出这些验证命令：
 
 ```bash
 ticktick-mcp-cli --version
@@ -79,22 +79,24 @@ npx github:GeekMai90/ticktick-mcp-cli auth status --json
 npx --package github:GeekMai90/ticktick-mcp-cli ticktick-mcp
 ```
 
-wrapper 会优先通过 `uvx` 调用 Python 包；没有 `uvx` 时回退到 `python3 -m pipx run`。它本身不保存凭据。
+wrapper 会优先通过 `uvx` 从这个 GitHub 仓库调用 Python 包；没有 `uvx` 时回退到 `python3 -m pipx run`。默认 spec：`ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git`。它本身不保存凭据。
 
-### 方式 C：从 PyPI 安装
+### 方式 C：直接从 GitHub 安装
+
+在 `ticktick-mcp-cli` 包正式发布到 PyPI 之前，请使用仓库源安装：
 
 ```bash
-uv tool install ticktick-mcp-cli
+uv tool install 'ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 # 或
-pipx install ticktick-mcp-cli
+pipx install 'ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 ```
 
-如果希望同时安装 MCP server 依赖，请使用可选的 `mcp` extra：
+如果不需要系统 keyring，只安装 MCP 依赖即可：
 
 ```bash
-uv tool install 'ticktick-mcp-cli[mcp]'
+uv tool install 'ticktick-mcp-cli[mcp] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 # 或
-pipx install 'ticktick-mcp-cli[mcp]'
+pipx install 'ticktick-mcp-cli[mcp] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 ```
 
 ### 方式 D：从 clone 直接使用
@@ -107,12 +109,14 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### 方式 E：从 GitHub 安装为工具
+### 方式 E：发布到 PyPI 后再从 PyPI 安装
+
+仓库已经有发布自动化，但只有维护者正式发布后，PyPI 才能解析 `ticktick-mcp-cli`。发布后可以使用：
 
 ```bash
-uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
+uv tool install ticktick-mcp-cli
 # 或
-pipx install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
+pipx install ticktick-mcp-cli
 ```
 
 验证：
