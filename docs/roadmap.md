@@ -94,6 +94,7 @@ Source projects: `kvanland/ticktick-cli`, npm-based MCP servers.
 - [x] Installer script for uv/pipx
 - [x] GitHub npx wrapper for agent installs
 - [x] Agent-first quickstart for link-to-agent installs
+- [x] Lightweight docs index for agent-first onboarding
 - [ ] Prebuilt docs site or GitHub Pages
 - [x] Example configs for Claude Desktop, Hermes, Cursor, Claude Code, and OpenClaw
 
@@ -171,6 +172,7 @@ Project differentiator.
 24. ✅ `feat(dx): add installer script`
 25. ✅ `feat(dx): add npx wrapper for agent installs`
 26. ✅ `feat(docs): add agent-first quickstart`
+27. ✅ `feat(docs): add lightweight docs index`
 
 
 

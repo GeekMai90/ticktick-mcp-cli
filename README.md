@@ -494,6 +494,7 @@ Project notes:
 
 ## Documentation
 
+- [Docs Index](docs/index.md)
 - [Agent-First Quickstart](docs/agent-quickstart.md)
 - [Installation](docs/installation.md)
 - [OAuth](docs/oauth.md)
