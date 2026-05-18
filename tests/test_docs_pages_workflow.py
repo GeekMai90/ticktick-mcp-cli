@@ -3,6 +3,7 @@ from pathlib import Path
 
 PAGES_WORKFLOW = Path(".github/workflows/docs-pages.yml")
 DOCS_INDEX = Path("docs/index.md")
+ZH_CN_DOC = Path("docs/zh-CN.md")
 ROADMAP = Path("docs/roadmap.md")
 
 
@@ -42,5 +43,17 @@ def test_docs_index_is_pages_friendly_and_roadmap_marks_pages_workflow_complete(
 
     assert "# TickTick MCP CLI Docs" in index
     assert "GitHub Pages" in index
+    assert "[简体中文手册](zh-CN.md)" in index
     assert "[x] GitHub Pages workflow for docs index" in roadmap
     assert "✅ `feat(docs): add GitHub Pages workflow`" in roadmap
+
+
+def test_simplified_chinese_docs_cover_agent_first_dida365_and_mcp() -> None:
+    zh_cn = ZH_CN_DOC.read_text()
+
+    assert "# TickTick MCP CLI 简体中文手册" in zh_cn
+    assert "Agent-first" in zh_cn
+    assert "--service dida365" in zh_cn
+    assert "hermes mcp add ticktask --command ticktask-mcp" in zh_cn
+    assert "List my projects. Do not create, update, complete, or delete tasks." in zh_cn
+    assert "不要把 `client_secret`、`access_token`、`refresh_token`" in zh_cn

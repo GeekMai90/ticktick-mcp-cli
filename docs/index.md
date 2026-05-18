@@ -4,6 +4,7 @@ Start here if you are a human user or an AI agent installing TickTick MCP CLI fr
 
 ## Start here
 
+- [简体中文手册](zh-CN.md) — 面向中文用户和 AI Agent 的安装、Dida365 OAuth、MCP 接入、安全操作与常见问题。
 - [Agent-First Quickstart](agent-quickstart.md) — fastest path when a user gives an agent this repository link and asks it to install/configure the tool.
 - [Installation](installation.md) — install script, GitHub npx wrapper, PyPI/uv/pipx, source build, and config directory notes.
 - [OAuth](oauth.md) — OAuth app setup, PKCE/state login flow, keyring token storage, and local callback server mode.
