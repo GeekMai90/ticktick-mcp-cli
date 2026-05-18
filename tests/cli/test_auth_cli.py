@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 
 from typer.testing import CliRunner
 
@@ -128,6 +129,65 @@ def test_auth_init_rejects_invalid_token_storage_without_writing_config(tmp_path
     assert payload["ok"] is False
     assert "Unsupported token storage" in payload["error"]["message"]
     assert not (tmp_path / "config.json").exists()
+
+
+def test_auth_login_local_server_json(monkeypatch) -> None:
+    opened = []
+
+    class FakeProfile:
+        service = "ticktick"
+        refresh_token = "refresh"
+        expires_at = "2026-01-01T00:00:00+00:00"
+
+        def has_token(self):
+            return True
+
+    class FakeFlow:
+        authorization_url = "https://ticktick.com/oauth/authorize?client_id=client&state=state"
+        state = "state"
+
+    class FakeConfig:
+        def get_profile(self, service=None):
+            return SimpleNamespace(redirect_uri="http://localhost:8080/callback")
+
+    class FakeStore:
+        def load(self):
+            return FakeConfig()
+
+    class FakeManager:
+        store = FakeStore()
+
+        def begin_login(self, service=None):
+            return FakeFlow()
+
+        def login_with_code(self, code, service=None, state=None):
+            assert code == "abc"
+            assert state == "state"
+            return FakeProfile()
+
+    monkeypatch.setattr("ticktask.cli.auth.AuthManager", lambda: FakeManager())
+    monkeypatch.setattr("ticktask.cli.auth.webbrowser.open", lambda url: opened.append(url))
+    monkeypatch.setattr(
+        "ticktask.cli.auth.wait_for_oauth_callback",
+        lambda redirect_uri, timeout_seconds=120, before_wait=None: (
+            before_wait() if before_wait else None,
+            SimpleNamespace(
+                callback_url="http://localhost:8080/callback?code=abc&state=state",
+                code="abc",
+                state="state",
+            ),
+        )[1],
+    )
+
+    result = runner.invoke(app, ["auth", "login", "--local-server", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)["data"]
+    assert payload["authenticated"] is True
+    assert payload["callback_received"] is True
+    assert "abc" not in result.stdout
+    assert "state" not in result.stdout
+    assert opened == [FakeFlow.authorization_url]
 
 
 def test_auth_login_code_and_refresh_json(monkeypatch) -> None:

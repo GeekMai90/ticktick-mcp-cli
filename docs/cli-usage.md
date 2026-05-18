@@ -7,6 +7,7 @@ uv run ticktick-mcp-cli doctor --json
 uv run ticktick-mcp-cli doctor bundle --output ./ticktask-diagnostics.zip --json
 uv run ticktick-mcp-cli auth status --json
 uv run ticktick-mcp-cli auth init --service dida365 --client-id "$DIDA365_CLIENT_ID" --client-secret "$DIDA365_CLIENT_SECRET" --redirect-uri "http://localhost:8080/callback" --token-storage keyring --json
+uv run ticktick-mcp-cli auth login --service ticktick --local-server --json
 uv run ticktick-mcp-cli auth login --service ticktick --no-browser --json
 uv run ticktick-mcp-cli auth login --service ticktick --callback-url 'http://localhost:8080/callback?code=***&state=STATE' --json
 uv run ticktick-mcp-cli auth login --service ticktick --code CALLBACK_CODE --state STATE --json

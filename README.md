@@ -134,8 +134,15 @@ Do **not** commit local config files, client secrets, access tokens, or refresh 
 
 ### 2. Log in with OAuth
 
-Start the browser/manual login flow:
+Start the local callback login flow:
 
+```bash
+ticktask auth login --service ticktick --local-server --json
+```
+
+This opens the browser and waits for one callback on the configured localhost redirect URI.
+
+Manual browser flow:
 ```bash
 ticktask auth login --service ticktick --no-browser --json
 ```

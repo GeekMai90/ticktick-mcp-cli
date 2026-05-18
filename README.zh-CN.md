@@ -134,8 +134,15 @@ ticktask config path
 
 ### 2. OAuth 登录
 
-启动浏览器 / 手动登录流程：
+启动本地 callback 登录流程：
 
+```bash
+ticktask auth login --service ticktick --local-server --json
+```
+
+这会打开浏览器，并在已配置的 localhost redirect URI 上等待一次 OAuth callback。
+
+手动浏览器流程：
 ```bash
 ticktask auth login --service ticktick --no-browser --json
 ```

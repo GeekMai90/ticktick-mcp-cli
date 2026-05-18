@@ -6,9 +6,14 @@ import typer
 
 from ticktask.cli.formatters import emit_error, emit_json, emit_result
 from ticktask.core.auth import AuthManager
+from ticktask.core.oauth_server import wait_for_oauth_callback
 from ticktask.core.results import ok
 
 app = typer.Typer(help="Configure OAuth credentials and inspect login status.")
+
+
+def _open_browser(url: str) -> None:
+    webbrowser.open(url)
 
 
 @app.command("init")
@@ -87,6 +92,16 @@ def auth_login(
         "--state",
         help="OAuth state printed by `auth login --no-browser`; used with --code.",
     ),
+    local_server: bool = typer.Option(
+        False,
+        "--local-server",
+        help="Start a one-shot localhost callback server, open the browser, and complete login automatically.",
+    ),
+    timeout_seconds: int = typer.Option(
+        120,
+        "--timeout",
+        help="Seconds to wait for --local-server OAuth callback.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
     try:
@@ -108,6 +123,24 @@ def auth_login(
 
         flow = manager.begin_login(service)
         authorization_url = flow.authorization_url
+        if local_server:
+            callback = wait_for_oauth_callback(
+                manager.store.load().get_profile(service).redirect_uri or "",
+                timeout_seconds=timeout_seconds,
+                before_wait=lambda: _open_browser(authorization_url),
+            )
+            profile = manager.login_with_code(callback.code, service, state=callback.state)
+            emit_result(
+                {
+                    "service": profile.service,
+                    "authenticated": profile.has_token(),
+                    "has_refresh_token": bool(profile.refresh_token),
+                    "expires_at": profile.expires_at,
+                    "callback_received": True,
+                },
+                json_output=json_output,
+            )
+            return
         if not no_browser:
             webbrowser.open(authorization_url)
         data = {
