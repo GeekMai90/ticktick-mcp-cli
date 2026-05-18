@@ -494,6 +494,7 @@ Project notes:
 
 ## Documentation
 
+- [Agent-First Quickstart](docs/agent-quickstart.md)
 - [Installation](docs/installation.md)
 - [OAuth](docs/oauth.md)
 - [CLI Usage](docs/cli-usage.md)

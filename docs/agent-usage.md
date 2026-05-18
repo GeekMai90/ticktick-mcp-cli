@@ -1,5 +1,7 @@
 # Agent Usage
 
+If you are installing this project from a repository link, begin with [Agent-First Quickstart](agent-quickstart.md), then return here for command-level operating rules.
+
 Prefer JSON commands:
 
 ```bash

@@ -1,5 +1,7 @@
 # Installation
 
+For the shortest agent-oriented path, start with [Agent-First Quickstart](agent-quickstart.md).
+
 ## Installer script
 
 For a one-command setup with the MCP server and keyring extras, run:
