@@ -2,6 +2,8 @@
 
 简体中文 | [English](README.md)
 
+文档站：[简体中文手册](docs/zh-CN.md) | [Docs index](docs/index.md)
+
 面向人类和 AI Agent 的 TickTick 国际版 / 滴答清单 Dida365 国内版 CLI 与 MCP 服务器。
 
 TickTick MCP CLI 的目标是让人类用户和 AI Agent 都能安全、清楚、稳定地操作任务系统：
