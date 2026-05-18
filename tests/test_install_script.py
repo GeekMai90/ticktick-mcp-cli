@@ -69,9 +69,9 @@ def test_install_docs_reference_script_and_verification_commands() -> None:
         assert "ticktick-mcp-cli auth status --json" in text
 
 
-def test_roadmap_marks_install_script_complete_and_keeps_homebrew_pending() -> None:
+def test_roadmap_marks_install_script_complete_and_omits_homebrew_channel() -> None:
     roadmap = ROADMAP.read_text()
 
     assert "[x] Installer script for uv/pipx" in roadmap
-    assert "[ ] Homebrew tap" in roadmap
+    assert "Homebrew" not in roadmap
     assert "✅ `feat(dx): add installer script`" in roadmap

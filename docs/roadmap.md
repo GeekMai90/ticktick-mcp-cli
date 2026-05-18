@@ -92,7 +92,6 @@ Source projects: `kvanland/ticktick-cli`, npm-based MCP servers.
 - [x] Backward-compatible legacy commands: `ticktask`, `tt`, `ticktask-mcp`
 - [x] PyPI publishing workflow
 - [x] Installer script for uv/pipx
-- [ ] Homebrew tap
 - [ ] Optional npm wrapper for `npx ticktick-mcp-cli`
 - [ ] Prebuilt docs site or GitHub Pages
 - [x] Example configs for Claude Desktop, Hermes, Cursor, Claude Code, and OpenClaw
