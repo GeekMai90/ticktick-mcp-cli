@@ -59,7 +59,7 @@ For a one-command setup with MCP server and keyring extras, run:
 curl -fsSL https://raw.githubusercontent.com/GeekMai90/ticktick-mcp-cli/main/scripts/install.sh | sh
 ```
 
-The script prefers `uv tool install 'ticktick-mcp-cli[mcp,keyring]'`, falls back to `pipx install 'ticktick-mcp-cli[mcp,keyring]'`, and prints the same verification commands used by the docs:
+The script installs from this GitHub repository by default (`ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git`) because the PyPI package name is not published yet. It prefers `uv tool install` and falls back to `pipx install`, then prints the same verification commands used by the docs:
 
 ```bash
 ticktick-mcp-cli --version
@@ -77,22 +77,24 @@ npx github:GeekMai90/ticktick-mcp-cli auth status --json
 npx --package github:GeekMai90/ticktick-mcp-cli ticktick-mcp
 ```
 
-The wrapper delegates to the Python package via `uvx` when available, with a `python3 -m pipx run` fallback. It does not store credentials.
+The wrapper delegates to the Python package from this GitHub repository via `uvx` when available, with a `python3 -m pipx run` fallback. Default spec: `ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git`. It does not store credentials.
 
-### Option C: install from PyPI
+### Option C: install from GitHub directly
+
+Use the repository source until the `ticktick-mcp-cli` package is published on PyPI:
 
 ```bash
-uv tool install ticktick-mcp-cli
+uv tool install 'ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 # or
-pipx install ticktick-mcp-cli
+pipx install 'ticktick-mcp-cli[mcp,keyring] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 ```
 
-If you want the MCP server dependencies installed with the tool, include the optional `mcp` extra:
+If you do not need keyring support, use only the MCP extra:
 
 ```bash
-uv tool install 'ticktick-mcp-cli[mcp]'
+uv tool install 'ticktick-mcp-cli[mcp] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 # or
-pipx install 'ticktick-mcp-cli[mcp]'
+pipx install 'ticktick-mcp-cli[mcp] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'
 ```
 
 ### Option D: use directly from a clone
@@ -105,12 +107,14 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### Option E: install from GitHub
+### Option E: install from PyPI after publication
+
+The project has release automation, but the `ticktick-mcp-cli` package is not available on PyPI until a maintainer publishes a release. After publication, these commands should work:
 
 ```bash
-uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
+uv tool install ticktick-mcp-cli
 # or
-pipx install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
+pipx install ticktick-mcp-cli
 ```
 
 Then verify:

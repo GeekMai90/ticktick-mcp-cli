@@ -136,7 +136,7 @@ TICKTASK_INTEGRATION=1 ticktick-mcp-cli integration smoke --service dida365 --js
 
 When setup finishes, report only:
 
-- install path used: install script, PyPI/uv/pipx, or GitHub npx wrapper;
+- install path used: install script, GitHub source via uv/pipx, GitHub npx wrapper, or PyPI after publication;
 - service: `dida365` or `ticktick`;
 - `auth status --json` fields that are not secrets;
 - MCP command configured;

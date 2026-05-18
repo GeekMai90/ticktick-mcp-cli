@@ -7,7 +7,7 @@ from ticktask.mcp import prompts, resources, tools
 
 INSTALL_HINT = (
     "ticktask MCP server requires the optional `mcp` package. "
-    "Install with `uv pip install 'ticktick-mcp-cli[mcp]'` or `pip install 'ticktick-mcp-cli[mcp]'`."
+    "Install with `uv pip install 'ticktick-mcp-cli[mcp] @ git+https://github.com/GeekMai90/ticktick-mcp-cli.git'` or install from a local checkout with `uv sync --extra mcp`."
 )
 
 
