@@ -64,6 +64,7 @@ include = [
   "src/ticktask",
   "tests",
   "docs",
+  "scripts",
   "README.md",
   "README.zh-CN.md",
   "LICENSE",

@@ -1,5 +1,15 @@
 # Installation
 
+## Installer script
+
+For a one-command setup with the MCP server and keyring extras, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GeekMai90/ticktick-mcp-cli/main/scripts/install.sh | sh
+```
+
+The script prefers `uv tool install 'ticktick-mcp-cli[mcp,keyring]'`, falls back to `pipx install 'ticktick-mcp-cli[mcp,keyring]'`, and prints the verification commands below.
+
 ## Install from PyPI
 
 ```bash
@@ -21,6 +31,7 @@ Verify the installation:
 ```bash
 ticktick-mcp-cli --version
 ticktick-mcp-cli doctor --json
+ticktick-mcp-cli auth status --json
 ```
 
 ## Development

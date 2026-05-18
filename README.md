@@ -51,7 +51,23 @@ Current capabilities:
 
 ## Install
 
-### Option A: install from PyPI
+### Option A: installer script
+
+For a one-command setup with MCP server and keyring extras, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GeekMai90/ticktick-mcp-cli/main/scripts/install.sh | sh
+```
+
+The script prefers `uv tool install 'ticktick-mcp-cli[mcp,keyring]'`, falls back to `pipx install 'ticktick-mcp-cli[mcp,keyring]'`, and prints the same verification commands used by the docs:
+
+```bash
+ticktick-mcp-cli --version
+ticktick-mcp-cli doctor --json
+ticktick-mcp-cli auth status --json
+```
+
+### Option B: install from PyPI
 
 ```bash
 uv tool install ticktick-mcp-cli
@@ -67,7 +83,7 @@ uv tool install 'ticktick-mcp-cli[mcp]'
 pipx install 'ticktick-mcp-cli[mcp]'
 ```
 
-### Option B: use directly from a clone
+### Option C: use directly from a clone
 
 ```bash
 git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
@@ -77,7 +93,7 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### Option C: install from GitHub
+### Option D: install from GitHub
 
 ```bash
 uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git
