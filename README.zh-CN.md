@@ -67,7 +67,19 @@ ticktick-mcp-cli doctor --json
 ticktick-mcp-cli auth status --json
 ```
 
-### 方式 B：从 PyPI 安装
+### 方式 B：给 Agent 使用的 GitHub npx wrapper
+
+已有 Node.js 的 Agent runtime 可以直接从 GitHub 运行 wrapper，不需要 npm registry 全局包：
+
+```bash
+npx github:GeekMai90/ticktick-mcp-cli doctor --json
+npx github:GeekMai90/ticktick-mcp-cli auth status --json
+npx --package github:GeekMai90/ticktick-mcp-cli ticktick-mcp
+```
+
+wrapper 会优先通过 `uvx` 调用 Python 包；没有 `uvx` 时回退到 `python3 -m pipx run`。它本身不保存凭据。
+
+### 方式 C：从 PyPI 安装
 
 ```bash
 uv tool install ticktick-mcp-cli
@@ -83,7 +95,7 @@ uv tool install 'ticktick-mcp-cli[mcp]'
 pipx install 'ticktick-mcp-cli[mcp]'
 ```
 
-### 方式 C：从 clone 直接使用
+### 方式 D：从 clone 直接使用
 
 ```bash
 git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
@@ -93,7 +105,7 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### 方式 D：从 GitHub 安装为工具
+### 方式 E：从 GitHub 安装为工具
 
 ```bash
 uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git

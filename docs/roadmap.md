@@ -92,7 +92,7 @@ Source projects: `kvanland/ticktick-cli`, npm-based MCP servers.
 - [x] Backward-compatible legacy commands: `ticktask`, `tt`, `ticktask-mcp`
 - [x] PyPI publishing workflow
 - [x] Installer script for uv/pipx
-- [ ] Optional npm wrapper for `npx ticktick-mcp-cli`
+- [x] GitHub npx wrapper for agent installs
 - [ ] Prebuilt docs site or GitHub Pages
 - [x] Example configs for Claude Desktop, Hermes, Cursor, Claude Code, and OpenClaw
 
@@ -168,6 +168,7 @@ Project differentiator.
 22. ✅ `feat(auth): add optional keyring token storage`
 23. ✅ `feat(auth): add local OAuth callback server mode`
 24. ✅ `feat(dx): add installer script`
+25. ✅ `feat(dx): add npx wrapper for agent installs`
 
 
 

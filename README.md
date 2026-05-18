@@ -67,7 +67,19 @@ ticktick-mcp-cli doctor --json
 ticktick-mcp-cli auth status --json
 ```
 
-### Option B: install from PyPI
+### Option B: GitHub npx wrapper for agents
+
+Agent runtimes with Node.js can run the GitHub wrapper without a global npm registry package:
+
+```bash
+npx github:GeekMai90/ticktick-mcp-cli doctor --json
+npx github:GeekMai90/ticktick-mcp-cli auth status --json
+npx --package github:GeekMai90/ticktick-mcp-cli ticktick-mcp
+```
+
+The wrapper delegates to the Python package via `uvx` when available, with a `python3 -m pipx run` fallback. It does not store credentials.
+
+### Option C: install from PyPI
 
 ```bash
 uv tool install ticktick-mcp-cli
@@ -83,7 +95,7 @@ uv tool install 'ticktick-mcp-cli[mcp]'
 pipx install 'ticktick-mcp-cli[mcp]'
 ```
 
-### Option C: use directly from a clone
+### Option D: use directly from a clone
 
 ```bash
 git clone https://github.com/GeekMai90/ticktick-mcp-cli.git
@@ -93,7 +105,7 @@ uv run ticktask --help
 uv run tt --help
 ```
 
-### Option D: install from GitHub
+### Option E: install from GitHub
 
 ```bash
 uv tool install git+https://github.com/GeekMai90/ticktick-mcp-cli.git

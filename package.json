@@ -1,0 +1,36 @@
+{
+  "name": "ticktick-mcp-cli",
+  "version": "0.1.0",
+  "private": false,
+  "description": "npx-friendly wrapper for the TickTick/Dida365 CLI and MCP server.",
+  "license": "MIT",
+  "homepage": "https://github.com/GeekMai90/ticktick-mcp-cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeekMai90/ticktick-mcp-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GeekMai90/ticktick-mcp-cli/issues"
+  },
+  "keywords": [
+    "ticktick",
+    "dida365",
+    "mcp",
+    "cli",
+    "agent"
+  ],
+  "bin": {
+    "ticktick-mcp-cli": "scripts/npx-wrapper.js",
+    "ticktick-mcp": "scripts/npx-wrapper.js"
+  },
+  "files": [
+    "scripts/npx-wrapper.js",
+    "scripts/install.sh",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -10,6 +10,18 @@ curl -fsSL https://raw.githubusercontent.com/GeekMai90/ticktick-mcp-cli/main/scr
 
 The script prefers `uv tool install 'ticktick-mcp-cli[mcp,keyring]'`, falls back to `pipx install 'ticktick-mcp-cli[mcp,keyring]'`, and prints the verification commands below.
 
+## GitHub npx wrapper for agents
+
+Agent runtimes that already have Node.js can launch the wrapper directly from GitHub without a global npm registry package:
+
+```bash
+npx github:GeekMai90/ticktick-mcp-cli doctor --json
+npx github:GeekMai90/ticktick-mcp-cli auth status --json
+npx --package github:GeekMai90/ticktick-mcp-cli ticktick-mcp
+```
+
+The wrapper prefers `uvx --from 'ticktick-mcp-cli[mcp,keyring]' ...` and falls back to `python3 -m pipx run --spec 'ticktick-mcp-cli[mcp,keyring]' ...`. It does not store credentials; it only delegates to the Python CLI/MCP package.
+
 ## Install from PyPI
 
 ```bash
