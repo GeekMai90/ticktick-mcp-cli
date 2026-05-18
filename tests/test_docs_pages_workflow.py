@@ -17,6 +17,7 @@ def test_docs_pages_workflow_deploys_docs_with_github_pages_actions() -> None:
     assert "pages: write" in workflow
     assert "id-token: write" in workflow
     assert "actions/configure-pages@v5" in workflow
+    assert "enablement: true" in workflow
     assert "actions/jekyll-build-pages@v1" in workflow
     assert "actions/upload-pages-artifact@v3" in workflow
     assert "actions/deploy-pages@v4" in workflow
