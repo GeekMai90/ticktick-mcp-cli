@@ -84,7 +84,7 @@ Tools:
 Resources:
 
 - `ticktask://projects` — read-only project list for planning and exact-ID lookup.
-- `ticktask://config` — sanitized active service/profile configuration with secret fields redacted to boolean `*_configured` flags.
+- `ticktask://config` — sanitized active service/profile configuration with secret fields redacted to boolean `*_configured` flags, including `token_storage` and keyring-backed secret presence.
 - `ticktask://saved-views` — built-in smart-filter presets (`today`, `overdue`, `upcoming`, `high-priority`, `no-date`) with equivalent MCP tool arguments and CLI commands.
 
 Resource functions are importable from `ticktask.mcp.resources` for unit testing without launching stdio.

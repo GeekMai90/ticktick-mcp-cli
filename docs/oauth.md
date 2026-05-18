@@ -8,6 +8,15 @@ uv run ticktick-mcp-cli auth init \
   --client-id "$TICKTICK_CLIENT_ID" \
   --client-secret "$TICKTICK_CLIENT_SECRET" \
   --redirect-uri "http://localhost:8080/callback"
+
+# Optional: store client secret and tokens in the OS keyring instead of config.json.
+# Install the optional extra first: pipx install 'ticktick-mcp-cli[keyring]' or uv tool install 'ticktick-mcp-cli[keyring]'.
+uv run ticktick-mcp-cli auth init \
+  --service dida365 \
+  --client-id "$DIDA365_CLIENT_ID" \
+  --client-secret "$DIDA365_CLIENT_SECRET" \
+  --redirect-uri "http://localhost:8080/callback" \
+  --token-storage keyring
 ```
 
 Supported services:
@@ -42,4 +51,4 @@ Before API calls, ticktask automatically refreshes expired or near-expired acces
 
 This phase intentionally does not run a full local browser callback server. The implemented flow is robust and testable with mocked HTTP, and keeps all credentials local.
 
-Never commit local config, client secrets, access tokens, or refresh tokens.
+Never commit local config, client secrets, access tokens, or refresh tokens. `auth status --json`, `doctor --json`, diagnostic bundles, and the `ticktask://config` MCP resource expose only boolean `*_configured` flags plus `token_storage`/keyring availability; they never return secret values.

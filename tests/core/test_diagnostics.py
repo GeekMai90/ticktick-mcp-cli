@@ -5,6 +5,24 @@ from ticktask.core.config import ConfigStore, ProfileConfig
 from ticktask.core.diagnostics import collect_diagnostics, create_diagnostic_bundle, redact_mapping
 
 
+class LockedKeyring:
+    def get_password(self, service_name: str, username: str) -> str | None:
+        raise RuntimeError("backend locked")
+
+    def set_password(self, service_name: str, username: str, password: str) -> None:
+        raise RuntimeError("backend locked")
+
+    def delete_password(self, service_name: str, username: str) -> None:
+        raise RuntimeError("backend locked")
+
+
+class ProbeOnlyLockedKeyring(LockedKeyring):
+    def get_password(self, service_name: str, username: str) -> str | None:
+        if username == "__probe__":
+            return None
+        raise RuntimeError("backend locked during secret read")
+
+
 def _configured_store(tmp_path):
     store = ConfigStore(tmp_path / "config.json")
     config = store.load()
@@ -54,6 +72,55 @@ def test_collect_diagnostics_sanitizes_config_and_reports_runtime(tmp_path) -> N
     assert "refresh-token-secret" not in serialized
     assert data["mcp"]["server_buildable"] is True
     assert data["tools"]["mcp_tool_count"] > 0
+
+
+def test_collect_diagnostics_handles_unavailable_keyring_backend(tmp_path, monkeypatch) -> None:
+    store = ConfigStore(tmp_path / "config.json")
+    config = store.load()
+    profile = ProfileConfig.for_service(
+        "dida365",
+        "client-id",
+        "client-secret",
+        "http://localhost/callback",
+        token_storage="keyring",
+    )
+    config.set_profile(profile)
+    store.save(config)
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: LockedKeyring()),
+    )
+
+    data = collect_diagnostics(store=store)
+
+    profile_data = data["config"]["profiles"]["dida365"]
+    assert profile_data["token_storage"] == "keyring"
+    assert profile_data["client_secret_configured"] is False
+    assert data["auth"]["token_storage"] == "keyring"
+    assert data["auth"]["keyring_available"] is False
+
+
+def test_collect_diagnostics_handles_keyring_secret_read_failure(tmp_path, monkeypatch) -> None:
+    store = ConfigStore(tmp_path / "config.json")
+    config = store.load()
+    profile = ProfileConfig.for_service(
+        "dida365",
+        "client-id",
+        "client-secret",
+        "http://localhost/callback",
+        token_storage="keyring",
+    )
+    config.set_profile(profile)
+    store.save(config)
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: ProbeOnlyLockedKeyring()),
+    )
+
+    data = collect_diagnostics(store=store)
+
+    assert data["auth"]["token_storage"] == "keyring"
+    assert data["auth"]["keyring_available"] is False
 
 
 def test_create_diagnostic_bundle_writes_redacted_zip_and_report(tmp_path) -> None:

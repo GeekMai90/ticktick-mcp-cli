@@ -20,6 +20,7 @@ Rules for agents:
 - Complete tasks only with exact `TASK_ID`, exact `PROJECT_ID`, and `--yes`.
 - Delete tasks only with exact `TASK_ID`, exact `PROJECT_ID`, and `--yes`.
 - Never print or commit local config, access tokens, refresh tokens, client secrets, or user-local paths unless the user explicitly asks for diagnostic output.
+- Treat `token_storage: keyring` and `*_configured` booleans in `auth status`, diagnostics, and `ticktask://config` as secret-presence indicators only; never ask tools to reveal secret values.
 
 Mutation example:
 

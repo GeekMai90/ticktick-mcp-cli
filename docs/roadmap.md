@@ -106,7 +106,7 @@ Project differentiator.
 - [x] Read-only smoke gate with `TICKTASK_INTEGRATION=1`
 - [x] Conflict-safe retries for read-only/rate-limited API calls
 - [x] Agent retry idempotency keys for task creation
-- [ ] Token storage keyring option
+- [x] Token storage keyring option
 - [x] Redacted diagnostic bundle command
 - [ ] End-to-end OAuth callback local server mode
 - [x] Idempotency/deduplication helpers for agent retries
@@ -165,6 +165,7 @@ Project differentiator.
 19. ✅ `feat(errors): add remediation hints and stable error taxonomy`
 20. ✅ `feat(reliability): add task creation idempotency keys for agent retries`
 21. ✅ `feat(task): add deterministic natural-language task query adapter`
+22. ✅ `feat(auth): add optional keyring token storage`
 
 
 

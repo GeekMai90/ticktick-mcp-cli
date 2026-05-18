@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from ticktask.core.constants import CONFIG_FILENAME, DEFAULT_SERVICE, get_service_profile
+from ticktask.core.credentials import SECRET_FIELDS, SUPPORTED_TOKEN_STORAGES, credential_store_for
 from ticktask.core.errors import ConfigError
 
 
@@ -21,6 +22,7 @@ class ProfileConfig:
     redirect_uri: str | None = None
     access_token: str | None = None
     refresh_token: str | None = None
+    token_storage: str = "file"
     expires_at: str | None = None
     oauth_state: str | None = None
     code_verifier: str | None = None
@@ -32,8 +34,10 @@ class ProfileConfig:
         client_id: str | None = None,
         client_secret: str | None = None,
         redirect_uri: str | None = None,
+        token_storage: str = "file",
     ) -> ProfileConfig:
         profile = get_service_profile(service)
+        _validate_token_storage(token_storage)
         return cls(
             service=profile.name,
             base_url=profile.base_url,
@@ -42,12 +46,15 @@ class ProfileConfig:
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri=redirect_uri,
+            token_storage=token_storage,
         )
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> ProfileConfig:
         service = raw.get("service") or DEFAULT_SERVICE
         profile = get_service_profile(service)
+        token_storage = raw.get("token_storage") or "file"
+        _validate_token_storage(token_storage)
         return cls(
             service=profile.name,
             base_url=raw.get("base_url") or profile.base_url,
@@ -60,6 +67,7 @@ class ProfileConfig:
             redirect_uri=raw.get("redirect_uri"),
             access_token=raw.get("access_token"),
             refresh_token=raw.get("refresh_token"),
+            token_storage=token_storage,
             expires_at=raw.get("expires_at"),
             oauth_state=raw.get("oauth_state"),
             code_verifier=raw.get("code_verifier"),
@@ -70,6 +78,33 @@ class ProfileConfig:
 
     def has_token(self) -> bool:
         return bool(self.access_token)
+
+    def hydrate_credentials(self) -> ProfileConfig:
+        if self.token_storage != "keyring":
+            return self
+        store = credential_store_for(self.token_storage)
+        for field in SECRET_FIELDS:
+            if getattr(self, field) is None:
+                setattr(self, field, store.load(self.service, field))
+        return self
+
+    def save_external_credentials(self) -> None:
+        if self.token_storage != "keyring":
+            return
+        store = credential_store_for(self.token_storage)
+        for field in SECRET_FIELDS:
+            store.save(self.service, field, getattr(self, field))
+
+    def credential_configured(self, field: str) -> bool:
+        value = getattr(self, field)
+        if value:
+            return True
+        if self.token_storage != "keyring":
+            return False
+        try:
+            return credential_store_for(self.token_storage).configured(self.service, field)
+        except Exception:
+            return False
 
 
 @dataclass
@@ -89,9 +124,16 @@ class TicktaskConfig:
         return cls(active_service=active_service, profiles=profiles)
 
     def to_dict(self) -> dict[str, Any]:
+        profiles: dict[str, dict[str, Any]] = {}
+        for name, profile in self.profiles.items():
+            raw = asdict(profile)
+            if profile.token_storage == "keyring":
+                for field in SECRET_FIELDS:
+                    raw.pop(field, None)
+            profiles[name] = raw
         return {
             "active_service": self.active_service,
-            "profiles": {name: asdict(profile) for name, profile in self.profiles.items()},
+            "profiles": profiles,
         }
 
     def get_profile(self, service: str | None = None) -> ProfileConfig:
@@ -104,9 +146,18 @@ class TicktaskConfig:
 
     def set_profile(self, profile: ProfileConfig, active: bool = True) -> None:
         get_service_profile(profile.service)
+        _validate_token_storage(profile.token_storage)
         self.profiles[profile.service] = profile
         if active:
             self.active_service = profile.service
+
+
+def _validate_token_storage(token_storage: str) -> None:
+    if token_storage not in SUPPORTED_TOKEN_STORAGES:
+        raise ConfigError(
+            f"Unsupported token storage `{token_storage}`.",
+            hint="Use `file` or `keyring`.",
+        )
 
 
 def config_dir() -> Path:

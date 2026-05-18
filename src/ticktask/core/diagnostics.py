@@ -72,6 +72,8 @@ def collect_diagnostics(store: ConfigStore | None = None) -> dict[str, Any]:
             "client_id_configured": bool(status.client_id),
             "redirect_uri_configured": bool(status.redirect_uri),
             "expires_at_configured": bool(status.expires_at),
+            "token_storage": status.token_storage,
+            "keyring_available": status.keyring_available,
         },
         "mcp": _mcp_status(),
         "tools": _tool_status(),
@@ -110,10 +112,11 @@ def _sanitize_profile(profile: ProfileConfig) -> dict[str, Any]:
         "oauth_authorize_base_url": profile.oauth_authorize_base_url,
         "oauth_token_base_url": profile.oauth_token_base_url,
         "client_id_configured": bool(profile.client_id),
-        "client_secret_configured": bool(profile.client_secret),
+        "client_secret_configured": profile.credential_configured("client_secret"),
         "redirect_uri_configured": bool(profile.redirect_uri),
-        "access_token_configured": bool(profile.access_token),
-        "refresh_token_configured": bool(profile.refresh_token),
+        "access_token_configured": profile.credential_configured("access_token"),
+        "refresh_token_configured": profile.credential_configured("refresh_token"),
+        "token_storage": profile.token_storage,
         "expires_at_configured": bool(profile.expires_at),
         "oauth_state_configured": bool(profile.oauth_state),
         "code_verifier_configured": bool(profile.code_verifier),
@@ -122,7 +125,7 @@ def _sanitize_profile(profile: ProfileConfig) -> dict[str, Any]:
 
 def _is_secret_key(key: str) -> bool:
     normalized = key.casefold()
-    if normalized in {"client_id", "redirect_uri"} or normalized.endswith("_configured"):
+    if normalized in {"client_id", "redirect_uri", "token_storage"} or normalized.endswith("_configured"):
         return False
     return any(marker in normalized for marker in _SECRET_KEYS)
 

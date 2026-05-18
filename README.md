@@ -26,6 +26,7 @@ Supported service profiles:
 Current capabilities:
 
 - OAuth credential setup and login.
+- Optional OS keyring storage for OAuth client secret, access token, and refresh token.
 - OAuth state + PKCE hardened authorization flow.
 - Automatic access-token refresh when `expires_at` is near or past expiry.
 - Project list, project data retrieval, create, update, and delete, with project kind/view-mode validation.
@@ -129,7 +130,7 @@ Local config path:
 ticktask config path
 ```
 
-Do **not** commit local config files, client secrets, access tokens, or refresh tokens.
+Do **not** commit local config files, client secrets, access tokens, or refresh tokens. For OS-managed secret storage, initialize auth with `--token-storage keyring` after installing the optional extra (`pipx install 'ticktick-mcp-cli[keyring]'` or `uv tool install 'ticktick-mcp-cli[keyring]'`); the JSON config then keeps only non-secret metadata while client secret/access/refresh tokens are stored in the system keyring.
 
 ### 2. Log in with OAuth
 

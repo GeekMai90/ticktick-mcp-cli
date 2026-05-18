@@ -26,6 +26,7 @@ TickTick MCP CLI 使用一个共享 Python Core，并在其上提供两个薄前
 当前能力：
 
 - OAuth 凭据初始化和登录。
+- 可选系统 keyring 存储 OAuth client secret、access token 和 refresh token。
 - 带 OAuth `state` + PKCE 的更安全授权流程。
 - 当 `expires_at` 即将过期或已经过期时自动刷新 access token。
 - 项目列表、项目数据读取、创建、更新和删除，并校验项目 kind / view mode。
@@ -129,7 +130,7 @@ ticktask auth init \
 ticktask config path
 ```
 
-不要提交本地配置、client secret、access token 或 refresh token。
+不要提交本地配置、client secret、access token 或 refresh token。如果希望使用系统级密钥存储，先安装可选 extra（`pipx install 'ticktick-mcp-cli[keyring]'` 或 `uv tool install 'ticktick-mcp-cli[keyring]'`），再用 `--token-storage keyring` 初始化；此时 JSON config 只保留非敏感元数据，client secret、access token 和 refresh token 存入系统 keyring。
 
 ### 2. OAuth 登录
 

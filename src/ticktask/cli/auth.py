@@ -23,6 +23,11 @@ def auth_init(
         help="Optional existing access token for local testing.",
     ),
     refresh_token: str | None = typer.Option(None, "--refresh-token", help="Optional refresh token."),
+    token_storage: str = typer.Option(
+        "file",
+        "--token-storage",
+        help="Where to store OAuth client secret and tokens: file or keyring.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON."),
 ) -> None:
     try:
@@ -34,6 +39,7 @@ def auth_init(
             redirect_uri=redirect_uri,
             access_token=access_token,
             refresh_token=refresh_token,
+            token_storage=token_storage,
         )
         emit_result(
             {
@@ -42,6 +48,7 @@ def auth_init(
                 "configured": profile.is_configured(),
                 "authenticated": profile.has_token(),
                 "config_path": manager.store.path_string(),
+                "token_storage": profile.token_storage,
             },
             json_output=json_output,
         )

@@ -12,6 +12,7 @@ import httpx
 
 from ticktask.core.client import request_json_without_auth
 from ticktask.core.config import ConfigStore, ProfileConfig
+from ticktask.core.credentials import credential_store_for
 from ticktask.core.errors import AuthError, ConfigError
 
 
@@ -26,6 +27,9 @@ class AuthStatus:
     client_id: str | None
     redirect_uri: str | None
     expires_at: str | None
+    token_storage: str
+    keyring_available: bool | None = None
+    keyring_hint: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -55,16 +59,19 @@ class AuthManager:
         access_token: str | None = None,
         refresh_token: str | None = None,
         expires_at: str | None = None,
+        token_storage: str = "file",
     ) -> ProfileConfig:
         profile = ProfileConfig.for_service(
             service=service,
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri=redirect_uri,
+            token_storage=token_storage,
         )
         profile.access_token = access_token
         profile.refresh_token = refresh_token
         profile.expires_at = expires_at
+        profile.save_external_credentials()
         config = self.store.load()
         config.set_profile(profile)
         self.store.save(config)
@@ -89,7 +96,17 @@ class AuthManager:
                 client_id=None,
                 redirect_uri=None,
                 expires_at=None,
+                token_storage="file",
             )
+        backend_status = self._credential_backend_status(profile)
+        if profile.token_storage != "keyring" or backend_status["keyring_available"] is not False:
+            try:
+                profile = profile.hydrate_credentials()
+            except Exception as exc:
+                backend_status = {
+                    "keyring_available": False,
+                    "keyring_hint": f"Keyring backend is unavailable: {exc}",
+                }
         return AuthStatus(
             service=profile.service,
             base_url=profile.base_url,
@@ -100,6 +117,8 @@ class AuthManager:
             client_id=profile.client_id,
             redirect_uri=profile.redirect_uri,
             expires_at=profile.expires_at,
+            token_storage=profile.token_storage,
+            **backend_status,
         )
 
     def authorization_url(
@@ -133,6 +152,7 @@ class AuthManager:
         profile.oauth_state = state
         profile.code_verifier = code_verifier
         config = self.store.load()
+        profile.save_external_credentials()
         config.set_profile(profile)
         self.store.save(config)
         return AuthorizationFlow(
@@ -219,7 +239,7 @@ class AuthManager:
         http_client: httpx.Client | None = None,
     ) -> ProfileConfig:
         config = self.store.load()
-        profile = config.get_profile(service)
+        profile = config.get_profile(service).hydrate_credentials()
         if not profile.access_token:
             raise AuthError(
                 f"Service profile `{profile.service}` has no access token.",
@@ -239,13 +259,23 @@ class AuthManager:
 
     def _require_configured_profile(self, service: str | None = None) -> ProfileConfig:
         config = self.store.load()
-        profile = config.get_profile(service)
+        profile = config.get_profile(service).hydrate_credentials()
         if not profile.is_configured():
             raise AuthError(
                 f"Service profile `{profile.service}` is missing OAuth client config.",
                 hint="Run `ticktask auth init --service SERVICE --client-id ... --client-secret ... --redirect-uri ...`.",
             )
         return profile
+
+    @staticmethod
+    def _credential_backend_status(profile: ProfileConfig) -> dict[str, Any]:
+        if profile.token_storage != "keyring":
+            return {"keyring_available": None, "keyring_hint": None}
+        try:
+            status = credential_store_for(profile.token_storage).status()
+        except ConfigError as exc:
+            return {"keyring_available": False, "keyring_hint": str(exc)}
+        return {"keyring_available": status.available, "keyring_hint": status.hint}
 
     @staticmethod
     def _should_refresh(profile: ProfileConfig, skew: timedelta = timedelta(minutes=5)) -> bool:
@@ -282,6 +312,7 @@ class AuthManager:
                 raise AuthError("OAuth token response included an invalid expires_in value.") from exc
             profile.expires_at = expires_at.isoformat()
         config = self.store.load()
+        profile.save_external_credentials()
         config.set_profile(profile)
         self.store.save(config)
         return profile

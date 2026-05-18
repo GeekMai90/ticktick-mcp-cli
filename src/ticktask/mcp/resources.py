@@ -112,9 +112,9 @@ def _sanitize_profile(profile: ProfileConfig) -> dict[str, Any]:
             "code_verifier",
         }
     }
-    sanitized["client_secret_configured"] = bool(profile.client_secret)
-    sanitized["access_token_configured"] = bool(profile.access_token)
-    sanitized["refresh_token_configured"] = bool(profile.refresh_token)
+    sanitized["client_secret_configured"] = profile.credential_configured("client_secret")
+    sanitized["access_token_configured"] = profile.credential_configured("access_token")
+    sanitized["refresh_token_configured"] = profile.credential_configured("refresh_token")
     sanitized["oauth_state_configured"] = bool(profile.oauth_state)
     return sanitized
 

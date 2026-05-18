@@ -1,9 +1,37 @@
+import json
 from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qs, urlparse
 
 from ticktask.core.auth import AuthManager
 from ticktask.core.config import ConfigStore
+from ticktask.core.errors import ConfigError
 import httpx
+
+
+class FakeKeyring:
+    def __init__(self) -> None:
+        self.values = {}
+
+    def get_password(self, service_name: str, username: str) -> str | None:
+        return self.values.get((service_name, username))
+
+    def set_password(self, service_name: str, username: str, password: str) -> None:
+        self.values[(service_name, username)] = password
+
+    def delete_password(self, service_name: str, username: str) -> None:
+        self.values.pop((service_name, username), None)
+
+
+class LockedKeyring(FakeKeyring):
+    def get_password(self, service_name: str, username: str) -> str | None:
+        raise RuntimeError("backend locked")
+
+
+class ProbeOnlyLockedKeyring(FakeKeyring):
+    def get_password(self, service_name: str, username: str) -> str | None:
+        if username == "__probe__":
+            return None
+        raise RuntimeError("backend locked during secret read")
 
 
 def test_auth_init_and_status(tmp_path) -> None:
@@ -21,6 +49,157 @@ def test_auth_init_and_status(tmp_path) -> None:
     assert status.configured is True
     assert status.authenticated is True
     assert status.client_id == "client"
+
+
+def test_auth_init_keyring_storage_hydrates_tokens_without_file_secrets(tmp_path, monkeypatch) -> None:
+    fake_keyring = FakeKeyring()
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: fake_keyring),
+    )
+    config_path = tmp_path / "config.json"
+    manager = AuthManager(ConfigStore(config_path))
+
+    manager.init(
+        service="dida365",
+        client_id="client",
+        client_secret="secret",
+        redirect_uri="http://localhost/callback",
+        access_token="token",
+        refresh_token="refresh",
+        token_storage="keyring",
+    )
+
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    profile_raw = raw["profiles"]["dida365"]
+    assert profile_raw["token_storage"] == "keyring"
+    assert "client_secret" not in profile_raw
+    assert "access_token" not in profile_raw
+    assert "refresh_token" not in profile_raw
+
+    status = manager.status()
+    assert status.configured is True
+    assert status.authenticated is True
+    assert status.has_refresh_token is True
+    assert status.token_storage == "keyring"
+    assert status.keyring_available is True
+
+    profile = manager.require_token()
+    assert profile.client_secret == "secret"
+    assert profile.access_token == "token"
+    assert profile.refresh_token == "refresh"
+
+
+def test_auth_status_reports_keyring_unavailable_without_reclassifying_profile(
+    tmp_path, monkeypatch
+) -> None:
+    config_path = tmp_path / "config.json"
+    fake_keyring = FakeKeyring()
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: fake_keyring),
+    )
+    manager = AuthManager(ConfigStore(config_path))
+    manager.init(
+        service="dida365",
+        client_id="client",
+        client_secret="secret",
+        redirect_uri="http://localhost/callback",
+        token_storage="keyring",
+    )
+
+    def unavailable():
+        raise ConfigError("keyring package missing")
+
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(unavailable),
+    )
+
+    status = manager.status()
+    assert status.service == "dida365"
+    assert status.token_storage == "keyring"
+    assert status.configured is False
+    assert status.authenticated is False
+    assert status.keyring_available is False
+    assert "keyring package missing" in (status.keyring_hint or "")
+
+
+def test_auth_status_reports_locked_keyring_without_crashing(tmp_path, monkeypatch) -> None:
+    fake_keyring = FakeKeyring()
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: fake_keyring),
+    )
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init(
+        service="dida365",
+        client_id="client",
+        client_secret="secret",
+        redirect_uri="http://localhost/callback",
+        token_storage="keyring",
+    )
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: LockedKeyring()),
+    )
+
+    status = manager.status()
+
+    assert status.token_storage == "keyring"
+    assert status.keyring_available is False
+    assert "backend locked" in (status.keyring_hint or "")
+
+
+def test_auth_status_handles_probe_success_but_secret_read_failure(tmp_path, monkeypatch) -> None:
+    fake_keyring = FakeKeyring()
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: fake_keyring),
+    )
+    manager = AuthManager(ConfigStore(tmp_path / "config.json"))
+    manager.init(
+        service="dida365",
+        client_id="client",
+        client_secret="secret",
+        redirect_uri="http://localhost/callback",
+        access_token="token",
+        refresh_token="refresh",
+        token_storage="keyring",
+    )
+    monkeypatch.setattr(
+        "ticktask.core.credentials.KeyringCredentialStore._load_backend",
+        staticmethod(lambda: ProbeOnlyLockedKeyring()),
+    )
+
+    status = manager.status()
+
+    assert status.token_storage == "keyring"
+    assert status.configured is False
+    assert status.authenticated is False
+    assert status.has_refresh_token is False
+    assert status.keyring_available is False
+    assert "backend locked during secret read" in (status.keyring_hint or "")
+
+
+def test_auth_init_rejects_invalid_token_storage_before_writing_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    manager = AuthManager(ConfigStore(config_path))
+
+    try:
+        manager.init(
+            service="dida365",
+            client_id="client",
+            client_secret="secret",
+            redirect_uri="http://localhost/callback",
+            access_token="token",
+            token_storage="bogus",
+        )
+    except ConfigError as exc:
+        assert "Unsupported token storage" in str(exc)
+    else:  # pragma: no cover - assertion branch
+        raise AssertionError("invalid token storage should fail")
+    assert not config_path.exists()
 
 
 def test_auth_status_without_config_is_not_authenticated(tmp_path) -> None:
